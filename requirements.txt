@@ -1,2 +1,2 @@
-# Airflow with Postgres provider
-apache-airflow[postgres]==2.10.4
+# Additional Airflow extras to install
+apache-airflow[postgres,google]==2.10.4
