@@ -20,7 +20,9 @@ Dev container, requirements and constraints files used for local development pri
 ## Airflow Setup
 
 1. Started with official [docker compose](https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html)
-2. Switched to `LocalExecutor` and trimmed down to webserver + scheduler image and Postgres for local testing
+2. Switched to `LocalExecutor` 
+3. Removed additional containers, combined webserver + scheduler on single image
+
 
 ## Azure Setup
 

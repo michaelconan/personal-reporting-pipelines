@@ -1,0 +1,5 @@
+# Skip internal folders (git, github, devcontainer)
+.*
+
+# Exclude logs
+logs
