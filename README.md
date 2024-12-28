@@ -1,4 +1,4 @@
-# personal-reporting
+# personal-reporting-airflow
 
 Airflow server for personal data integration and experimentation.
 
@@ -20,15 +20,14 @@ Dev container, requirements and constraints files used for local development pri
 ## Airflow Setup
 
 1. Started with official [docker compose](https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html)
-2. Switched to `LocalExecutor` 
-3. Removed additional containers, combined webserver + scheduler on single image
+2. Decided to [extend the image](https://airflow.apache.org/docs/docker-stack/build.html#extending-the-image) starting with the slim version due to limited packaged requirements
+3. Switched to `LocalExecutor` 
+4. Stripped down the Docker Compose to a single container to run webserver + scheduler and use for dev container
 
 
 ## Azure Setup
 
 I have used [this quickstart](https://github.com/savjani-zz/azure-quickstart-templates/tree/master/101-webapp-linux-airflow-postgresql) for reference and the idea to run the webserver and scheduler together in a single container with `LocalExecutor`. `CeleryExecutor` shouldn't be necessary unless scale increases and multiple workers are required.
 
-1. Create container registry and enable [admin user access](https://learn.microsoft.com/en-us/azure/container-registry/container-registry-authentication?tabs=azure-cli#admin-account)
-   `az acr update -n airflowreportingregistry --admin-enabled true`
-2. Push container images to registry using Docker or automated pipeline (Azure DevOps)
-3. Create App Service app with container and connected services (Postgres Database and Redis Cache)
+1. Create PostgreSQL flexible server for database
+2. Create App Service app with container (NOTE: I followed [this tutorial](https://learn.microsoft.com/en-us/azure/app-service/configure-custom-container?tabs=debian&pivots=container-linux#enable-ssh) to configure SSH access in app service)

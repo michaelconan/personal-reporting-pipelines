@@ -18,7 +18,7 @@ services:
 
   airflow:
     build: .
-    command: bash -c "airflow scheduler & airflow webserver"
+    command: bash -c "service ssh start && airflow scheduler & airflow webserver"
     ports:
       - "8080:8080"
     healthcheck:
@@ -36,6 +36,11 @@ services:
       AIRFLOW__CORE__LOAD_EXAMPLES: 'true'
       AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session'
       AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
+      # Variables to inform airflow entrypoint script behavior
+      _AIRFLOW_DB_MIGRATE: 'true'
+      _AIRFLOW_WWW_USER_CREATE: 'true'
+      _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}
+      _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
       # If you want to use it, outcomment it and replace airflow.cfg with the name of your config file
       # AIRFLOW_CONFIG: '/opt/airflow/config/airflow.cfg'
     volumes:
