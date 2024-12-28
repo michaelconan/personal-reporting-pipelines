@@ -8,12 +8,13 @@ COPY . .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Start and enable SSH
+USER root
 RUN apt-get update \
     && apt-get install -y --no-install-recommends dialog \
     && apt-get install -y --no-install-recommends openssh-server \
-    && echo "root:Docker!" | chpasswd \
-    && chmod u+x ./entrypoint.sh
+    && echo "root:Docker!" | chpasswd
 COPY sshd_config /etc/ssh/
+USER airflow
 
 EXPOSE 8080 2222
 
