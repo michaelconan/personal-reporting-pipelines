@@ -8,26 +8,36 @@ on:
 
 env:
   AZURE_WEBAPP_NAME: airflow-reporting
+  RESOURCE_GROUP: airflow-reporting_group
   AZURE_WEBAPP_PACKAGE_PATH: '.'
+  PYTHON_VERSION: 3.12
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - name: Set up Python 3.12
+    - name: Set up Python 3
       uses: actions/setup-python@v4
       with:
-        python-version: 3.12
+        python-version: ${{ env.PYTHON_VERSION }}
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt -c constraints.txt
     - name: Building web app
       uses: azure/appservice-build@v2
+      with:
+        platform: python
+        platform-version: ${{ env.PYTHON_VERSION }}
     - name: Deploy web App using GH Action azure/webapps-deploy
       uses: azure/webapps-deploy@v3
       with:
         app-name: ${{ env.AZURE_WEBAPP_NAME }}
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
         package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+    - name: Deploy startup script
+      uses: azure/cli@v2
+      with:
+        inlineScript: |
+          az webapp deploy --src-path ${{ github.workspace }}/startup.sh --name ${{ env.AZURE_WEBAPP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --type startup --track-status false
