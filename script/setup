@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# script/setup: Set up application for the first time after cloning, or set it
+#               back to the initial first unused state.
+
+set -e
+
+cd "$(dirname "$0")/.."
+
+# Run bootstrap script to install dependencies
+script/bootstrap
+
+echo "==> Setting up DB…"
+
+# Reset Airflow database
+airflow db downgrade base
+airflow db migrate
