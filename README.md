@@ -6,6 +6,12 @@ Airflow server for personal data integration and experimentation.
 
 Dev container, requirements and constraints files used for local development prior to deployment.
 
+## Resources
+
+I have found a few resources covering deploying Airflow on Azure, none of which have been entirely usable for my purpose.
+
+- [2018 Azure blog](https://azure.microsoft.com/es-es/blog/deploying-apache-airflow-in-azure-to-build-and-run-data-pipelines/) and [2022 Azure Quickstart](https://learn.microsoft.com/en-us/samples/azure/azure-quickstart-templates/airflow-postgres-app-services/) both use Puckel airflow image which does not support Airflow 2.0
+
 ## Data Sources
 
 1. Google Contacts
@@ -26,7 +32,7 @@ Dev container, requirements and constraints files used for local development pri
 
 ## Azure Setup
 
-I have used [this quickstart](https://github.com/savjani-zz/azure-quickstart-templates/tree/master/101-webapp-linux-airflow-postgresql) for reference and the idea to run the webserver and scheduler together in a single container with `LocalExecutor`. `CeleryExecutor` shouldn't be necessary unless scale increases and multiple workers are required.
+From the resources above I determined I can run the webserver and scheduler together in a single container with `LocalExecutor`. `CeleryExecutor` shouldn't be necessary unless scale increases and multiple workers are required.
 
 1. Create PostgreSQL flexible server for database
 2. Create App Service app with container (NOTE: I followed [this tutorial](https://learn.microsoft.com/en-us/azure/app-service/configure-custom-container?tabs=debian&pivots=container-linux#enable-ssh) to configure SSH access in app service)
