@@ -10,6 +10,7 @@ env:
   AZURE_WEBAPP_NAME: airflow-reporting
   RESOURCE_GROUP: airflow-reporting_group
   AZURE_WEBAPP_PACKAGE_PATH: '.'
+  STARTUP_COMMAND: 'startup.sh'
   PYTHON_VERSION: 3.12
 
 jobs:
@@ -36,8 +37,4 @@ jobs:
         app-name: ${{ env.AZURE_WEBAPP_NAME }}
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
         package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
-    - name: Deploy startup script
-      uses: azure/cli@v2
-      with:
-        inlineScript: |
-          az webapp deploy --src-path ${{ github.workspace }}/startup.sh --name ${{ env.AZURE_WEBAPP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --type startup --track-status false
+        startup-command: ${{ env.STARTUP_COMMAND }}
