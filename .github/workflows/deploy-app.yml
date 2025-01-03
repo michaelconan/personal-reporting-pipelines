@@ -26,12 +26,12 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt -c constraints.txt
-    - name: Building web app
+    - name: Build web app
       uses: azure/appservice-build@v3
       with:
         platform: python
         platform-version: ${{ env.PYTHON_VERSION }}
-    - name: Deploy web App using GH Action azure/webapps-deploy
+    - name: Deploy web a
       uses: azure/webapps-deploy@v3
       with:
         app-name: ${{ env.AZURE_WEBAPP_NAME }}
