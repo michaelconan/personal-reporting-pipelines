@@ -1,2 +1,4 @@
+# To run app via Procfile
+honcho==2.0.0
 # Additional Airflow extras to install
-apache-airflow[postgres,google]==2.10.4
+apache-airflow[crypto,postgres,google]==2.10.4
