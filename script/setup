@@ -13,5 +13,5 @@ script/bootstrap
 echo "==> Setting up DB…"
 
 # Reset Airflow database
-airflow db downgrade base
+airflow db reset --yes
 airflow db migrate

@@ -2,9 +2,15 @@ version: '3.8'
 
 services:
   app:
+    env:
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://postgres:postgres@db/postgres
+      AIRFLOW__API__AUTH_BACKENDS: "airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session"
+      AIRFLOW__CORE__FERNET_KEY: ""
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: "true"
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
     build:
-      # Use Airflow Dockerfile
-      context: ..
+      context: .
       dockerfile: Dockerfile
 
     volumes:
