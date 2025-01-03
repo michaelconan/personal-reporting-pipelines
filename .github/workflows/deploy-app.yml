@@ -31,7 +31,7 @@ jobs:
       with:
         platform: python
         platform-version: ${{ env.PYTHON_VERSION }}
-    - name: Deploy web a
+    - name: Deploy web app
       uses: azure/webapps-deploy@v3
       with:
         app-name: ${{ env.AZURE_WEBAPP_NAME }}
