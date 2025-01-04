@@ -1,4 +1,7 @@
 __pycache__
 logs
 *.csv
+
+# Secrets and variables
 .env
+config/*
