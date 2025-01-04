@@ -1,0 +1,18 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            // Disable coverage check to allow breakpoints in debug
+            "name": "Python Debugger: PyTest No Coverage",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}",
+            "module": "pytest",
+            "console": "integratedTerminal",
+            "args": [
+                "--no-cov"
+            ],
+            "justMyCode": true
+        }
+    ]
+}

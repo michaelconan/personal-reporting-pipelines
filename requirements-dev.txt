@@ -1,0 +1,4 @@
+# Install all production dependencies
+-r requirements.txt
+# Unit testing and code coverage
+pytest-cov==6.0.0
