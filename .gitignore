@@ -1,7 +1,20 @@
+# Cache data
 __pycache__
+.pytest_cache
+.coverage
+
+# Logs
 logs
+*.log
+
+# Data files
 *.csv
 
 # Secrets and variables
 .env
 config/*
+
+# DBT compiled files
+dbt/*/target
+dbt/*/dbt_modules
+dbt/*/dbt_packages

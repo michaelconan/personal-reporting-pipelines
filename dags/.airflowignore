@@ -1,0 +1,4 @@
+# Modules to ignore for DAG discovery using REGEX
+
+# Common tasks to import into dags
+reporting/common/.*
