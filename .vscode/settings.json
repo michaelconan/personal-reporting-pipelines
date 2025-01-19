@@ -2,12 +2,15 @@
     "python.testing.pytestArgs": [
         "tests",
         // Coverage of source code
-        "--cov=src/",
+        "--cov=dags/",
         // INFO level pytest logging
         "--log-cli-level=INFO",
     ],
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
     "editor.defaultFormatter": "ms-python.black-formatter",
-    "editor.formatOnSave": true
+    "editor.formatOnSave": true,
+    "[json]": {
+        "editor.defaultFormatter": "vscode.json-language-features"
+    }
 }
