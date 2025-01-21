@@ -1,0 +1,33 @@
+version: 2
+
+models:
+  - name: stg_notion_habits
+    description: "Combined list of daily and weekly habits from the Notion habit tracker."
+    columns:
+      - name: id
+        description: "The primary key for this table"
+        data_tests:
+          - unique
+          - not_null
+
+sources:
+  - name: notion
+    description: "Source data from the Notion habit tracker."
+    schema: raw
+    tables:
+      - name: daily_habit
+        description: "Raw habit entries from the daily notion database."
+        columns:
+          - name: id
+            description: "Primary key for the raw daily habits table."
+            tests:
+              - not_null
+              - unique
+      - name: weekly_habit
+        description: "Raw habit entries from the weekly notion database."
+        columns:
+          - name: id
+            description: "Primary key for the raw daily habits table."
+            tests:
+              - not_null
+              - unique

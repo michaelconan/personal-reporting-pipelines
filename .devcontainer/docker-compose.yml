@@ -3,6 +3,7 @@ version: '3.8'
 services:
   app:
     environment:
+      AIRFLOW_HOME: "/workspaces/personal-reporting"
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://postgres:postgres@db/postgres
       AIRFLOW__DATABASE__LOAD_DEFAULT_CONNECTIONS: "false"
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
@@ -10,7 +11,6 @@ services:
       AIRFLOW__CORE__LOAD_EXAMPLES: "false"
       AIRFLOW__WEBSERVER__INSTANCE_NAME: "Local Instance"
       AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "true"
-      AIRFLOW__CORE__DAGS_FOLDER: "/workspaces/personal-reporting/dags"
     build:
       context: .
       dockerfile: Dockerfile
