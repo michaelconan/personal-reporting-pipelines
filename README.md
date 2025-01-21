@@ -14,6 +14,47 @@ The following data will be ingested from my personal systems into a BigQuery war
 2. HubSpot
 3. Google Contacts
 
+### Warehouse Data Flow
+
+```mermaid
+graph TB
+
+    %% Soruces
+    S1[Notion]
+    S2[HubSpot]
+
+    subgraph staging
+        direction TB
+        L1[Daily Habits]
+        L2[Weekly Habits]
+        L3[Contacts]
+        L4[Companies]
+        L5[Engagements]
+    end
+
+    %% Source to Staging Flows
+    S1 --> L1
+    S1 --> L2
+    S2 --> L3
+    S2 --> L4
+    S2 --> L5
+
+    subgraph cleansed
+        C1[Habits]
+    end
+
+    %% Staging to Cleansed Flows
+    L1 --> C1
+    L2 --> C1
+```
+
+## Frameworks
+
+1. [Alembic](https://alembic.sqlalchemy.org/en/latest/) database migrations for raw tables which should generally match the schema of the source system, run via [Airflow provider package](https://pypi.org/project/airflow-provider-alembic/)
+2. [Airflow](https://airflow.apache.org/) to orchestrate data loading scripts and additional automated workflows
+3. [DBT core](https://docs.getdbt.com/) to define data models and transformations, again orchestrated by Airflow (via CLI / `BashOperator`) 
+
+
 ## Setup
 
 ### Airflow Setup

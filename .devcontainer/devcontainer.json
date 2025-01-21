@@ -10,7 +10,8 @@
 			"extensions": [
 				"ms-python.python",
 				"GitHub.copilot-chat",
-				"ms-python.black-formatter"
+				"ms-python.black-formatter",
+				"bierner.markdown-mermaid"
 			]
 		}
 	},
