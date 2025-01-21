@@ -28,39 +28,39 @@ def upgrade() -> None:
     op.execute(f"CREATE SCHEMA IF NOT EXISTS {SCHEMA};")
 
     op.create_table(
-        "notion_daily_habit",
+        "daily_habit",
         sa.Column("database_id", sa.String(50), nullable=False),
         sa.Column("id", sa.String(50), nullable=False),
         sa.Column("Name", sa.String(255), nullable=False),
-        sa.Column("Date", sa.DateTime, nullable=False),
+        sa.Column("Date", sa.Date, nullable=False),
         sa.Column("Devotional", sa.Boolean(), nullable=False),
         sa.Column("Journal", sa.Boolean(), nullable=False),
         sa.Column("Prayer", sa.Boolean(), nullable=False),
         sa.Column("Read Bible", sa.Boolean(), nullable=False),
         sa.Column("Workout", sa.Boolean(), nullable=False),
         sa.Column("Language", sa.Boolean(), nullable=False),
-        sa.Column("created_time", sa.DateTime, nullable=False),
-        sa.Column("last_edited_time", sa.DateTime, nullable=False),
+        sa.Column("created_time", sa.TIMESTAMP(), nullable=False),
+        sa.Column("last_edited_time", sa.TIMESTAMP(), nullable=False),
         schema=SCHEMA,
     )
 
     op.create_table(
-        "notion_weekly_habit",
+        "weekly_habit",
         sa.Column("database_id", sa.String(50), nullable=False),
         sa.Column("id", sa.String(50), nullable=False),
         sa.Column("Name", sa.String(255), nullable=False),
-        sa.Column("Date", sa.DateTime, nullable=False),
+        sa.Column("Date", sa.Date, nullable=False),
         sa.Column("Church", sa.Boolean(), nullable=False),
         sa.Column("Fast", sa.Boolean(), nullable=False),
         sa.Column("Time Prayed", sa.Integer(), nullable=False),
-        sa.Column("created_time", sa.DateTime, nullable=False),
-        sa.Column("last_edited_time", sa.DateTime, nullable=False),
+        sa.Column("created_time", sa.TIMESTAMP(), nullable=False),
+        sa.Column("last_edited_time", sa.TIMESTAMP(), nullable=False),
         schema=SCHEMA,
     )
 
 
 def downgrade() -> None:
     # Remove tables and schema
-    op.drop_table("notion_weekly_habit", schema=SCHEMA)
-    op.drop_table("notion_daily_habit", schema=SCHEMA)
+    op.drop_table("weekly_habit", schema=SCHEMA)
+    op.drop_table("daily_habit", schema=SCHEMA)
     op.execute(f"DROP SCHEMA IF EXISTS {SCHEMA};")
