@@ -27,8 +27,8 @@ NOTION_CONN_ID = "notion_productivity"
 
 # BigQuery connection details
 BQ_CONN_ID = "bigquery_reporting"
-BQ_DAILY_TABLE = "notion_daily_habit"
-BQ_WEEKLY_TABLE = "notion_weekly_habit"
+BQ_DAILY_TABLE = "daily_habit"
+BQ_WEEKLY_TABLE = "weekly_habit"
 
 # Datasets for triggering
 daily_habits_dataset = Dataset("notion_daily_habits")
@@ -92,11 +92,18 @@ def get_notion_habits(
         search_results = client.search(
             query=database_name, filter={"property": "object", "value": "database"}
         )
-        if not search_results:
-            raise LookupError(f"Database {database_name} not found.")
-        else:
-            search_results = [r for r in search_results if database_name in r["title"]]
-            database_id = search_results[0]["id"]
+        database_id = None
+        if search_results:
+            matched_results = [
+                r
+                for r in search_results["results"]
+                if database_name in "".join(t["plain_text"] for t in r["title"])
+            ]
+            if matched_results:
+                database_id = matched_results[0]["id"]
+
+        if not database_id:
+            raise LookupError(f"Database '{database_name}' not found.")
 
         notion_filters = {
             # Added formula property in database for last edited time to allow filter
@@ -122,17 +129,18 @@ def get_notion_habits(
 
     def get_notion_property(property_dict: dict, property_name: str):
         """Extract property value from Notion page data"""
-        property_type = property_dict["type"]
+        property_val = property_dict.get(property_name)
+        property_type = property_val["type"]
         if property_type == "title":
-            return property["title"][0]["plain_text"]
+            return property_val["title"][0]["plain_text"]
         elif property_type == "checkbox":
-            return property["checkbox"]
+            return property_val["checkbox"]
         elif property_type == "date":
-            return property["date"]["start"]
+            return property_val["date"]["start"]
         elif property_type == "number":
-            return property["number"]
+            return property_val["number"]
         elif property_type == "select":
-            return property["select"]["name"]
+            return property_val["select"]["name"]
         elif property_type == "formula":
             return get_notion_property(property_dict["formula"])
 
@@ -250,7 +258,6 @@ def NotionWeeklyHabits(raw_dataset: Param = Param("raw")):
         raw_dataset (Param, optional): Dataset name to allow testing override.
             Defaults to "raw".
     """
-    WEEKLY_HABIT_DB = "11e09eb8-3f76-80e7-8fac-e8d0bb538fb0"
     DATA_FILE = "/tmp/weekly_habits.jsonl"
 
     @task(

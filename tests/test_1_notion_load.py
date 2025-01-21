@@ -30,8 +30,8 @@ def test_1_notion_habits(dag_bag: DagBag, dag_id: str, time_period: int):
     dag = dag_bag.get_dag(dag_id=dag_id)
     args = {
         "execution_date": DATA_INTERVAL_START,
-        "data_invterval": (DATA_INTERVAL_START, DATA_INTERVAL_END),
-        "conf": {"staging_dataset": BQ_TEST_DATASET},
+        "data_interval": (DATA_INTERVAL_START, DATA_INTERVAL_END),
+        "conf": {"raw_dataset": BQ_TEST_DATASET},
     }
 
     # WHEN
