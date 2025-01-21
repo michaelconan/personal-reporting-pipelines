@@ -1,7 +1,7 @@
 version: 2
 
 models:
-  - name: notion_habits
+  - name: stg_notion_habits
     description: "Combined list of daily and weekly habits from the Notion habit tracker."
     columns:
       - name: id
