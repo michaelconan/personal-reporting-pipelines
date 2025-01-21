@@ -1,7 +1,8 @@
 # To run app via Procfile
 honcho==2.0.0
 # Airflow with extras to install
-apache-airflow[crypto,postgres,google]==2.10.4
+apache-airflow[crypto,postgres]==2.10.4
+apache-airflow-providers-google[bigquery]==12.0.0
 airflow-provider-alembic==1.0.0
 # dbt packages
 dbt-core==1.8.8
