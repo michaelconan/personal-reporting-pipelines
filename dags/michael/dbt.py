@@ -28,7 +28,6 @@ def DBT():
     KEYFILE_PATH = os.path.join(PROFILES_DIR, "bq-service-account.json")
     PROFILE_PATH = os.path.join(PROFILES_DIR, "dbt_profile.yml")
 
-    # TODO: Generate profile file from connections
     @task(
         task_id="generate_dbt_profile",
     )
@@ -43,7 +42,7 @@ def DBT():
 
         # Generate profile with BigQuery details
         profile = {
-            "personal_reporting": {
+            "michael": {
                 "outputs": {
                     "dev": {
                         "type": "bigquery",
