@@ -25,7 +25,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt   # -c constraints.txt
+        pip install -r requirements.txt -c constraints.txt
     - name: Build web app
       uses: azure/appservice-build@v3
       with:
