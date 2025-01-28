@@ -1,5 +1,3 @@
-{{ config(materialized='table') }}
-
 -- pivot daily habits
 with daily_habits as (
 

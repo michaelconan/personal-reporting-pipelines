@@ -1,9 +1,12 @@
+# Base imports
+import os
+
 # Airflow imports
 from airflow.models.dagbag import DagBag
 from airflow.utils.state import TaskInstanceState
 
 # Local imports
-from tests.conftest import run_dag
+from tests.conftest import run_dag, BQ_TEST_DATASET
 
 
 def test_1_downgrade(dag_bag: DagBag):
@@ -27,6 +30,7 @@ def test_1_downgrade(dag_bag: DagBag):
 def test_2_upgrade(dag_bag: DagBag):
 
     # GIVEN
+    os.environ["RAW_SCHEMA"] = BQ_TEST_DATASET
     # Get DAG from DagBag to set context
     dag = dag_bag.get_dag(dag_id="raw_migrations")
     args = {
