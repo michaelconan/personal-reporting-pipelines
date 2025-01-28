@@ -9,9 +9,11 @@
 		"vscode": {
 			"extensions": [
 				"ms-python.python",
-				"GitHub.copilot-chat",
 				"ms-python.black-formatter",
-				"bierner.markdown-mermaid"
+				"ms-python.flake8",
+				"GitHub.copilot-chat",
+				"bierner.markdown-mermaid",
+				"njpwerner.autodocstring"
 			]
 		}
 	},

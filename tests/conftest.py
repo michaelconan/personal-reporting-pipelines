@@ -1,11 +1,19 @@
+# Base imports
 import uuid
+
+# PyPI imports
 import pytest
 import pendulum
+
+# Airflow imports
 from airflow.models.dag import DAG
 from airflow.models.dagbag import DagBag
 from airflow.models.dagrun import DagRun
-from airflow.utils.state import DagRunState, TaskInstanceState
+from airflow.utils.state import DagRunState
 from airflow.utils.types import DagRunType
+
+# Separate dataset to run tests
+BQ_TEST_DATASET = "test_raw"
 
 
 @pytest.fixture
@@ -25,6 +33,7 @@ def run_dag_tasks(run: DagRun):
     instances = get_instances(run)
     for ti in instances:
         ti.run(ignore_ti_state=True, ignore_all_deps=True)
+        # Append updated (run) task instance to new list
         tis.append(ti)
     return tis
 

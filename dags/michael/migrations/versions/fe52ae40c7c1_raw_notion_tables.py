@@ -6,6 +6,7 @@ Create Date: 2025-01-12 20:40:26.956798
 
 """
 
+import os
 from typing import Sequence, Union
 
 from alembic import op
@@ -20,7 +21,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 # Raw schema to copy system data as-is
-SCHEMA = "raw"
+SCHEMA = os.getenv("RAW_SCHEMA", default="raw")
 
 
 def upgrade() -> None:
@@ -52,7 +53,7 @@ def upgrade() -> None:
         sa.Column("Date", sa.Date, nullable=False),
         sa.Column("Church", sa.Boolean(), nullable=False),
         sa.Column("Fast", sa.Boolean(), nullable=False),
-        sa.Column("Time Prayed", sa.Integer(), nullable=False),
+        sa.Column("Prayer Minutes", sa.Integer(), nullable=False),
         sa.Column("created_time", sa.TIMESTAMP(), nullable=False),
         sa.Column("last_edited_time", sa.TIMESTAMP(), nullable=False),
         schema=SCHEMA,

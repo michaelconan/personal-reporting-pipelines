@@ -20,8 +20,9 @@ DBT_DATASET = "reporting"
     catchup=False,
     start_date=pendulum.datetime(2025, 1, 1),
     dagrun_timeout=datetime.timedelta(minutes=20),
+    tags=["dbt", "transform"],
 )
-def DBT():
+def run_dbt():
 
     # File paths for service account key and dbt profile
     PROFILES_DIR = "/tmp/.dbt"
@@ -79,3 +80,7 @@ def DBT():
 
     # Define DAG workflow
     generate_dbt_profile() >> dbt_run >> cleanup_files()
+
+
+# Call dag in the global namespace
+dbt_dag = run_dbt()

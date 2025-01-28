@@ -13,6 +13,7 @@ logs
 # Secrets and variables
 .env
 config/*
+*.pid
 
 # DBT compiled files
 dbt/*/target
