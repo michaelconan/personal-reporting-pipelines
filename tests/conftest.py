@@ -1,5 +1,6 @@
 # Base imports
 import uuid
+import os
 
 # PyPI imports
 import pytest
@@ -13,11 +14,15 @@ from airflow.utils.state import DagRunState
 from airflow.utils.types import DagRunType
 
 # Separate dataset to run tests
-BQ_TEST_DATASET = "test_raw"
+RAW_TEST_DATASET = "test_raw"
+DBT_TEST_DATASET = "test_reporting"
 
 
 @pytest.fixture
 def dag_bag():
+    # Set dataset variables
+    os.environ["RAW_SCHEMA"] = RAW_TEST_DATASET
+    os.environ["DBT_SCHEMA"] = DBT_TEST_DATASET
     return DagBag(dag_folder="./dags", include_examples=False)
 
 
@@ -38,7 +43,10 @@ def run_dag_tasks(run: DagRun):
     return tis
 
 
-def run_dag(dag: DAG, extras: dict = None):
+def run_dag(dag: DAG, extras: dict = {}):
+    if dag is None:
+        raise ValueError("DAG not found")
+
     # Generate unique ID to avoid conflicts
     dag.dag_id = f"{dag.dag_id}-{uuid.uuid4()}"
 

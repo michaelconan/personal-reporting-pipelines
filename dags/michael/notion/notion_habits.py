@@ -5,22 +5,24 @@ DAGs to load daily and weekly habits from Notion API into BigQuery.
 """
 
 # Basic imports
-import datetime
+import os
 import pendulum
 import jsonlines
+from typing import Any
 
 # Standard airflow imports
-from airflow.decorators import dag, task
+from airflow.decorators import task
 from airflow.models import DAG
-from airflow.models.param import Param
 from airflow.datasets import Dataset
-from airflow.exceptions import AirflowSkipException
 
 # Airflow hooks and operators
 from airflow.hooks.base import BaseHook
 
 # Common custom tasks
 from michael.common.bigquery import load_file_to_bq
+from michael.datasets import NOTION_DAILY_HABITS_DS, NOTION_WEEKLY_HABITS_DS
+
+IS_TEST = os.getenv("TEST") or os.getenv("CI")
 
 # Notion connection
 NOTION_CONN_ID = "notion_productivity"
@@ -29,10 +31,6 @@ NOTION_CONN_ID = "notion_productivity"
 BQ_CONN_ID = "bigquery_reporting"
 BQ_DAILY_TABLE = "daily_habit"
 BQ_WEEKLY_TABLE = "weekly_habit"
-
-# Datasets for triggering
-daily_habits_dataset = Dataset("notion_daily_habits")
-weekly_habits_dataset = Dataset("notion_weekly_habits")
 
 # Notion database names
 DAILY_DATABASE = "Daily Disciplines"
@@ -54,7 +52,9 @@ WEEKLY_PROPERTIES = [
     "Date",
     "Church",
     "Fast",
+    "Community",
     "Prayer Minutes",
+    "Screen Minutes",
 ]
 
 # Configurations to generated DAGs
@@ -63,7 +63,7 @@ DAG_CONFIGS = [
         "dag_id": "load_initial_daily_habits",
         "schedule": "@once",
         "bq_table": BQ_DAILY_TABLE,
-        "dataset": daily_habits_dataset,
+        "dataset": NOTION_DAILY_HABITS_DS,
         "database": DAILY_DATABASE,
         "properties": DAILY_PROPERTIES,
     },
@@ -71,7 +71,7 @@ DAG_CONFIGS = [
         "dag_id": "load_changed_daily_habits",
         "schedule": "@daily",
         "bq_table": BQ_DAILY_TABLE,
-        "dataset": daily_habits_dataset,
+        "dataset": NOTION_DAILY_HABITS_DS,
         "database": DAILY_DATABASE,
         "properties": DAILY_PROPERTIES,
     },
@@ -79,15 +79,15 @@ DAG_CONFIGS = [
         "dag_id": "load_initial_weekly_habits",
         "schedule": "@once",
         "bq_table": BQ_WEEKLY_TABLE,
-        "dataset": daily_habits_dataset,
+        "dataset": NOTION_WEEKLY_HABITS_DS,
         "database": WEEKLY_DATABASE,
         "properties": WEEKLY_PROPERTIES,
     },
     {
         "dag_id": "load_changed_weekly_habits",
-        "schedule": "@weekly",
+        "schedule": "@daily",
         "bq_table": BQ_WEEKLY_TABLE,
-        "dataset": weekly_habits_dataset,
+        "dataset": NOTION_WEEKLY_HABITS_DS,
         "database": WEEKLY_DATABASE,
         "properties": WEEKLY_PROPERTIES,
     },
@@ -211,26 +211,26 @@ def create_notion_dag(
                         body["start_cursor"] = cursor
                     query_results = client.databases.query(**body)
                     all_results.extend(query_results["results"])
-                    if not query_results["has_more"]:
+                    # Only load first page of results for testing
+                    if not query_results["has_more"] or IS_TEST:
                         break
                     cursor = query_results["next_cursor"]
 
                 return database_id, all_results
 
-            def get_notion_property(property_dict: dict, property_name: str):
+            def get_notion_property(property_dict: dict[str, Any]) -> Any:
                 """Extract property value from Notion page data"""
-                property_val = property_dict.get(property_name)
-                property_type = property_val["type"]
+                property_type = property_dict["type"]
                 if property_type == "title":
-                    return property_val["title"][0]["plain_text"]
+                    return property_dict["title"][0]["plain_text"]
                 elif property_type == "checkbox":
-                    return property_val["checkbox"]
+                    return property_dict["checkbox"]
                 elif property_type == "date":
-                    return property_val["date"]["start"][:10]
+                    return property_dict["date"]["start"][:10]
                 elif property_type == "number":
-                    return property_val["number"]
+                    return property_dict["number"]
                 elif property_type == "select":
-                    return property_val["select"]["name"]
+                    return property_dict["select"]["name"]
                 elif property_type == "formula":
                     return get_notion_property(property_dict["formula"])
 
@@ -238,7 +238,7 @@ def create_notion_dag(
                 database_id: str, page: dict, properties: list[str]
             ) -> dict:
                 property_data = {
-                    prop: get_notion_property(page["properties"], prop)
+                    prop: get_notion_property(page["properties"][prop])
                     for prop in properties
                 }
                 return {

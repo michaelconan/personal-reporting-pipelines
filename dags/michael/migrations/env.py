@@ -1,4 +1,5 @@
 from logging.config import fileConfig
+import os
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
@@ -27,6 +28,7 @@ target_metadata = None
 
 
 DATASET = "admin"
+VERSION_TABLE = os.getenv("VERSION_TABLE", "alembic_version")
 
 
 def run_migrations_offline() -> None:

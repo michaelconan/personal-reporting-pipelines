@@ -8,6 +8,7 @@ Create Date: 2025-01-12 20:40:26.956798
 
 import os
 from typing import Sequence, Union
+import logging
 
 from alembic import op
 import sqlalchemy as sa
@@ -20,13 +21,20 @@ branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
+logger = logging.getLogger(__name__)
+
 # Raw schema to copy system data as-is
-SCHEMA = os.getenv("RAW_SCHEMA", default="raw")
+RAW_SCHEMA = os.getenv("RAW_SCHEMA", default="raw")
+DBT_SCHEMA = os.getenv("DBT_SCHEMA", default="reporting")
 
 
 def upgrade() -> None:
+
+    logger.info(f"Creating raw tables in schema: {RAW_SCHEMA}")
+    logger.info(f"Creating dbt schema: {DBT_SCHEMA}")
     # Add schema and raw tables
-    op.execute(f"CREATE SCHEMA IF NOT EXISTS {SCHEMA};")
+    op.execute(f"CREATE SCHEMA IF NOT EXISTS {RAW_SCHEMA};")
+    op.execute(f"CREATE SCHEMA IF NOT EXISTS {DBT_SCHEMA};")
 
     op.create_table(
         "daily_habit",
@@ -42,7 +50,7 @@ def upgrade() -> None:
         sa.Column("Language", sa.Boolean(), nullable=False),
         sa.Column("created_time", sa.TIMESTAMP(), nullable=False),
         sa.Column("last_edited_time", sa.TIMESTAMP(), nullable=False),
-        schema=SCHEMA,
+        schema=RAW_SCHEMA,
     )
 
     op.create_table(
@@ -53,15 +61,21 @@ def upgrade() -> None:
         sa.Column("Date", sa.Date, nullable=False),
         sa.Column("Church", sa.Boolean(), nullable=False),
         sa.Column("Fast", sa.Boolean(), nullable=False),
-        sa.Column("Prayer Minutes", sa.Integer(), nullable=False),
+        sa.Column("Community", sa.Boolean(), nullable=False),
+        sa.Column("Prayer Minutes", sa.Integer(), nullable=True),
+        sa.Column("Screen Minutes", sa.Integer(), nullable=True),
         sa.Column("created_time", sa.TIMESTAMP(), nullable=False),
         sa.Column("last_edited_time", sa.TIMESTAMP(), nullable=False),
-        schema=SCHEMA,
+        schema=RAW_SCHEMA,
     )
 
 
 def downgrade() -> None:
+
+    logger.info(f"Dropping raw tables in schema: {RAW_SCHEMA}")
+    logger.info(f"Dropping dbt schema: {DBT_SCHEMA}")
     # Remove tables and schema
-    op.drop_table("weekly_habit", schema=SCHEMA)
-    op.drop_table("daily_habit", schema=SCHEMA)
-    op.execute(f"DROP SCHEMA IF EXISTS {SCHEMA};")
+    op.drop_table("weekly_habit", schema=RAW_SCHEMA)
+    op.drop_table("daily_habit", schema=RAW_SCHEMA)
+    op.execute(f"DROP SCHEMA IF EXISTS {RAW_SCHEMA};")
+    op.execute(f"DROP SCHEMA IF EXISTS {DBT_SCHEMA};")
