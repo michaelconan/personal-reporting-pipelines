@@ -12,6 +12,8 @@ env:
   AZURE_WEBAPP_PACKAGE_PATH: '.'
   STARTUP_COMMAND: 'startup.sh'
   PYTHON_VERSION: 3.12
+  # Oryx deploy doesn't recognise constraints
+  CUSTOM_REQUIREMENTSTXT_PATH: './constraints.txt'
 
 jobs:
   build:
