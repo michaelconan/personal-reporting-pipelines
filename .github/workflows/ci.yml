@@ -6,10 +6,10 @@ on:
   pull_request:
     branches: [ main ]
 
-# Defines two custom environment variables for the workflow. These are used for the Container registry domain, and a name for the Docker image that this workflow builds.
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ghcr.io/${{ github.repository }}-devcontainer
+  CONNECTIONS_FILE: ./config/connections.json
 
 jobs:
   test:
@@ -24,7 +24,7 @@ jobs:
         env:
           AIRFLOW_CONNECTIONS: ${{ secrets.AIRFLOW_CONNECTIONS }}
         run: |
-          echo "$AIRFLOW_CONNECTIONS" > connections.yml
+          echo "$AIRFLOW_CONNECTIONS" > ${{ env.CONNECTIONS_FILE }}
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2 
@@ -47,10 +47,8 @@ jobs:
           imageName: ${{ env.IMAGE_NAME }}
           # Run setup, validation and tests in dev container
           runCmd: |
-            # Run setup first
+            # Run setup steps
             script/setup
-            # Import airflow connections
-            airflow connections import connections.yml
             # Run pre-commit checks
             pre-commit run --all-files --verbose --show-diff-on-failure
             # Run tests (which now have access to connections)
@@ -58,4 +56,4 @@ jobs:
 
       - name: Cleanup Files
         run: |
-          rm connections.yml
+          rm ${{ env.CONNECTIONS_FILE }}

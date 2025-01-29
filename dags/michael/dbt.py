@@ -2,6 +2,7 @@
 import os
 import pendulum
 import datetime
+import shutil
 
 # PyPI imports
 import yaml
@@ -11,28 +12,31 @@ from airflow.decorators import dag, task
 from airflow.operators.bash import BashOperator
 from airflow.hooks.base import BaseHook
 
-# Dataset name in BigQuery for DBT
-DBT_DATASET = "reporting"
+# Local imports
+from michael.datasets import NOTION_DAILY_HABITS_DS, NOTION_WEEKLY_HABITS_DS
 
 
 @dag(
-    schedule="@daily",
+    # Run after source datasets refreshed
+    schedule=[NOTION_DAILY_HABITS_DS, NOTION_WEEKLY_HABITS_DS],
     catchup=False,
     start_date=pendulum.datetime(2025, 1, 1),
     dagrun_timeout=datetime.timedelta(minutes=20),
+    params={"dataset": "reporting"},
     tags=["dbt", "transform"],
 )
 def run_dbt():
 
     # File paths for service account key and dbt profile
     PROFILES_DIR = "/tmp/.dbt"
+    PROJECT_DIR = os.path.join(os.getenv("AIRFLOW_HOME"), "dbt/michael")
     KEYFILE_PATH = os.path.join(PROFILES_DIR, "bq-service-account.json")
-    PROFILE_PATH = os.path.join(PROFILES_DIR, "dbt_profile.yml")
+    PROFILE_PATH = os.path.join(PROFILES_DIR, "profiles.yml")
 
     @task(
         task_id="generate_dbt_profile",
     )
-    def generate_dbt_profile():
+    def generate_dbt_profile(params: dict):
         # Get BigQuery connection details
         conn = BaseHook.get_connection("bigquery_reporting")
 
@@ -49,7 +53,7 @@ def run_dbt():
                         "type": "bigquery",
                         "method": "service-account",
                         "keyfile": KEYFILE_PATH,
-                        "dataset": DBT_DATASET,
+                        "dataset": params["dataset"],
                         "project": conn.extra_dejson.get("project"),
                         "location": conn.extra_dejson.get("location"),
                         "priority": "interactive",
@@ -67,8 +71,8 @@ def run_dbt():
 
     dbt_run = BashOperator(
         task_id="dbt_run",
-        bash_command=f"dbt run --profiles-dir {PROFILES_DIR}",
-        env={"DBT_PROFILES_DIR": PROFILES_DIR},
+        bash_command="dbt run",
+        env={"DBT_PROFILES_DIR": PROFILES_DIR, "DBT_PROJECT_DIR": PROJECT_DIR},
     )
 
     @task(
@@ -76,7 +80,7 @@ def run_dbt():
     )
     def cleanup_files():
         # Remove temporary files
-        os.remove(PROFILES_DIR)
+        shutil.rmtree(PROFILES_DIR)
 
     # Define DAG workflow
     generate_dbt_profile() >> dbt_run >> cleanup_files()

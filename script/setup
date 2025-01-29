@@ -25,7 +25,7 @@ airflow users create \
     --role Admin \
     --email local@admin.org
 
-if [ -f "config/connections.yml" ]; then
+if [ -f "config/connections.json" ]; then
     echo "==> Setting up connections…"
-    airflow connections import "config/connections.yml"
+    airflow connections import "config/connections.json"
 fi

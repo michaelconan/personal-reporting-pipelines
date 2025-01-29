@@ -1,4 +1,5 @@
 # General imports
+import os
 import datetime
 import pendulum
 import pytest
@@ -8,7 +9,11 @@ from airflow.models.dagbag import DagBag
 from airflow.utils.state import TaskInstanceState
 
 # Local imports
-from tests.conftest import run_dag, BQ_TEST_DATASET
+from tests.conftest import run_dag, RAW_TEST_DATASET
+
+
+# Set environment variable for testing
+os.environ["TEST"] = "True"
 
 
 @pytest.mark.parametrize(
@@ -20,7 +25,7 @@ from tests.conftest import run_dag, BQ_TEST_DATASET
         ("load_changed_weekly_habits", 7),
     ),
 )
-def test_1_notion_habits(dag_bag: DagBag, dag_id: str, time_period: int):
+def test_notion_habits(dag_bag: DagBag, dag_id: str, time_period: int):
 
     # GIVEN
     # Define interval and DAG run parameters
@@ -30,7 +35,7 @@ def test_1_notion_habits(dag_bag: DagBag, dag_id: str, time_period: int):
     dag = dag_bag.get_dag(dag_id=dag_id)
     args = {
         "execution_date": DATA_INTERVAL_START,
-        "conf": {"raw_dataset": BQ_TEST_DATASET},
+        "conf": {"raw_dataset": RAW_TEST_DATASET},
     }
     if time_period:
         DATA_INTERVAL_END = DATA_INTERVAL_START + datetime.timedelta(days=time_period)

@@ -13,7 +13,7 @@ env:
   STARTUP_COMMAND: 'startup.sh'
   PYTHON_VERSION: 3.12
   # Oryx deploy doesn't recognise constraints
-  CUSTOM_REQUIREMENTSTXT_PATH: './constraints.txt'
+  CUSTOM_REQUIREMENTSTXT_PATH: './requirements-constraints.txt'
 
 jobs:
   build:
@@ -26,8 +26,11 @@ jobs:
         python-version: ${{ env.PYTHON_VERSION }}
     - name: Install dependencies
       run: |
+        # Install requirements with constraints
         python -m pip install --upgrade pip
         pip install -r requirements.txt -c constraints.txt
+        # Save the installed packages to a file for build
+        pip freeze > ${{ env.CUSTOM_REQUIREMENTSTXT_PATH }}
     - name: Build web app
       uses: azure/appservice-build@v3
       with:
