@@ -15,3 +15,17 @@ echo "==> Setting up DB…"
 # Reset Airflow database
 airflow db reset --yes
 airflow db migrate
+
+# Create a basic admin user (local only)
+airflow users create \
+    --username admin \
+    --password admin \
+    --firstname local \
+    --lastname admin \
+    --role Admin \
+    --email local@admin.org
+
+if [ -f "config/connections.json" ]; then
+    echo "==> Setting up connections…"
+    airflow connections import "config/connections.json"
+fi

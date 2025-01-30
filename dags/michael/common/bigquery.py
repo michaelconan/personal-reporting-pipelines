@@ -26,9 +26,13 @@ def load_file_to_bq(conn_id: str, file_path: str, table_id: str) -> str:
     connection = BigQueryHook(gcp_conn_id=conn_id)
     client = connection.get_client()
 
+    # Append data to table
     job_config = bigquery.LoadJobConfig(
         source_format=bigquery.SourceFormat.NEWLINE_DELIMITED_JSON,
+        write_disposition=bigquery.WriteDisposition.WRITE_APPEND,
     )
+
+    # Provide bytestream to load data
     with open(file_path, "rb") as source_file:
         job = client.load_table_from_file(source_file, table_id, job_config=job_config)
     job.result()

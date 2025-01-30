@@ -19,11 +19,11 @@ The following data will be ingested from my personal systems into a BigQuery war
 ```mermaid
 graph TB
 
-    %% Soruces
+    %% Sources
     S1[Notion]
     S2[HubSpot]
 
-    subgraph staging
+    subgraph raw
         direction TB
         L1[Daily Habits]
         L2[Weekly Habits]
@@ -32,18 +32,18 @@ graph TB
         L5[Engagements]
     end
 
-    %% Source to Staging Flows
+    %% Raw to Staging Flows
     S1 --> L1
     S1 --> L2
     S2 --> L3
     S2 --> L4
     S2 --> L5
 
-    subgraph cleansed
-        C1[Habits]
+    subgraph staging
+        C1[Notion Habits]
     end
 
-    %% Staging to Cleansed Flows
+    %% Staging to Intermediate Flows
     L1 --> C1
     L2 --> C1
 ```
@@ -68,13 +68,12 @@ To run Airflow on a single instance, I used Honcho to run multiple processes via
 1. Create Web App + PostgreSQL with Python
 2. Turn on Application Insights, Logging
 3. Set relevant environment variables for Airflow
+    - `AIRFLOW_HOME=/home/site/wwwroot` to run airflow from deployed application folders
     - `AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://{username}:{password}@{host}:{port}/{database}` from the Azure database
     - `AIRFLOW__API__AUTH_BACKENDS=airflow.api.auth.backend.basic_auth, airflow.api.auth.backend.session` for authorization
     - `AIRFLOW__CORE__EXECUTOR=LocalExecutor` to allow parallel execution on a single instance
-    - `AIRFLOW__CORE__DAGS_FOLDER=/home/site/wwwroot/dags` to load dags from deployed application folder
     - `AIRFLOW__CORE__FERNKET_KEY={generated-key}` following [this guidance](https://airflow.apache.org/docs/apache-airflow/1.10.8/howto/secure-connections.html) to encrypt connection data
     - `AIRFLOW__WEBSERVER__WEB_SERVER_MASTER_TIMEOUT=600` to allow for longer startup
-    - `AIRFLOW__WEBSERVER__EXPOSE_CONFIG=true` to facilitate administration
 4. Generate Publish Profile file and deploy application code from GitHub
 5. Set startup command to use the `startup.txt` file
 6. Run database migrations (`airflow db migrate`) and user setup (`airflow users create`) as one-off admin process, Procfile just for main processes

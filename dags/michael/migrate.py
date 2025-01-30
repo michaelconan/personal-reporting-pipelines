@@ -5,7 +5,6 @@ from datetime import datetime
 # Airflow imports
 from airflow.models import DAG
 from airflow.decorators import task
-from airflow.models.param import Param
 
 # Airflow hooks and operators
 from airflow.hooks.base import BaseHook
@@ -15,10 +14,11 @@ from airflow_provider_alembic.operators.alembic import AlembicOperator
 migration_folder = os.path.join(os.path.dirname(__file__), "migrations")
 
 with DAG(
-    "raw_migrations",
+    "migrate_raw_tables",
     schedule="@once",  # also consider "None"
     start_date=datetime(1970, 1, 1),
-    params={"command": Param("upgrade"), "revision": Param("head")},
+    params={"command": "upgrade", "revision": "head"},
+    tags=["raw", "migrate"],
 ) as dag:
 
     KEYFILE_PATH = "/tmp/bq-service-account.json"
