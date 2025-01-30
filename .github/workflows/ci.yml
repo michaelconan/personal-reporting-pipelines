@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ghcr.io/${{ github.repository }}-devcontainer
+  CONNECTIONS_FILE: ./config/connections.json
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      CI: true
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Load Airflow connections
+        env:
+          AIRFLOW_CONNECTIONS: ${{ secrets.AIRFLOW_CONNECTIONS }}
+        run: |
+          echo "$AIRFLOW_CONNECTIONS" > ${{ env.CONNECTIONS_FILE }}
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2 
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pre-build dev container image
+        uses: devcontainers/ci@v0.3
+        with:
+          imageName: ${{ env.IMAGE_NAME }}
+          cacheFrom: ${{ env.IMAGE_NAME }}
+          push: always
+
+      - name: Build and run Dev Container task
+        uses: devcontainers/ci@v0.3
+        with:
+          # Devcontainer image
+          imageName: ${{ env.IMAGE_NAME }}
+          # Run setup, validation and tests in dev container
+          runCmd: |
+            # Run setup steps
+            script/setup
+            # Run pre-commit checks
+            pre-commit run --all-files --verbose --show-diff-on-failure
+            # Run tests (which now have access to connections)
+            script/test
+
+      - name: Cleanup Files
+        run: |
+          rm ${{ env.CONNECTIONS_FILE }}

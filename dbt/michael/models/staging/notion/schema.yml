@@ -1,7 +1,7 @@
 version: 2
 
 models:
-  - name: stg_notion_habits
+  - name: stg_notion__habits
     description: "Combined list of daily and weekly habits from the Notion habit tracker."
     columns:
       - name: id
@@ -13,7 +13,7 @@ models:
 sources:
   - name: notion
     description: "Source data from the Notion habit tracker."
-    schema: raw
+    schema: "{{ env_var('RAW_SCHEMA', 'raw') }}"
     tables:
       - name: daily_habit
         description: "Raw habit entries from the daily notion database."
