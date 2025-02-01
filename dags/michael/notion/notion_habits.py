@@ -282,7 +282,7 @@ def create_notion_dag(
                     table_id=f"{params['raw_dataset']}.{bq_table}",
                 )
                 # Update outlet dataset extras
-                outlet_events[daily_habits_dataset].extra = {
+                outlet_events[dataset].extra = {
                     "state": job_state,
                     "rows": rows,
                 }
