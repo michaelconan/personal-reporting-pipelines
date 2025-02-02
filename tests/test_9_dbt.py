@@ -1,8 +1,6 @@
 # Base imports
-import os
 
 # PyPI imports
-import pytest
 
 # Airflow imports
 from airflow.models.dagbag import DagBag

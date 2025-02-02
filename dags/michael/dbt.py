@@ -9,7 +9,6 @@ import yaml
 
 # Airflow imports
 from airflow.decorators import dag, task
-from airflow.operators.bash import BashOperator
 from airflow.hooks.base import BaseHook
 
 # Local imports
@@ -63,7 +62,7 @@ def run_dbt():
                     },
                 },
                 "target": "dev",
-            }
+            },
         }
         # Create profile file for dbt run
         with open(PROFILE_PATH, "w") as f:
