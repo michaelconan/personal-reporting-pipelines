@@ -60,7 +60,7 @@ WEEKLY_PROPERTIES = [
 # Configurations to generated DAGs
 DAG_CONFIGS = [
     {
-        "dag_id": "load_initial_daily_habits",
+        "dag_id": "raw_notion__daily_habits__intial",
         "schedule": "@once",
         "bq_table": BQ_DAILY_TABLE,
         "dataset": NOTION_DAILY_HABITS_DS,
@@ -68,7 +68,7 @@ DAG_CONFIGS = [
         "properties": DAILY_PROPERTIES,
     },
     {
-        "dag_id": "load_changed_daily_habits",
+        "dag_id": "raw_notion__daily_habits__changed",
         "schedule": "@daily",
         "bq_table": BQ_DAILY_TABLE,
         "dataset": NOTION_DAILY_HABITS_DS,
@@ -76,7 +76,7 @@ DAG_CONFIGS = [
         "properties": DAILY_PROPERTIES,
     },
     {
-        "dag_id": "load_initial_weekly_habits",
+        "dag_id": "raw_notion__weekly_habits__initial",
         "schedule": "@once",
         "bq_table": BQ_WEEKLY_TABLE,
         "dataset": NOTION_WEEKLY_HABITS_DS,
@@ -84,7 +84,7 @@ DAG_CONFIGS = [
         "properties": WEEKLY_PROPERTIES,
     },
     {
-        "dag_id": "load_changed_weekly_habits",
+        "dag_id": "raw_notion__weekly_habits__changed",
         "schedule": "@daily",
         "bq_table": BQ_WEEKLY_TABLE,
         "dataset": NOTION_WEEKLY_HABITS_DS,
@@ -200,7 +200,7 @@ def create_notion_dag(
                                 "property": "Last edited time",
                                 "date": {"before": end_date.isoformat()},
                             },
-                        ]
+                        ],
                     }
 
                 all_results = list()
@@ -235,7 +235,9 @@ def create_notion_dag(
                     return get_notion_property(property_dict["formula"])
 
             def get_page_data(
-                database_id: str, page: dict, properties: list[str]
+                database_id: str,
+                page: dict,
+                properties: list[str],
             ) -> dict:
                 property_data = {
                     prop: get_notion_property(page["properties"][prop])

@@ -69,21 +69,21 @@ def run_dbt():
         with open(PROFILE_PATH, "w") as f:
             yaml.dump(profile, f)
 
-    dbt_run = BashOperator(
-        task_id="dbt_run",
-        bash_command="dbt run",
-        env={"DBT_PROFILES_DIR": PROFILES_DIR, "DBT_PROJECT_DIR": PROJECT_DIR},
-    )
+    @task.bash
+    def dbt_cli():
+        dbt_args = f"--profiles-dir {PROFILES_DIR} --project-dir {PROJECT_DIR}"
+        return f"dbt run {dbt_args}"
 
     @task(
         task_id="cleanup_files",
+        trigger_rule="all_done",
     )
     def cleanup_files():
         # Remove temporary files
         shutil.rmtree(PROFILES_DIR)
 
     # Define DAG workflow
-    generate_dbt_profile() >> dbt_run >> cleanup_files()
+    generate_dbt_profile() >> dbt_cli() >> cleanup_files()
 
 
 # Call dag in the global namespace

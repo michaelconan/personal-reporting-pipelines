@@ -1,4 +1,4 @@
-select 
+select
     database_id,
     id,
     Name as name,
