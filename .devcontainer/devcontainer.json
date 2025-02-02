@@ -26,7 +26,7 @@
 		5432
 	],
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "git config --global --add safe.directory $PWD && sudo chmod -R 777 script/* && script/setup",
+	"postCreateCommand": "sudo chown -R vscode:vscode $PWD && script/setup",
 	// Configure tool-specific properties.
 	// "customizations": {},
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
