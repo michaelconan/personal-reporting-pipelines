@@ -111,7 +111,7 @@ def create_notion_dag(
         user_defined_macros={"BQ_TABLE": bq_table},
         tags=["notion", "habits", "raw"],
     ) as dag:
-        DATA_FILE = "/tmp/notion_data.jsonl"
+        DATA_FILE = f"/tmp/{dag_id}.jsonl"
 
         @task(
             task_id="get_notion_habit_pages",
