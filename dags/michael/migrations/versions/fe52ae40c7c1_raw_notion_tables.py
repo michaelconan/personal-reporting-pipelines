@@ -1,7 +1,7 @@
 """raw notion tables
 
 Revision ID: fe52ae40c7c1
-Revises: 
+Revises:
 Create Date: 2025-01-12 20:40:26.956798
 
 """
