@@ -28,7 +28,9 @@ def run_dbt():
 
     # File paths for service account key and dbt profile
     PROFILES_DIR = "/tmp/.dbt"
-    PROJECT_DIR = os.path.join(os.getenv("AIRFLOW_HOME"), "dbt/michael")
+    PROJECT_DIR = os.path.join(
+        os.path.abspath(os.getenv("AIRFLOW_HOME")), "dbt/michael"
+    )
     KEYFILE_PATH = os.path.join(PROFILES_DIR, "bq-service-account.json")
     PROFILE_PATH = os.path.join(PROFILES_DIR, "profiles.yml")
 

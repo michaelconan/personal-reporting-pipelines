@@ -35,6 +35,7 @@ with DAG(
         task_id="create_admin_dataset",
         gcp_conn_id=BIGQUERY_CONN_ID,
         dataset_id=DATASET,
+        if_exists="ignore",
     )
 
     @task(task_id="save_bigquery_keyfile")
@@ -58,6 +59,9 @@ with DAG(
     @task(task_id="cleanup_keyfile", trigger_rule="all_done")
     def cleanup_keyfile():
         # Remove keyfile
-        os.remove(KEYFILE_PATH)
+        if os.path.exists(KEYFILE_PATH):
+            os.remove(KEYFILE_PATH)
+        else:
+            dag.log.info(f"Keyfile not found at: {KEYFILE_PATH}")
 
     create_dataset >> get_keyfile() >> alembic_op >> cleanup_keyfile()
