@@ -28,9 +28,24 @@ def dag_bag():
 
 def get_instances(run: DagRun):
     instances = run.get_task_instances()
+    task_instance_dict = dict()
     for instance in instances:
         instance.task = run.dag.get_task(instance.task_id)
-    return sorted(instances, key=lambda ti: ti.task.upstream_task_ids)
+        task_instance_dict[instance.task_id] = instance
+
+    ordered_tasks = list()
+    assigned_tasks = set()
+    remaining_tasks = set(task_instance_dict.keys())
+    while remaining_tasks:
+        for task_id in list(remaining_tasks):
+            task_instance = task_instance_dict[task_id]
+            if task_instance.task.upstream_task_ids.issubset(assigned_tasks):
+                assigned_tasks.add(task_id)
+                ordered_tasks.append(task_instance)
+                remaining_tasks.remove(task_id)
+                break
+
+    return ordered_tasks
 
 
 def run_dag_tasks(run: DagRun):

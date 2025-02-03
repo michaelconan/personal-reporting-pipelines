@@ -52,7 +52,7 @@ graph TB
 
 1. [Alembic](https://alembic.sqlalchemy.org/en/latest/) database migrations for raw tables which should generally match the schema of the source system, run via [Airflow provider package](https://pypi.org/project/airflow-provider-alembic/)
 2. [Airflow](https://airflow.apache.org/) to orchestrate data loading scripts and additional automated workflows
-3. [DBT core](https://docs.getdbt.com/) to define data models and transformations, again orchestrated by Airflow (via CLI / `BashOperator`) 
+3. [DBT core](https://docs.getdbt.com/) to define data models and transformations, again orchestrated by Airflow (via CLI / `BashOperator`)
 
 
 ## Setup
@@ -78,7 +78,7 @@ To run Airflow on a single instance, I used Honcho to run multiple processes via
 5. Set startup command to use the `startup.txt` file
 6. Run database migrations (`airflow db migrate`) and user setup (`airflow users create`) as one-off admin process, Procfile just for main processes
     - Reference [quick start](https://airflow.apache.org/docs/apache-airflow/stable/start.html) for guidance on this setup process
-    - It may be necessary to run these via startup command to get the app to launch 
+    - It may be necessary to run these via startup command to get the app to launch
 
 ### Automated Deployment
 

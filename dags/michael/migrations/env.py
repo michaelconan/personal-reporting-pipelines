@@ -27,7 +27,7 @@ target_metadata = None
 # ... etc.
 
 
-DATASET = "admin"
+DATASET = os.getenv("ADMIN_DATASET", "admin")
 VERSION_TABLE = os.getenv("VERSION_TABLE", "alembic_version")
 
 

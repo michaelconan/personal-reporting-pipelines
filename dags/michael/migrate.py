@@ -9,9 +9,14 @@ from airflow.decorators import task
 # Airflow hooks and operators
 from airflow.hooks.base import BaseHook
 from airflow_provider_alembic.operators.alembic import AlembicOperator
+from airflow.providers.google.cloud.operators.bigquery import (
+    BigQueryCreateEmptyDatasetOperator,
+)
 
 # Get migration folder relative to DAG
 migration_folder = os.path.join(os.path.dirname(__file__), "migrations")
+
+DATASET = os.getenv("ADMIN_DATASET", "admin")
 
 with DAG(
     "migrate_raw_tables",
@@ -26,7 +31,14 @@ with DAG(
     # Set keyfile as application default credentials
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = KEYFILE_PATH
 
-    @task(task_id="bigquery_keyfile")
+    create_dataset = BigQueryCreateEmptyDatasetOperator(
+        task_id="create_admin_dataset",
+        gcp_conn_id=BIGQUERY_CONN_ID,
+        dataset_id=DATASET,
+        if_exists="ignore",
+    )
+
+    @task(task_id="save_bigquery_keyfile")
     def get_keyfile():
         # Get BigQuery connection details
         conn = BaseHook.get_connection(BIGQUERY_CONN_ID)
@@ -37,11 +49,19 @@ with DAG(
 
     # Run migrations
     alembic_op = AlembicOperator(
-        task_id="alembic_op",
+        task_id="run_alembic_migrations",
         conn_id=BIGQUERY_CONN_ID,
         command="{{ params.command }}",
         revision="{{ params.revision }}",
         script_location=migration_folder,
     )
 
-    get_keyfile() >> alembic_op
+    @task(task_id="cleanup_keyfile", trigger_rule="all_done")
+    def cleanup_keyfile():
+        # Remove keyfile
+        if os.path.exists(KEYFILE_PATH):
+            os.remove(KEYFILE_PATH)
+        else:
+            dag.log.info(f"Keyfile not found at: {KEYFILE_PATH}")
+
+    create_dataset >> get_keyfile() >> alembic_op >> cleanup_keyfile()

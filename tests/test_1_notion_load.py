@@ -19,10 +19,10 @@ os.environ["TEST"] = "True"
 @pytest.mark.parametrize(
     ("dag_id", "time_period"),
     (
-        ("load_initial_daily_habits", None),
-        ("load_initial_weekly_habits", None),
-        ("load_changed_daily_habits", 1),
-        ("load_changed_weekly_habits", 7),
+        ("raw_notion__daily_habits__initial", None),
+        ("raw_notion__weekly_habits__initial", None),
+        ("raw_notion__daily_habits__changed", 1),
+        ("raw_notion__weekly_habits__changed", 7),
     ),
 )
 def test_notion_habits(dag_bag: DagBag, dag_id: str, time_period: int):

@@ -9,7 +9,6 @@ import yaml
 
 # Airflow imports
 from airflow.decorators import dag, task
-from airflow.operators.bash import BashOperator
 from airflow.hooks.base import BaseHook
 
 # Local imports
@@ -29,7 +28,9 @@ def run_dbt():
 
     # File paths for service account key and dbt profile
     PROFILES_DIR = "/tmp/.dbt"
-    PROJECT_DIR = os.path.join(os.getenv("AIRFLOW_HOME"), "dbt/michael")
+    PROJECT_DIR = os.path.join(
+        os.path.abspath(os.getenv("AIRFLOW_HOME")), "dbt/michael"
+    )
     KEYFILE_PATH = os.path.join(PROFILES_DIR, "bq-service-account.json")
     PROFILE_PATH = os.path.join(PROFILES_DIR, "profiles.yml")
 
@@ -63,27 +64,27 @@ def run_dbt():
                     },
                 },
                 "target": "dev",
-            }
+            },
         }
         # Create profile file for dbt run
         with open(PROFILE_PATH, "w") as f:
             yaml.dump(profile, f)
 
-    dbt_run = BashOperator(
-        task_id="dbt_run",
-        bash_command="dbt run",
-        env={"DBT_PROFILES_DIR": PROFILES_DIR, "DBT_PROJECT_DIR": PROJECT_DIR},
-    )
+    @task.bash
+    def dbt_cli():
+        dbt_args = f"--profiles-dir {PROFILES_DIR} --project-dir {PROJECT_DIR}"
+        return f"dbt run {dbt_args}"
 
     @task(
         task_id="cleanup_files",
+        trigger_rule="all_done",
     )
     def cleanup_files():
         # Remove temporary files
         shutil.rmtree(PROFILES_DIR)
 
     # Define DAG workflow
-    generate_dbt_profile() >> dbt_run >> cleanup_files()
+    generate_dbt_profile() >> dbt_cli() >> cleanup_files()
 
 
 # Call dag in the global namespace
