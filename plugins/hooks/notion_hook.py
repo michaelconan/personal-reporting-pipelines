@@ -12,5 +12,3 @@ class NotionHook(BaseHook):
         connection = BaseHook.get_connection(conn_id)
         password = connection.password
         self.client = Client(auth=password)
-
-    
