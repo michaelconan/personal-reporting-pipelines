@@ -60,7 +60,7 @@ WEEKLY_PROPERTIES = [
 # Configurations to generated DAGs
 DAG_CONFIGS = [
     {
-        "dag_id": "raw_notion__daily_habits__initial",
+        "dag_id": "raw_notion__daily_habits__full",
         "schedule": "@once",
         "bq_table": BQ_DAILY_TABLE,
         "dataset": NOTION_DAILY_HABITS_DS,
@@ -76,7 +76,7 @@ DAG_CONFIGS = [
         "properties": DAILY_PROPERTIES,
     },
     {
-        "dag_id": "raw_notion__weekly_habits__initial",
+        "dag_id": "raw_notion__weekly_habits__full",
         "schedule": "@once",
         "bq_table": BQ_WEEKLY_TABLE,
         "dataset": NOTION_WEEKLY_HABITS_DS,
