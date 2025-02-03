@@ -12,6 +12,7 @@ import logging
 
 from alembic import op
 import sqlalchemy as sa
+import google.cloud.bigquery as bigquery
 
 
 # revision identifiers, used by Alembic.
@@ -72,10 +73,10 @@ def upgrade() -> None:
 
 def downgrade() -> None:
 
+    client = bigquery.Client()
+
     logger.info(f"Dropping raw tables in schema: {RAW_SCHEMA}")
     logger.info(f"Dropping dbt schema: {DBT_SCHEMA}")
-    # Remove tables and schema
-    op.drop_table("weekly_habit", schema=RAW_SCHEMA)
-    op.drop_table("daily_habit", schema=RAW_SCHEMA)
-    op.execute(f"DROP SCHEMA IF EXISTS {RAW_SCHEMA};")
-    op.execute(f"DROP SCHEMA IF EXISTS {DBT_SCHEMA};")
+    # Remove tables and schema, use client library to avoid errors
+    client.delete_dataset(RAW_SCHEMA, delete_contents=True)
+    client.delete_dataset(DBT_SCHEMA, delete_contents=True)
