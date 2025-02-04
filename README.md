@@ -71,6 +71,11 @@ To run Airflow on a single instance, I used Honcho to run multiple processes via
     - `AIRFLOW_HOME=/home/site/wwwroot` to run airflow from deployed application folders
     - `AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://{username}:{password}@{host}:{port}/{database}` from the Azure database
     - `AIRFLOW__CORE__FERNKET_KEY={generated-key}` following [this guidance](https://airflow.apache.org/docs/apache-airflow/1.10.8/howto/secure-connections.html) to encrypt connection data
+    - `AIRFLOW__CORE__INTERNAL_API_SECRET_KEY={generated-secret1}` following [this guidance](https://flask.palletsprojects.com/en/stable/config/#SECRET_KEY)
+    - `AIRFLOW__WEBSERVER__SECRET_KEY={generated-secret2}` following guidance above
+    - `AIRFLOW__WEBSERVER__BASE_URL={deployed-url}`
+    - `AIRFLOW__CLI__ENDPOINT_URL={deployed-url}`
+    - `AIRFLOW__WEBSERVER__INSTANCE_NAME=MY INSTANCE!`
 4. Generate Publish Profile file and deploy application code from GitHub
 5. Set startup command to use the `startup.txt` file
 6. Run database migrations (`airflow db migrate`) and user setup (`airflow users create`) as one-off admin process, Procfile just for main processes
