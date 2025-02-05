@@ -54,6 +54,15 @@ graph TB
 2. [Airflow](https://airflow.apache.org/) to orchestrate data loading scripts and additional automated workflows
 3. [DBT core](https://docs.getdbt.com/) to define data models and transformations, again orchestrated by Airflow (via CLI / bash TaskFlow)
 
+## Standards
+
+The project has been strucutrd and designed with inspiration from [dbt project recommendations](https://docs.getdbt.com/best-practices/how-we-structure/1-guide-overview) and other sources.
+
+- DBT projects stored in separate subdirectory from DAGs (at least now)
+- DAGs and DBT projects organised at the top level by owner (should more get involved)
+- Further organisation by data source and / or function
+- Naming generally follows DBT recommended `[layer]_[source]__[entity]`, adapted for Airflow DAGs with `__[refresh-type]` and other modifications as needed. 
+
 
 ## Setup
 
@@ -73,8 +82,6 @@ To run Airflow on a single instance, I used Honcho to run multiple processes via
     - `AIRFLOW__CORE__FERNKET_KEY={generated-key}` following [this guidance](https://airflow.apache.org/docs/apache-airflow/1.10.8/howto/secure-connections.html) to encrypt connection data
     - `AIRFLOW__CORE__INTERNAL_API_SECRET_KEY={generated-secret1}` following [this guidance](https://flask.palletsprojects.com/en/stable/config/#SECRET_KEY)
     - `AIRFLOW__WEBSERVER__SECRET_KEY={generated-secret2}` following guidance above
-    - `AIRFLOW__WEBSERVER__BASE_URL={deployed-url}`
-    - `AIRFLOW__CLI__ENDPOINT_URL={deployed-url}`
     - `AIRFLOW__WEBSERVER__INSTANCE_NAME=MY INSTANCE!`
 4. Generate Publish Profile file and deploy application code from GitHub
 5. Set startup command to use the `startup.txt` file
