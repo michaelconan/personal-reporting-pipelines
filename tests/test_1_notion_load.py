@@ -19,8 +19,8 @@ os.environ["TEST"] = "True"
 @pytest.mark.parametrize(
     ("dag_id", "time_period"),
     (
-        ("raw_notion__daily_habits__initial", None),
-        ("raw_notion__weekly_habits__initial", None),
+        ("raw_notion__daily_habits__full", None),
+        ("raw_notion__weekly_habits__full", None),
         ("raw_notion__daily_habits__changed", 1),
         ("raw_notion__weekly_habits__changed", 7),
     ),

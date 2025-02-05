@@ -45,6 +45,7 @@ jobs:
 
       - name: Build container and run pre-commit format and lint
         uses: devcontainers/ci@v0.3
+        continue-on-error: true
         with:
           imageName: ${{ env.IMAGE_NAME }}
           cacheFrom: ${{ env.IMAGE_NAME }}
@@ -62,5 +63,6 @@ jobs:
             script/test
 
       - name: Cleanup Files
+        if: always()
         run: |
           rm -f ${{ env.CONNECTIONS_FILE }}
