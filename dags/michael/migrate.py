@@ -19,7 +19,7 @@ migration_folder = os.path.join(os.path.dirname(__file__), "migrations")
 DATASET = os.getenv("ADMIN_DATASET", "admin")
 
 with DAG(
-    "migrate_raw_tables",
+    "bq__migrate_schema",
     schedule="@once",  # also consider "None"
     start_date=datetime(1970, 1, 1),
     params={"command": "upgrade", "revision": "head"},
