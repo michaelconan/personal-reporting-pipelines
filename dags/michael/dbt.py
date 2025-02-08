@@ -16,6 +16,7 @@ from michael.datasets import NOTION_DAILY_HABITS_DS, NOTION_WEEKLY_HABITS_DS
 
 
 @dag(
+    dag_id="dbt__michael",
     # Run after source datasets refreshed
     schedule=[NOTION_DAILY_HABITS_DS, NOTION_WEEKLY_HABITS_DS],
     catchup=False,
