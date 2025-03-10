@@ -42,6 +42,7 @@ with DAG(
     def get_keyfile():
         # Get BigQuery connection details
         conn = BaseHook.get_connection(BIGQUERY_CONN_ID)
+        os.environ["BQ_LOCATION"] = conn.extra_dejson.get("location", "US")
 
         # Write keyfile to temporary file
         with open(KEYFILE_PATH, "w") as f:

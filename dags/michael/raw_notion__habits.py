@@ -1,5 +1,5 @@
 """
-notion_habit_periods.py
+raw_notion__habits.py
 
 DAGs to load daily and weekly habits from Notion API into BigQuery.
 """
@@ -20,7 +20,11 @@ from airflow.hooks.base import BaseHook
 
 # Common custom tasks
 from michael.common.bigquery import load_file_to_bq
-from michael.datasets import NOTION_DAILY_HABITS_DS, NOTION_WEEKLY_HABITS_DS
+from michael.datasets import (
+    NOTION_DAILY_HABITS_DS,
+    NOTION_WEEKLY_HABITS_DS,
+    NOTION_MONTHLY_HABITS_DS,
+)
 
 IS_TEST = os.getenv("TEST") or os.getenv("CI")
 
@@ -31,10 +35,11 @@ NOTION_CONN_ID = "notion_productivity"
 BQ_CONN_ID = "bigquery_reporting"
 BQ_DAILY_TABLE = "daily_habit"
 BQ_WEEKLY_TABLE = "weekly_habit"
-
+BQ_MONTHLY_TABLE = "monthly_habit"
 # Notion database names
 DAILY_DATABASE = "Daily Disciplines"
 WEEKLY_DATABASE = "Weekly Disciplines"
+MONTHLY_DATABASE = "Monthly Disciplines"
 
 # Properties to extract from Notion databases
 DAILY_PROPERTIES = [
@@ -55,6 +60,14 @@ WEEKLY_PROPERTIES = [
     "Community",
     "Prayer Minutes",
     "Screen Minutes",
+]
+MONTHLY_PROPERTIES = [
+    "Name",
+    "Date",
+    "Budget",
+    "Serve",
+    "Travel",
+    "Blog",
 ]
 
 # Configurations to generated DAGs
@@ -91,6 +104,22 @@ DAG_CONFIGS = [
         "database": WEEKLY_DATABASE,
         "properties": WEEKLY_PROPERTIES,
     },
+    {
+        "dag_id": "raw_notion__monthly_habits__full",
+        "schedule": "@once",
+        "bq_table": BQ_MONTHLY_TABLE,
+        "dataset": NOTION_MONTHLY_HABITS_DS,
+        "database": MONTHLY_DATABASE,
+        "properties": MONTHLY_PROPERTIES,
+    },
+    {
+        "dag_id": "raw_notion__monthly_habits__changed",
+        "schedule": "@daily",
+        "bq_table": BQ_MONTHLY_TABLE,
+        "dataset": NOTION_MONTHLY_HABITS_DS,
+        "database": MONTHLY_DATABASE,
+        "properties": MONTHLY_PROPERTIES,
+    },
 ]
 
 
@@ -107,7 +136,7 @@ def create_notion_dag(
         schedule=schedule,
         start_date=pendulum.datetime(2024, 10, 1),
         catchup=False,
-        params={"raw_dataset": "raw"},
+        params={"raw_schema": "raw"},
         user_defined_macros={"BQ_TABLE": bq_table},
         tags=["notion", "habits", "raw"],
     ) as dag:
@@ -281,7 +310,7 @@ def create_notion_dag(
                 job_state = load_file_to_bq(
                     conn_id=BQ_CONN_ID,
                     file_path=DATA_FILE,
-                    table_id=f"{params['raw_dataset']}.{bq_table}",
+                    table_id=f"{params['raw_schema']}.{bq_table}",
                 )
                 # Update outlet dataset extras
                 outlet_events[dataset].extra = {

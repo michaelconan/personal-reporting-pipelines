@@ -1,13 +1,18 @@
 """notion raw tables
 
-Revision ID: c0ea7b45da9c
-Revises: fe52ae40c7c1
-Create Date: 2025-02-08 00:25:53.845234
-
+Revision ID:
+    c0ea7b45da9c
+Revises:
+    fe52ae40c7c1
+Create Date:
+    2025-02-08 00:25:53.845234
 """
 
+# Base imports
 from typing import Sequence, Union
 import os
+
+# PyPI imports
 from alembic import op
 import sqlalchemy as sa
 
@@ -24,6 +29,7 @@ RAW_SCHEMA = os.getenv("RAW_SCHEMA", default="raw")
 
 
 def upgrade() -> None:
+    """Create Notion Raw Tables for key objects"""
     op.create_table(
         "daily_habit",
         sa.Column("database_id", sa.String(50), nullable=False),
@@ -59,7 +65,25 @@ def upgrade() -> None:
         if_not_exists=True,
     )
 
+    op.create_table(
+        "monthly_habit",
+        sa.Column("database_id", sa.String(50), nullable=False),
+        sa.Column("id", sa.String(50), nullable=False),
+        sa.Column("Name", sa.String(255), nullable=False),
+        sa.Column("Date", sa.Date, nullable=False),
+        sa.Column("Budget", sa.Boolean(), nullable=False),
+        sa.Column("Serve", sa.Boolean(), nullable=False),
+        sa.Column("Travel", sa.Boolean(), nullable=False),
+        sa.Column("Blog", sa.Boolean(), nullable=False),
+        sa.Column("created_time", sa.TIMESTAMP(), nullable=False),
+        sa.Column("last_edited_time", sa.TIMESTAMP(), nullable=False),
+        schema=RAW_SCHEMA,
+        if_not_exists=True,
+    )
+
 
 def downgrade() -> None:
+    """Drop Notion Raw Tables for key objects"""
     op.drop_table("daily_habit", schema=RAW_SCHEMA)
     op.drop_table("weekly_habit", schema=RAW_SCHEMA)
+    op.drop_table("monthly_habit", schema=RAW_SCHEMA)

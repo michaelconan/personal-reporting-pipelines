@@ -12,7 +12,7 @@ from airflow.utils.state import TaskInstanceState
 from tests.conftest import run_dag
 
 
-MIGRATE_DAG = "migrate_raw_tables"
+MIGRATE_DAG = "bq__migrate_schema"
 os.environ["VERSION_TABLE"] = "test_alembic_version"
 
 

@@ -1,17 +1,19 @@
 """BigQuery schemas
 
-Revision ID: fe52ae40c7c1
+Revision ID:
+    fe52ae40c7c1
 Revises:
-Create Date: 2025-01-12 20:40:26.956798
-
+    None
+Create Date:
+    2025-01-12 20:40:26.956798
 """
 
+# Base imports
 import os
 from typing import Sequence, Union
 import logging
 
-from alembic import op
-import sqlalchemy as sa
+# PyPI imports
 import google.cloud.bigquery as bigquery
 
 
@@ -25,25 +27,30 @@ depends_on: Union[str, Sequence[str], None] = None
 logger = logging.getLogger(__name__)
 
 # Raw schema to copy system data as-is
+BQ_LOCATION = os.getenv("BQ_LOCATION", default="US")
 RAW_SCHEMA = os.getenv("RAW_SCHEMA", default="raw")
 DBT_SCHEMA = os.getenv("DBT_SCHEMA", default="reporting")
 
 
 def upgrade() -> None:
+    """Create BigQuery schemas (datasets)"""
+    # Initialize client with default credentials
+    client = bigquery.Client()
 
-    logger.info(f"Creating raw tables in schema: {RAW_SCHEMA}")
-    logger.info(f"Creating dbt schema: {DBT_SCHEMA}")
-    # Add schema and raw tables
-    op.execute(f"CREATE SCHEMA IF NOT EXISTS {RAW_SCHEMA};")
-    op.execute(f"CREATE SCHEMA IF NOT EXISTS {DBT_SCHEMA};")
+    # Add schemas in specified location
+    for schema in [RAW_SCHEMA, DBT_SCHEMA]:
+        logger.info(f"Creating BigQuery schema (dataset): {schema}")
+        bq_dataset = bigquery.Dataset(schema, location=BQ_LOCATION)
+        client.create_dataset(bq_dataset, exists_ok=True)
 
 
 def downgrade() -> None:
+    """Drop BigQuery schemas (datasets)"""
 
+    # Initialize client with default credentials
     client = bigquery.Client()
 
-    logger.info(f"Dropping raw tables in schema: {RAW_SCHEMA}")
-    logger.info(f"Dropping dbt schema: {DBT_SCHEMA}")
     # Remove tables and schema, use client library to avoid errors
-    client.delete_dataset(RAW_SCHEMA, delete_contents=True)
-    client.delete_dataset(DBT_SCHEMA, delete_contents=True)
+    for schema in [RAW_SCHEMA, DBT_SCHEMA]:
+        logger.info(f"Dropping BigQuery schema (dataset) with contents: {schema}")
+        client.delete_dataset(schema, delete_contents=True)
