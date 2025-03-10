@@ -7,10 +7,10 @@ from airflow.models.dagbag import DagBag
 from airflow.utils.state import TaskInstanceState
 
 # Local imports
-from tests.conftest import run_dag, DBT_TEST_DATASET
+from tests.conftest import run_dag, DBT_TEST_SCHEMA
 
 
-DBT_DAG = "run_dbt"
+DBT_DAG = "dbt__michael"
 
 
 def test_run_dbt(dag_bag: DagBag):
@@ -21,7 +21,7 @@ def test_run_dbt(dag_bag: DagBag):
 
     # WHEN
     # Run the DAG tasks
-    tis = run_dag(dag, extras={"conf": {"dataset": DBT_TEST_DATASET}})
+    tis = run_dag(dag, extras={"conf": {"dataset": DBT_TEST_SCHEMA}})
 
     # THEN
     # Validate task instances were successful
