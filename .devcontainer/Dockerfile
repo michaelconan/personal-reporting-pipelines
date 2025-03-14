@@ -9,7 +9,7 @@ ENV PATH="/home/vscode/.local/bin:${PATH}"
 
 # Install git and other dependencies
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends git sudo && \
+    apt-get install -y --no-install-recommends git sudo curl && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 

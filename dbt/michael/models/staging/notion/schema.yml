@@ -2,7 +2,7 @@ version: 2
 
 models:
   - name: stg_notion__habits
-    description: "Combined list of daily and weekly habits from the Notion habit tracker."
+    description: "Combined list of daily, weekly, and monthly habits from the Notion habit tracker."
     columns:
       - name: id
         description: "The primary key for this table"
@@ -16,6 +16,7 @@ sources:
     schema: "{{ env_var('RAW_SCHEMA', 'raw') }}"
     tables:
       - name: daily_habit
+        identifier: notion__daily_habit
         description: "Raw habit entries from the daily notion database."
         columns:
           - name: id
@@ -24,10 +25,20 @@ sources:
               - not_null
               - unique
       - name: weekly_habit
+        identifier: notion__weekly_habit
         description: "Raw habit entries from the weekly notion database."
         columns:
           - name: id
-            description: "Primary key for the raw daily habits table."
+            description: "Primary key for the raw weekly habits table."
+            tests:
+              - not_null
+              - unique
+      - name: monthly_habit
+        identifier: notion__monthly_habit
+        description: "Raw habit entries from the monthly notion database."
+        columns:
+          - name: id
+            description: "Primary key for the raw monthly habits table."
             tests:
               - not_null
               - unique
