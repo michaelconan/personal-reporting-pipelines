@@ -16,7 +16,7 @@ from airflow.providers.google.cloud.operators.bigquery import (
 # Get migration folder relative to DAG
 migration_folder = os.path.join(os.path.dirname(__file__), "migrations")
 
-DATASET = os.getenv("ADMIN_DATASET", "admin")
+SCHEMA = os.getenv("ADMIN_SCHEMA", "admin")
 
 with DAG(
     "bq__migrate_schema",
@@ -34,7 +34,7 @@ with DAG(
     create_dataset = BigQueryCreateEmptyDatasetOperator(
         task_id="create_admin_dataset",
         gcp_conn_id=BIGQUERY_CONN_ID,
-        dataset_id=DATASET,
+        dataset_id=SCHEMA,
         if_exists="ignore",
     )
 

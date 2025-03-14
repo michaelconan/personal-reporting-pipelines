@@ -1,4 +1,4 @@
-"""hubspot raw tables
+"""Create hubspot raw tables
 
 Revision ID:
     fe3875770e8b
@@ -28,7 +28,7 @@ RAW_SCHEMA = os.getenv("RAW_SCHEMA", default="raw")
 def upgrade() -> None:
     """Create Hubspot Raw Tables for key objects and intersection tables for associations"""
     op.create_table(
-        "company",
+        "hubspot__company",
         sa.Column("id", sa.String(25), nullable=False),
         sa.Column("name", sa.String(100), nullable=False),
         # Profile tier used for target contact cadence
@@ -41,10 +41,10 @@ def upgrade() -> None:
 
     # Only primary company is associated with contact
     op.create_table(
-        "contact",
+        "hubspot__contact",
         sa.Column("id", sa.String(25), nullable=False),
-        sa.Column("associatedcompanyid", sa.String(25), nullable=False),
-        sa.Column("email", sa.String(100), nullable=False),
+        sa.Column("associatedcompanyid", sa.String(25), nullable=True),
+        sa.Column("email", sa.String(100), nullable=True),
         sa.Column("firstname", sa.String(50), nullable=False),
         sa.Column("lastname", sa.String(50), nullable=False),
         sa.Column("createdAt", sa.TIMESTAMP(), nullable=False),
@@ -55,13 +55,13 @@ def upgrade() -> None:
 
     # NOTE: timestamp is stored as a unix timestamp in milliseconds based on API format
     op.create_table(
-        "engagement",
+        "hubspot__engagement",
         sa.Column("id", sa.String(25), nullable=False),
         sa.Column("type", sa.String(50), nullable=False),
         sa.Column("timestamp", sa.BigInteger(), nullable=False),
-        sa.Column("bodyPreview", sa.Text(), nullable=False),
-        sa.Column("contactIds", sa.ARRAY(sa.String(25)), nullable=False),
-        sa.Column("companyIds", sa.ARRAY(sa.String(25)), nullable=False),
+        sa.Column("bodyPreview", sa.Text(), nullable=True),
+        sa.Column("contactIds", sa.ARRAY(sa.String(25)), nullable=True),
+        sa.Column("companyIds", sa.ARRAY(sa.String(25)), nullable=True),
         sa.Column("createdAt", sa.BigInteger(), nullable=False),
         sa.Column("lastUpdated", sa.BigInteger(), nullable=False),
         schema=RAW_SCHEMA,
@@ -71,9 +71,6 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     """Drop Hubspot Raw Tables for key objects and intersection tables for associations"""
-    op.drop_table("contact_company")
-    op.drop_table("contact_engagement")
-    op.drop_table("company_engagement")
-    op.drop_table("engagement")
-    op.drop_table("company")
-    op.drop_table("contact")
+    op.drop_table("hubspot__engagement")
+    op.drop_table("hubspot__company")
+    op.drop_table("hubspot__contact")

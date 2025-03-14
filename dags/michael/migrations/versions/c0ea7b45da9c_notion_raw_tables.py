@@ -1,4 +1,4 @@
-"""notion raw tables
+"""Create notion raw tables
 
 Revision ID:
     c0ea7b45da9c
@@ -31,7 +31,7 @@ RAW_SCHEMA = os.getenv("RAW_SCHEMA", default="raw")
 def upgrade() -> None:
     """Create Notion Raw Tables for key objects"""
     op.create_table(
-        "daily_habit",
+        "notion__daily_habit",
         sa.Column("database_id", sa.String(50), nullable=False),
         sa.Column("id", sa.String(50), nullable=False),
         sa.Column("Name", sa.String(255), nullable=False),
@@ -49,7 +49,7 @@ def upgrade() -> None:
     )
 
     op.create_table(
-        "weekly_habit",
+        "notion__weekly_habit",
         sa.Column("database_id", sa.String(50), nullable=False),
         sa.Column("id", sa.String(50), nullable=False),
         sa.Column("Name", sa.String(255), nullable=False),
@@ -66,7 +66,7 @@ def upgrade() -> None:
     )
 
     op.create_table(
-        "monthly_habit",
+        "notion__monthly_habit",
         sa.Column("database_id", sa.String(50), nullable=False),
         sa.Column("id", sa.String(50), nullable=False),
         sa.Column("Name", sa.String(255), nullable=False),
@@ -84,6 +84,6 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     """Drop Notion Raw Tables for key objects"""
-    op.drop_table("daily_habit", schema=RAW_SCHEMA)
-    op.drop_table("weekly_habit", schema=RAW_SCHEMA)
-    op.drop_table("monthly_habit", schema=RAW_SCHEMA)
+    op.drop_table("notion__daily_habit", schema=RAW_SCHEMA)
+    op.drop_table("notion__weekly_habit", schema=RAW_SCHEMA)
+    op.drop_table("notion__monthly_habit", schema=RAW_SCHEMA)

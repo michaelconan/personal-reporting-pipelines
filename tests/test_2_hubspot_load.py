@@ -22,16 +22,16 @@ os.environ["TEST"] = "True"
         ("raw_hubspot__contacts__full", None),
         ("raw_hubspot__companies__full", None),
         ("raw_hubspot__engagements__full", None),
-        ("raw_hubspot__contacts__changed", 1),
-        ("raw_hubspot__companies__changed", 1),
-        ("raw_hubspot__engagements__changed", 1),
+        ("raw_hubspot__contacts__changed", 30),
+        ("raw_hubspot__companies__changed", 30),
+        ("raw_hubspot__engagements__changed", 30),
     ),
 )
 def test_hubspot_load(dag_bag: DagBag, dag_id: str, time_period: int):
 
     # GIVEN
     # Define interval and DAG run parameters
-    DATA_INTERVAL_START = pendulum.datetime(2024, 12, 14, tz="UTC")
+    DATA_INTERVAL_START = pendulum.datetime(2025, 2, 14, tz="UTC")
 
     # Get DAG from DagBag to set context
     dag = dag_bag.get_dag(dag_id=dag_id)

@@ -1,4 +1,4 @@
-"""BigQuery schemas
+"""Create BigQuery schemas
 
 Revision ID:
     fe52ae40c7c1
@@ -14,6 +14,7 @@ from typing import Sequence, Union
 import logging
 
 # PyPI imports
+from google.auth import default
 import google.cloud.bigquery as bigquery
 
 
@@ -35,12 +36,14 @@ DBT_SCHEMA = os.getenv("DBT_SCHEMA", default="reporting")
 def upgrade() -> None:
     """Create BigQuery schemas (datasets)"""
     # Initialize client with default credentials
-    client = bigquery.Client()
+    credentials, project_id = default()
+    client = bigquery.Client(credentials=credentials, project=project_id)
 
     # Add schemas in specified location
     for schema in [RAW_SCHEMA, DBT_SCHEMA]:
         logger.info(f"Creating BigQuery schema (dataset): {schema}")
-        bq_dataset = bigquery.Dataset(schema, location=BQ_LOCATION)
+        bq_dataset = bigquery.Dataset(f"{project_id}.{schema}")
+        bq_dataset.location = BQ_LOCATION
         client.create_dataset(bq_dataset, exists_ok=True)
 
 
