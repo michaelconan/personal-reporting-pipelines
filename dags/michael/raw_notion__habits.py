@@ -33,9 +33,9 @@ NOTION_CONN_ID = "notion_productivity"
 
 # BigQuery connection details
 BQ_CONN_ID = "bigquery_reporting"
-BQ_DAILY_TABLE = "daily_habit"
-BQ_WEEKLY_TABLE = "weekly_habit"
-BQ_MONTHLY_TABLE = "monthly_habit"
+BQ_DAILY_TABLE = "notion__daily_habit"
+BQ_WEEKLY_TABLE = "notion__weekly_habit"
+BQ_MONTHLY_TABLE = "notion__monthly_habit"
 # Notion database names
 DAILY_DATABASE = "Daily Disciplines"
 WEEKLY_DATABASE = "Weekly Disciplines"

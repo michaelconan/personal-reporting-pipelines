@@ -7,7 +7,7 @@ select
     is_complete,
     created_time,
     last_edited_time
-from {{ source('notion', 'daily_habit') }}
+from {{ source('notion', 'monthly_habit') }}
     unpivot(
-        is_complete for habit in (Devotional, Journal, Prayer, `Read Bible`, Workout, Language)
+        is_complete for habit in (Budget, Serve, Travel, Blog)
     )

@@ -8,8 +8,6 @@ DAGs to load Hubspot CRM data into BigQuery.
 import os
 import pendulum
 import jsonlines
-from logging import getLogger, Logger
-from typing import Any
 
 # Standard airflow imports
 from airflow.decorators import task
@@ -29,16 +27,14 @@ from michael.datasets import (
 
 IS_TEST = os.getenv("TEST") or os.getenv("CI")
 
-logger: Logger = getLogger(__name__)
-
 # Hubspot connection
 HUBSPOT_CONN_ID = "hubspot_app"
 
 # BigQuery connection details
 BQ_CONN_ID = "bigquery_reporting"
-BQ_CONTACT_TABLE = "contact"
-BQ_COMPANY_TABLE = "company"
-BQ_ENGAGEMENT_TABLE = "engagement"
+BQ_CONTACT_TABLE = "hubspot__contact"
+BQ_COMPANY_TABLE = "hubspot__company"
+BQ_ENGAGEMENT_TABLE = "hubspot__engagement"
 
 # Hubspot CRM object properties
 HUBSPOT_PROPERTIES = [
@@ -64,6 +60,7 @@ OBJECT_KEY = {
         ],
     },
     "engagements": {
+        "types": ["CALL", "WHATS_APP", "MEETING", "NOTE", "SMS"],
         "properties": [
             "lastUpdated",
             "type",
@@ -168,7 +165,7 @@ def create_hubspot_dag(
                 elif prop in record_data.get("associations", dict()):
                     record_properties[prop] = record_data["associations"][prop]
                 else:
-                    logger.warning(f"Property {prop} not found in record data")
+                    dag.log.warning(f"Property {prop} not found in record data")
             return record_properties
 
         @task(
@@ -272,8 +269,8 @@ def create_hubspot_dag(
             ):
                 # Define data interval details
                 is_incremental = start_date != end_date
-                unix_start = str(int(start_date.timestamp() * 1000))
-                unix_end = str(int(end_date.timestamp() * 1000))
+                unix_start = int(start_date.timestamp() * 1000)
+                unix_end = int(end_date.timestamp() * 1000)
 
                 # Use full paged endpoint as default
                 object_url = "/engagements/v1/engagements/paged"
@@ -292,12 +289,12 @@ def create_hubspot_dag(
                     hs_request["path"] = object_url
 
                 # Get all engagements, paginate using offset reference
-                results = list()
+                all_results = list()
                 while True:
                     response = api_client.api_request(hs_request)
                     if response.ok:
                         page = response.json()
-                        results.extend(page["results"])
+                        all_results.extend(page["results"])
                         if page["hasMore"]:
                             hs_request["path"] = f"{object_url}?offset={page['offset']}"
                         else:
@@ -306,18 +303,23 @@ def create_hubspot_dag(
                         raise Exception(
                             f"Error fetching data from Hubspot: {response.text}"
                         )
+                dag.log.info(f"Found {len(all_results)} engagements before filters")
 
                 # Filter results to only include those updated within the data interval
                 results = [
-                    r for r in results if r["engagement"]["lastUpdated"] <= unix_end
+                    r
+                    for r in all_results
+                    if r["engagement"]["lastUpdated"] <= unix_end
+                    and r["engagement"]["type"] in object_info["types"]
                 ]
+                dag.log.info(f"{len(results)} engagements after filters")
 
                 # Get properties from each engagement
-                results = [
+                mapped_results = [
                     get_object_properties(r, object_info["properties"]) for r in results
                 ]
 
-                return results
+                return mapped_results
 
             # Get data based on object type
             if crm_object == "engagements":
