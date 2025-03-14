@@ -25,27 +25,36 @@ graph TB
 
     subgraph raw
         direction TB
-        L1[Daily Habits]
-        L2[Weekly Habits]
-        L3[Contacts]
-        L4[Companies]
-        L5[Engagements]
+        R1[Daily Habits]
+        R2[Weekly Habits]
+        R3[Monthly Habits]
+        R4[Contacts]
+        R5[Companies]
+        R6[Engagements]
     end
 
-    %% Raw to Staging Flows
-    S1 --> L1
-    S1 --> L2
-    S2 --> L3
-    S2 --> L4
-    S2 --> L5
+    %% Source to Raw Flows
+    S1 --> R1
+    S1 --> R2
+    S1 --> R3
+    S2 --> R4
+    S2 --> R5
+    S2 --> R6
 
     subgraph staging
         C1[Notion Habits]
+        C2[CRM Contacts]
+        C3[CRM Companies]
+        C4[CRM Engagements]
     end
 
-    %% Staging to Intermediate Flows
-    L1 --> C1
-    L2 --> C1
+    %% Raw to Staging Flows
+    R1 --> C1
+    R2 --> C1
+    R3 --> C1
+    R4 --> C2
+    R5 --> C3
+    R6 --> C4
 ```
 
 ## Frameworks
