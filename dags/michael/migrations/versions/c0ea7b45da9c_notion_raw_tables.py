@@ -84,6 +84,6 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     """Drop Notion Raw Tables for key objects"""
-    op.drop_table("notion__daily_habit", schema=RAW_SCHEMA)
-    op.drop_table("notion__weekly_habit", schema=RAW_SCHEMA)
-    op.drop_table("notion__monthly_habit", schema=RAW_SCHEMA)
+    op.drop_table("notion__daily_habit", schema=RAW_SCHEMA, if_exists=True)
+    op.drop_table("notion__weekly_habit", schema=RAW_SCHEMA, if_exists=True)
+    op.drop_table("notion__monthly_habit", schema=RAW_SCHEMA, if_exists=True)

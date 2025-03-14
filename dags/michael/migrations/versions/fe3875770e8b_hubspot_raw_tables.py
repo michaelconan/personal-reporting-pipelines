@@ -71,6 +71,6 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     """Drop Hubspot Raw Tables for key objects and intersection tables for associations"""
-    op.drop_table("hubspot__engagement")
-    op.drop_table("hubspot__company")
-    op.drop_table("hubspot__contact")
+    op.drop_table("hubspot__engagement", schema=RAW_SCHEMA, if_exists=True)
+    op.drop_table("hubspot__company", schema=RAW_SCHEMA, if_exists=True)
+    op.drop_table("hubspot__contact", schema=RAW_SCHEMA, if_exists=True)
