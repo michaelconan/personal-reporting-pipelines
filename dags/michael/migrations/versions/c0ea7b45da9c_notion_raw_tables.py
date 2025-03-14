@@ -1,44 +1,37 @@
-"""raw notion tables
+"""Create notion raw tables
 
-Revision ID: fe52ae40c7c1
+Revision ID:
+    c0ea7b45da9c
 Revises:
-Create Date: 2025-01-12 20:40:26.956798
-
+    fe52ae40c7c1
+Create Date:
+    2025-02-08 00:25:53.845234
 """
 
-import os
+# Base imports
 from typing import Sequence, Union
-import logging
+import os
 
+# PyPI imports
 from alembic import op
 import sqlalchemy as sa
-import google.cloud.bigquery as bigquery
 
 
 # revision identifiers, used by Alembic.
-revision: str = "fe52ae40c7c1"
-down_revision: Union[str, None] = None
+revision: str = "c0ea7b45da9c"
+down_revision: Union[str, None] = "fe52ae40c7c1"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
-logger = logging.getLogger(__name__)
-
 # Raw schema to copy system data as-is
 RAW_SCHEMA = os.getenv("RAW_SCHEMA", default="raw")
-DBT_SCHEMA = os.getenv("DBT_SCHEMA", default="reporting")
 
 
 def upgrade() -> None:
-
-    logger.info(f"Creating raw tables in schema: {RAW_SCHEMA}")
-    logger.info(f"Creating dbt schema: {DBT_SCHEMA}")
-    # Add schema and raw tables
-    op.execute(f"CREATE SCHEMA IF NOT EXISTS {RAW_SCHEMA};")
-    op.execute(f"CREATE SCHEMA IF NOT EXISTS {DBT_SCHEMA};")
-
+    """Create Notion Raw Tables for key objects"""
     op.create_table(
-        "daily_habit",
+        "notion__daily_habit",
         sa.Column("database_id", sa.String(50), nullable=False),
         sa.Column("id", sa.String(50), nullable=False),
         sa.Column("Name", sa.String(255), nullable=False),
@@ -52,10 +45,11 @@ def upgrade() -> None:
         sa.Column("created_time", sa.TIMESTAMP(), nullable=False),
         sa.Column("last_edited_time", sa.TIMESTAMP(), nullable=False),
         schema=RAW_SCHEMA,
+        if_not_exists=True,
     )
 
     op.create_table(
-        "weekly_habit",
+        "notion__weekly_habit",
         sa.Column("database_id", sa.String(50), nullable=False),
         sa.Column("id", sa.String(50), nullable=False),
         sa.Column("Name", sa.String(255), nullable=False),
@@ -68,15 +62,28 @@ def upgrade() -> None:
         sa.Column("created_time", sa.TIMESTAMP(), nullable=False),
         sa.Column("last_edited_time", sa.TIMESTAMP(), nullable=False),
         schema=RAW_SCHEMA,
+        if_not_exists=True,
+    )
+
+    op.create_table(
+        "notion__monthly_habit",
+        sa.Column("database_id", sa.String(50), nullable=False),
+        sa.Column("id", sa.String(50), nullable=False),
+        sa.Column("Name", sa.String(255), nullable=False),
+        sa.Column("Date", sa.Date, nullable=False),
+        sa.Column("Budget", sa.Boolean(), nullable=False),
+        sa.Column("Serve", sa.Boolean(), nullable=False),
+        sa.Column("Travel", sa.Boolean(), nullable=False),
+        sa.Column("Blog", sa.Boolean(), nullable=False),
+        sa.Column("created_time", sa.TIMESTAMP(), nullable=False),
+        sa.Column("last_edited_time", sa.TIMESTAMP(), nullable=False),
+        schema=RAW_SCHEMA,
+        if_not_exists=True,
     )
 
 
 def downgrade() -> None:
-
-    client = bigquery.Client()
-
-    logger.info(f"Dropping raw tables in schema: {RAW_SCHEMA}")
-    logger.info(f"Dropping dbt schema: {DBT_SCHEMA}")
-    # Remove tables and schema, use client library to avoid errors
-    client.delete_dataset(RAW_SCHEMA, delete_contents=True)
-    client.delete_dataset(DBT_SCHEMA, delete_contents=True)
+    """Drop Notion Raw Tables for key objects"""
+    op.drop_table("notion__daily_habit", schema=RAW_SCHEMA, if_exists=True)
+    op.drop_table("notion__weekly_habit", schema=RAW_SCHEMA, if_exists=True)
+    op.drop_table("notion__monthly_habit", schema=RAW_SCHEMA, if_exists=True)

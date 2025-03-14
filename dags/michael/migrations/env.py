@@ -27,7 +27,7 @@ target_metadata = None
 # ... etc.
 
 
-DATASET = os.getenv("ADMIN_DATASET", "admin")
+SCHEMA = os.getenv("ADMIN_SCHEMA", "admin")
 VERSION_TABLE = os.getenv("VERSION_TABLE", "alembic_version")
 
 
@@ -72,7 +72,7 @@ def run_migrations_online() -> None:
         context.configure(
             connection=connection,
             target_metadata=target_metadata,
-            version_table=f"{DATASET}.alembic_version",
+            version_table=f"{SCHEMA}.alembic_version",
         )
 
         with context.begin_transaction():

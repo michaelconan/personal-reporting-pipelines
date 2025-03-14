@@ -1,0 +1,44 @@
+version: 2
+
+models:
+  - name: stg_hubspot__companies
+    description: "Combined list of daily and weekly habits from the Notion habit tracker."
+    columns:
+      - name: id
+        description: "The primary key for this table"
+        data_tests:
+          - unique
+          - not_null
+
+sources:
+  - name: hubspot
+    description: "Source data from the HubSpot CRM."
+    schema: "{{ env_var('RAW_SCHEMA', 'raw') }}"
+    tables:
+      - name: company
+        identifier: hubspot__company
+        description: "Raw company data from the HubSpot CRM."
+        columns:
+          - name: id
+            description: "Primary key for the raw HubSpot company table."
+            tests:
+              - not_null
+              - unique
+      - name: contact
+        identifier: hubspot__contact
+        description: "Raw contact data from the HubSpot CRM."
+        columns:
+          - name: id
+            description: "Primary key for the raw HubSpot contact table."
+            tests:
+              - not_null
+              - unique
+      - name: engagement
+        identifier: hubspot__engagement
+        description: "Raw engagement data from the HubSpot CRM."
+        columns:
+          - name: id
+            description: "Primary key for the raw HubSpot engagement table."
+            tests:
+              - not_null
+              - unique
