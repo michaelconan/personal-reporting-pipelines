@@ -12,13 +12,12 @@ from airflow.decorators import dag, task
 from airflow.hooks.base import BaseHook
 
 # Local imports
-from michael.datasets import NOTION_DAILY_HABITS_DS, NOTION_WEEKLY_HABITS_DS
-
+from michael.datasets import RAW_DATASETS
 
 @dag(
     dag_id="dbt__michael",
     # Run after source datasets refreshed
-    schedule=[NOTION_DAILY_HABITS_DS, NOTION_WEEKLY_HABITS_DS],
+    schedule=RAW_DATASETS,
     catchup=False,
     start_date=pendulum.datetime(2025, 1, 1),
     dagrun_timeout=datetime.timedelta(minutes=20),
