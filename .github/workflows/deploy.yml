@@ -1,4 +1,4 @@
-name: Deploy app to Azure
+name: Deploy app
 
 # Configures this workflow to run every time a change is pushed to the branch called `main`.
 on:
