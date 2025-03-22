@@ -14,6 +14,7 @@ from airflow.hooks.base import BaseHook
 # Local imports
 from michael.datasets import RAW_DATASETS
 
+
 @dag(
     dag_id="dbt__michael",
     # Run after source datasets refreshed
@@ -71,9 +72,9 @@ def run_dbt():
             yaml.dump(profile, f)
 
     @task.bash
-    def dbt_cli():
+    def dbt_cli(command: str) -> str:
         dbt_args = f"--profiles-dir {PROFILES_DIR} --project-dir {PROJECT_DIR}"
-        return f"dbt run {dbt_args}"
+        return f"dbt {command} {dbt_args}"
 
     @task(
         task_id="cleanup_files",
@@ -84,7 +85,7 @@ def run_dbt():
         shutil.rmtree(PROFILES_DIR)
 
     # Define DAG workflow
-    generate_dbt_profile() >> dbt_cli() >> cleanup_files()
+    generate_dbt_profile() >> dbt_cli("deps") >> dbt_cli("run") >> cleanup_files()
 
 
 # Call dag in the global namespace

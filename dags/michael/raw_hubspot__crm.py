@@ -40,7 +40,6 @@ BQ_ENGAGEMENT_TABLE = "hubspot__engagement"
 HUBSPOT_PROPERTIES = [
     "id",
     "createdAt",
-    "updatedAt",
 ]
 OBJECT_KEY = {
     "contacts": {
@@ -50,6 +49,7 @@ OBJECT_KEY = {
             "associatedcompanyid",
             "firstname",
             "lastname",
+            "updatedAt",
         ],
     },
     "companies": {
@@ -57,6 +57,7 @@ OBJECT_KEY = {
         "properties": [
             "name",
             "hs_ideal_customer_profile",
+            "updatedAt",
         ],
     },
     "engagements": {
