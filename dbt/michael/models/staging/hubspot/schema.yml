@@ -12,8 +12,10 @@ models:
       - name: tier
         description: "The ideal customer profile tier for a company."
         data_tests:
-          - accepted_values:
-              values: ["tier_1", "tier_2", "tier_3"]
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 3
+              row_condition: "id is not null"
   - name: stg_hubspot__contacts
     description: "Contacts from HubSpot CRM with company mapping."
     columns:

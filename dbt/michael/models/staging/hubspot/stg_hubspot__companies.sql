@@ -5,7 +5,8 @@ with companies as (
     select
         id,
         name,
-        hs_ideal_customer_profile as tier,
+        -- parse numeric value from tier label
+        parse_numeric(right(hs_ideal_customer_profile, 1)) as tier,
         createdAt as created_at,
         updatedAt as updated_at
     from {{ source('hubspot', 'company') }}
