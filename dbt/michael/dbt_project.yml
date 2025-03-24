@@ -35,3 +35,6 @@ models:
     staging:
       notion:
         +materialized: view
+
+vars:
+  'dbt_date:time_zone': 'UTC'

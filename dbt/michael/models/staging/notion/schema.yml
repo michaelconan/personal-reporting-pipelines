@@ -7,8 +7,12 @@ models:
       - name: id
         description: "The primary key for this table"
         data_tests:
-          - unique
           - not_null
+    data_tests:
+      - dbt_expectations.expect_compound_columns_to_be_unique:
+          column_list:
+            - id
+            - date
 
 sources:
   - name: notion
@@ -21,7 +25,7 @@ sources:
         columns:
           - name: id
             description: "Primary key for the raw daily habits table."
-            tests:
+            data_tests:
               - not_null
               - unique
       - name: weekly_habit
@@ -30,7 +34,7 @@ sources:
         columns:
           - name: id
             description: "Primary key for the raw weekly habits table."
-            tests:
+            data_tests:
               - not_null
               - unique
       - name: monthly_habit
@@ -39,6 +43,6 @@ sources:
         columns:
           - name: id
             description: "Primary key for the raw monthly habits table."
-            tests:
+            data_tests:
               - not_null
               - unique
