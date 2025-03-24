@@ -49,6 +49,8 @@ monthly_habits as (
 
 )
 
+-- combine all habit records
+
 select * from daily_habits
 
 union all
