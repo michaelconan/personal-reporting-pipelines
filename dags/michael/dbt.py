@@ -115,3 +115,4 @@ def make_dbt_docs():
 
 # Call dag in the global namespace
 dbt_dag = run_dbt()
+dbt_docs = make_dbt_docs()
