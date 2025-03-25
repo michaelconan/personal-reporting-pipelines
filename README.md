@@ -63,6 +63,13 @@ graph TB
 2. [Airflow](https://airflow.apache.org/) to orchestrate data loading scripts and additional automated workflows
 3. [DBT core](https://docs.getdbt.com/) to define data models and transformations, again orchestrated by Airflow (via CLI / bash TaskFlow)
 
+### DBT Notes
+
+- Data Tests: Used to validate conditions of datasets on ingestion or data modelling
+  - [Standard Generic tests](https://docs.getdbt.com/docs/build/data-tests): basic validations (unique, not null, relationship)
+  - [DBT Expectations package](https://hub.getdbt.com/metaplane/dbt_expectations/latest/): large variety of additional validations
+  - [Custom Generic tests](https://docs.getdbt.com/best-practices/writing-custom-generic-tests): for additional logic not available in those above
+
 ## Standards
 
 The project has been strucutrd and designed with inspiration from [dbt project recommendations](https://docs.getdbt.com/best-practices/how-we-structure/1-guide-overview) and other sources.
