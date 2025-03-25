@@ -9,6 +9,7 @@ env:
   PYTHON_VERSION: 3.12
   CONNECTIONS_FILE: ./config/connections.json
   DOCS_DAG: dbt_docs__michael
+  AIRFLOW_HOME: ${{ github.workspace }}
   AIRFLOW__CORE__EXECUTOR: SequentialExecutor
 
 jobs:
