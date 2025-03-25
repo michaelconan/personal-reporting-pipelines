@@ -1,7 +1,7 @@
 # Cache data
 __pycache__
 .pytest_cache
-.coverage
+.coverage*
 
 # Logs
 logs
