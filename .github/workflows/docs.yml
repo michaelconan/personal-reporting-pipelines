@@ -9,7 +9,7 @@ env:
   PYTHON_VERSION: 3.12
   CONNECTIONS_FILE: ./config/connections.json
   DOCS_DAG: dbt_docs__michael
-  AIRFLOW__CORE__EXECUTOR: SequentialExecutor
+  AIRFLOW__CORE__DAGS_FOLDER: ${{ github.workspace }}/dags
 
 jobs:
   build:
@@ -27,9 +27,13 @@ jobs:
           echo "$AIRFLOW_CONNECTIONS" > ${{ env.CONNECTIONS_FILE }}
       - name: Setup environment
         run: |
+          # Remove old database if exists
+          rm -f airflow.db
+          # Setup airflow app
           chmod +x script/* && script/setup
       - name: Generate docs
         run: |
+          airflow dags list -o yaml
           airflow dags test ${{ env.DOCS_DAG }}
       - name: Copy docs
         run: |
