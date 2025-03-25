@@ -26,7 +26,7 @@ jobs:
           echo "$AIRFLOW_CONNECTIONS" > ${{ env.CONNECTIONS_FILE }}
       - name: Setup environment
         run: |
-          script/setup
+          chmod +x script/* && script/setup
       - name: Generate docs
         run: |
           airflow dags trigger {{ env.DOCS_DAG }}
