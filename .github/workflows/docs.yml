@@ -28,6 +28,9 @@ jobs:
           echo "$AIRFLOW_CONNECTIONS" > ${{ env.CONNECTIONS_FILE }}
       - name: Setup environment
         run: |
+          # Remove old database if exists
+          rm -f airflow.db
+          # Setup airflow app
           chmod +x script/* && script/setup
       - name: Generate docs
         run: |
