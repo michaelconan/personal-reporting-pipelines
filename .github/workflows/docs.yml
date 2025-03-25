@@ -9,6 +9,7 @@ env:
   PYTHON_VERSION: 3.12
   CONNECTIONS_FILE: ./config/connections.json
   DOCS_DAG: dbt_docs__michael
+  AIRFLOW__CORE__EXECUTOR: SequentialExecutor
 
 jobs:
   build:
@@ -29,7 +30,7 @@ jobs:
           chmod +x script/* && script/setup
       - name: Generate docs
         run: |
-          airflow dags trigger {{ env.DOCS_DAG }}
+          airflow dags trigger ${{ env.DOCS_DAG }}
       - name: Copy docs
         run: |
           cp ./dbt/michael/target/static_index.html ./docs/index.html
