@@ -10,13 +10,16 @@ import yaml
 # Airflow imports
 from airflow.decorators import dag, task
 from airflow.hooks.base import BaseHook
+from airflow.configuration import conf
 
 # Local imports
 from michael.datasets import RAW_DATASETS
 
 # File paths for service account key and dbt profile
 PROFILES_DIR = "/tmp/.dbt"
-PROJECT_DIR = os.path.join(os.path.abspath(os.getenv("AIRFLOW_HOME")), "dbt/michael")
+# Assume dbt project is in the same directory as the DAGs folder
+DAGS_FOLDER = conf.get("core", "dags_folder")
+PROJECT_DIR = os.path.join(os.path.dirname(os.path.abspath(DAGS_FOLDER)), "dbt/michael")
 KEYFILE_PATH = os.path.join(PROFILES_DIR, "bq-service-account.json")
 PROFILE_PATH = os.path.join(PROFILES_DIR, "profiles.yml")
 
