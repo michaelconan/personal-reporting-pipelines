@@ -19,9 +19,7 @@ from michael.datasets import RAW_DATASETS
 PROFILES_DIR = "/tmp/.dbt"
 # Assume dbt project is in the same directory as the DAGs folder
 DAGS_FOLDER = conf.get("core", "dags_folder")
-PROJECT_DIR = os.path.join(
-    os.path.abspath(DAGS_FOLDER).replace("dags", "dbt"), "michael"
-)
+PROJECT_DIR = os.path.join(os.path.dirname(os.path.abspath(DAGS_FOLDER)), "dbt/michael")
 KEYFILE_PATH = os.path.join(PROFILES_DIR, "bq-service-account.json")
 PROFILE_PATH = os.path.join(PROFILES_DIR, "profiles.yml")
 
