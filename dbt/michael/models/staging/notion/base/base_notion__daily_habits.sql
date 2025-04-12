@@ -1,16 +1,16 @@
 with raw_daily_habit as (
-    
+
     select
         database_id,
         id,
         `Date` as `date`,
         `Name` as `name`,
-        Devotional,
-        Journal,
-        Prayer,
+        devotional,
+        journal,
+        prayer,
         `Read Bible`,
-        Workout,
-        Language,
+        workout,
+        language,
         created_time,
         last_edited_time,
         row_number() over (
@@ -34,9 +34,11 @@ all_daily_habit as (
         created_time,
         last_edited_time
     from raw_daily_habit
-        unpivot(
-            is_complete for habit in (Devotional, Journal, Prayer, `Read Bible`, Workout, Language)
+    unpivot (
+        is_complete for habit in (
+            devotional, journal, prayer, `Read Bible`, workout, language
         )
+    )
     where row_num = 1
 
 )

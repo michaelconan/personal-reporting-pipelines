@@ -3,3 +3,6 @@
 # Unit testing, code coverage and pre-commit
 pytest-cov==6.0.0
 pre-commit==3.7.1
+# SQL / DBT linting and formatting
+sqlfluff==3.3.1
+sqlfluff-templater-dbt==3.3.1

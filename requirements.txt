@@ -12,3 +12,4 @@ jsonlines==4.0.0
 # Client libraries for dags
 notion-client==2.3.0
 hubspot-api-client==11.1.0
+fitbit==0.3.1

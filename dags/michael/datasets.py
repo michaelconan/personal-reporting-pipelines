@@ -18,6 +18,9 @@ HUBSPOT_CONTACTS_DS = Dataset("hubspot_contacts")
 HUBSPOT_COMPANIES_DS = Dataset("hubspot_companies")
 HUBSPOT_ENGAGEMENTS_DS = Dataset("hubspot_engagements")
 
+# Fitbit Datasets
+FITBIT_SLEEP_DS = Dataset("fitbit_sleep")
+
 # All datasets for DBT triggering
 RAW_DATASETS = [
     NOTION_DAILY_HABITS_DS,
@@ -26,4 +29,5 @@ RAW_DATASETS = [
     HUBSPOT_CONTACTS_DS,
     HUBSPOT_COMPANIES_DS,
     HUBSPOT_ENGAGEMENTS_DS,
+    FITBIT_SLEEP_DS,
 ]

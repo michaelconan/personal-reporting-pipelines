@@ -5,9 +5,9 @@ with raw_weekly_habit as (
         id,
         `Date` as `date`,
         `Name` as `name`,
-        Fast,
-        Church,
-        Community,
+        fast,
+        church,
+        community,
         created_time,
         last_edited_time,
         row_number() over (
@@ -25,15 +25,15 @@ all_weekly_habit as (
         database_id,
         id,
         `Date` as `date`,
-        `Name` as `name`,    
+        `Name` as `name`,
         habit,
         is_complete,
         created_time,
         last_edited_time
     from raw_weekly_habit
-        unpivot(
-            is_complete for habit in (Fast, Church, Community)
-        )
+    unpivot (
+        is_complete for habit in (fast, church, community)
+    )
     where row_num = 1
 
 )
