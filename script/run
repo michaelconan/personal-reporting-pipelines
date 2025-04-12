@@ -4,4 +4,11 @@
 
 set -e
 
+# Set development environment variables
+export VERSION_TABLE="dev_alembic_version"
+export RAW_SCHEMA="dev_raw"
+export DBT_SCHEMA="dev_reporting"
+export DBT_TARGET="dev"
+
+# Start the application using honcho
 honcho start

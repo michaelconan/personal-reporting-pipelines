@@ -14,16 +14,15 @@ from airflow.utils.state import DagRunState
 from airflow.utils.types import DagRunType
 
 # Separate schema to run tests
-ADMIN_TEST_SCHEMA = "test_admin"
-RAW_TEST_SCHEMA = "test_raw"
 DBT_TEST_TARGET = "test"
 
 
 @pytest.fixture
 def dag_bag():
+
+    # Set environment variable for testing
+    os.environ["TEST"] = "True"
     # Set schema variables
-    os.environ["ADMIN_SCHEMA"] = ADMIN_TEST_SCHEMA
-    os.environ["RAW_SCHEMA"] = RAW_TEST_SCHEMA
     os.environ["DBT_TARGET"] = DBT_TEST_TARGET
     return DagBag(dag_folder="./dags", include_examples=False)
 

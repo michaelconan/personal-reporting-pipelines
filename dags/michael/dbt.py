@@ -13,7 +13,8 @@ from airflow.hooks.base import BaseHook
 from airflow.configuration import conf
 
 # Local imports
-from michael.datasets import RAW_DATASETS
+from dags.michael import DBT_TARGET, DBT_SCHEMA_NAME, DBT_SCHEMA
+from dags.michael.datasets import RAW_DATASETS
 
 # File paths for service account key and dbt profile
 PROFILES_DIR = "/tmp/.dbt"
@@ -59,7 +60,7 @@ def generate_dbt_profile(params: dict):
             "outputs": {
                 t: {
                     **profile_outputs.copy(),
-                    **{"dataset": (f"{t}_" if t != "prod" else "") + "reporting"},
+                    **{"dataset": (f"{t}_" if t != "prod" else "") + DBT_SCHEMA_NAME},
                 }
                 for t in TARGETS
             },
@@ -93,7 +94,7 @@ def cleanup_files():
     catchup=False,
     start_date=pendulum.datetime(2025, 1, 1),
     dagrun_timeout=datetime.timedelta(minutes=20),
-    params={"target": "prod"},
+    params={"target": DBT_TARGET},
     tags=["dbt", "transform"],
 )
 def run_dbt():
@@ -113,7 +114,7 @@ def run_dbt():
     catchup=False,
     start_date=pendulum.datetime(2025, 1, 1),
     dagrun_timeout=datetime.timedelta(minutes=20),
-    params={"dataset": "reporting"},
+    params={"dataset": DBT_SCHEMA},
     tags=["dbt", "docs"],
 )
 def make_dbt_docs():

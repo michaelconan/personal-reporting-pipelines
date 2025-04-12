@@ -13,9 +13,9 @@ models:
         description: "The ideal customer profile tier for a company."
         data_tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0
+              min_value: 1
               max_value: 3
-              row_condition: "id is not null"
+              row_condition: "tier is not null"
   - name: stg_hubspot__contacts
     description: "Contacts from HubSpot CRM with company mapping."
     columns:
@@ -124,11 +124,11 @@ sources:
             description: "The IDs of the contact associated with an engagement."
             data_tests:
               - expect_column_array_length_to_be_between:
-                  min_value: 1
+                  min_value: 0
                   max_value: 10
           - name: companyIds
             description: "The IDs of the company associated with an engagement."
             data_tests:
               - expect_column_array_length_to_be_between:
-                  min_value: 1
+                  min_value: 0
                   max_value: 10

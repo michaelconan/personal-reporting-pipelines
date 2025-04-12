@@ -1,15 +1,19 @@
-Welcome to your new dbt project!
+# Personal Reporting
 
-### Using the starter project
+## Layers
 
-Try running the following commands:
-- dbt run
-- dbt test
+Model layers have been implemented as recommended by [DBT project structure](https://docs.getdbt.com/best-practices/how-we-structure/1-guide-overview).
+
+   Layer      |           Description                          |                         Scope
+--------------|------------------------------------------------|---------------------------------------------------------
+ Staging      | Foundational models organised by source system | Renaming, type casting, basic computations, categorising
+ Intermediate | Apply complex transformations by focus area    | Structural simplification, re-graining, isolating complex operations
+ Marts        | Entity or concept layer, denormalised          | Standard entity concepts, built wide, and extended thoughtfully
 
 
-### Resources:
-- Learn more about dbt [in the docs](https://docs.getdbt.com/docs/introduction)
-- Check out [Discourse](https://discourse.getdbt.com/) for commonly asked questions and answers
-- Join the [chat](https://community.getdbt.com/) on Slack for live discussions and support
-- Find [dbt events](https://events.getdbt.com) near you
-- Check out [the blog](https://blog.getdbt.com/) for the latest news on dbt's development and best practices
+## Tests
+
+- Data Tests: Used to validate conditions of datasets on ingestion or data modelling
+  - [Standard Generic tests](https://docs.getdbt.com/docs/build/data-tests): basic validations (unique, not null, relationship)
+  - [DBT Expectations package](https://hub.getdbt.com/metaplane/dbt_expectations/latest/): large variety of additional validations
+  - [Custom Generic tests](https://docs.getdbt.com/best-practices/writing-custom-generic-tests): for additional logic not available in those above

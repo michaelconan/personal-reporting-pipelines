@@ -1,18 +1,31 @@
 version: 2
 
 models:
-  - name: stg_notion__habits
-    description: "Combined list of daily, weekly, and monthly habits from the Notion habit tracker."
+  - name: stg_notion__daily_habits
+    description: "Unique daily habits from the Notion habit tracker."
     columns:
       - name: id
         description: "The primary key for this table"
         data_tests:
           - not_null
-    data_tests:
-      - dbt_expectations.expect_compound_columns_to_be_unique:
-          column_list:
-            - id
-            - date
+          - unique
+  - name: stg_notion__weekly_habits
+    description: "Unique weekly habits from the Notion habit tracker."
+    columns:
+      - name: id
+        description: "The primary key for this table"
+        data_tests:
+          - not_null
+          - unique
+  - name: stg_notion__monthly_habits
+    description: "Unique monthly habits from the Notion habit tracker."
+    columns:
+      - name: id
+        description: "The primary key for this table"
+        data_tests:
+          - not_null
+          - unique
+
 
 sources:
   - name: notion

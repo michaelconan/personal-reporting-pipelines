@@ -12,7 +12,7 @@ The following data will be ingested from my personal systems into a BigQuery war
 
 1. Notion
 2. HubSpot
-3. Google Contacts
+3. Fitbit
 
 ### Warehouse Data Flow
 
@@ -63,22 +63,16 @@ graph TB
 2. [Airflow](https://airflow.apache.org/) to orchestrate data loading scripts and additional automated workflows
 3. [DBT core](https://docs.getdbt.com/) to define data models and transformations, again orchestrated by Airflow (via CLI / bash TaskFlow)
 
-### DBT Notes
+### Structures and Naming
 
-- Data Tests: Used to validate conditions of datasets on ingestion or data modelling
-  - [Standard Generic tests](https://docs.getdbt.com/docs/build/data-tests): basic validations (unique, not null, relationship)
-  - [DBT Expectations package](https://hub.getdbt.com/metaplane/dbt_expectations/latest/): large variety of additional validations
-  - [Custom Generic tests](https://docs.getdbt.com/best-practices/writing-custom-generic-tests): for additional logic not available in those above
-
-## Standards
-
-The project has been strucutrd and designed with inspiration from [dbt project recommendations](https://docs.getdbt.com/best-practices/how-we-structure/1-guide-overview) and other sources.
+The project has been structured and designed with inspiration from [dbt project recommendations](https://docs.getdbt.com/best-practices/how-we-structure/1-guide-overview) and other sources.
 
 - DBT projects stored in separate subdirectory from DAGs (at least now)
 - DAGs and DBT projects organised at the top level by owner (should more get involved)
 - Further organisation by data source and / or function
 - Naming generally follows DBT recommended `[layer]_[source]__[entity]`, adapted for Airflow DAGs with `__[refresh-type]` and other modifications as needed. 
 
+Refer to additional [DBT project documentation](/dbt/michael/README.md).
 
 ## Setup
 
@@ -113,8 +107,10 @@ To run Airflow on a single instance, I used Honcho to run multiple processes via
 
 1. Google Cloud BigQuery using [Airflow BigQuery Provider](https://airflow.apache.org/docs/apache-airflow-providers-google/stable/operators/cloud/bigquery.html#upsert-table) and dbt
 2. Notion using [Notion Client](https://pypi.org/project/notion-client/)
+3. Hubspot using [Hubspot API Client](https://pypi.org/project/hubspot-api-client/)
+4. Fitbit using [Fitbit Client](https://pypi.org/project/fitbit/)
 
-## Testing
+## Development and Testing
 
 ### Environments
 
@@ -126,3 +122,9 @@ Unit testing and the local instance are connected to a separate Google Cloud Pla
 2. To run server locally, run `honcho start` in the terminal
 3. Add connection settings in the interface or upload via file
 4. Write and run [unit tests for DAGs](https://airflow.apache.org/docs/apache-airflow/stable/best-practices.html#unit-tests)
+
+### DBT Steps
+
+Due to functionality of utilities like SQLFluff, it is helpful to open the DBT project as the root directory for development.
+
+The Airflow DAG dynamically generates the DBT profile file and BigQuery service account key, these can be copied to the standard `~/.dbt` folder for local development.

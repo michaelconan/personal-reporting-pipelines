@@ -5,7 +5,6 @@ DAGs to load Hubspot CRM data into BigQuery.
 """
 
 # Basic imports
-import os
 import pendulum
 import jsonlines
 
@@ -18,6 +17,7 @@ from airflow.datasets import Dataset
 from airflow.hooks.base import BaseHook
 
 # Common custom tasks
+from dags.michael import RAW_SCHEMA
 from michael.common.bigquery import load_file_to_bq
 from michael.datasets import (
     HUBSPOT_CONTACTS_DS,
@@ -25,7 +25,6 @@ from michael.datasets import (
     HUBSPOT_ENGAGEMENTS_DS,
 )
 
-IS_TEST = os.getenv("TEST") or os.getenv("CI")
 
 # Hubspot connection
 HUBSPOT_CONN_ID = "hubspot_app"
@@ -133,7 +132,7 @@ def create_hubspot_dag(
         schedule=schedule,
         start_date=pendulum.datetime(2024, 10, 1),
         catchup=False,
-        params={"raw_schema": "raw"},
+        params={"raw_schema": RAW_SCHEMA},
         user_defined_macros={"BQ_TABLE": bq_table},
         tags=["hubspot", "crm", "raw"],
     ) as dag:
