@@ -9,11 +9,7 @@ from airflow.models.dagbag import DagBag
 from airflow.utils.state import TaskInstanceState
 
 # Local imports
-from tests.conftest import run_dag, RAW_TEST_SCHEMA
-
-
-# Set environment variable for testing
-os.environ["TEST"] = "True"
+from tests.conftest import run_dag
 
 
 @pytest.mark.parametrize(
@@ -24,20 +20,23 @@ os.environ["TEST"] = "True"
         ("raw_hubspot__engagements__full", None),
         ("raw_hubspot__contacts__changed", 30),
         ("raw_hubspot__companies__changed", 30),
-        ("raw_hubspot__engagements__changed", 30),
+        ("raw_hubspot__engagements__changed", 15),
     ),
 )
 def test_hubspot_load(dag_bag: DagBag, dag_id: str, time_period: int):
 
+    # Delayed import to capture DBT target variable
+    from dags.michael import RAW_SCHEMA
+
     # GIVEN
     # Define interval and DAG run parameters
-    DATA_INTERVAL_START = pendulum.datetime(2025, 2, 14, tz="UTC")
+    DATA_INTERVAL_START = pendulum.now().add(days=-15)
 
     # Get DAG from DagBag to set context
     dag = dag_bag.get_dag(dag_id=dag_id)
     args = {
         "execution_date": DATA_INTERVAL_START,
-        "conf": {"raw_schema": RAW_TEST_SCHEMA},
+        "conf": {"raw_schema": RAW_SCHEMA},
     }
     if time_period:
         DATA_INTERVAL_END = DATA_INTERVAL_START + datetime.timedelta(days=time_period)

@@ -9,11 +9,7 @@ from airflow.models.dagbag import DagBag
 from airflow.utils.state import TaskInstanceState
 
 # Local imports
-from tests.conftest import run_dag, RAW_TEST_SCHEMA
-
-
-# Set environment variable for testing
-os.environ["TEST"] = "True"
+from tests.conftest import run_dag
 
 
 @pytest.mark.parametrize(
@@ -21,11 +17,16 @@ os.environ["TEST"] = "True"
     (
         ("raw_notion__daily_habits__full", None),
         ("raw_notion__weekly_habits__full", None),
+        ("raw_notion__monthly_habits__full", None),
         ("raw_notion__daily_habits__changed", 1),
         ("raw_notion__weekly_habits__changed", 7),
+        ("raw_notion__monthly_habits__changed", 31),
     ),
 )
 def test_notion_habits(dag_bag: DagBag, dag_id: str, time_period: int):
+
+    # Delayed import to capture DBT target variable
+    from dags.michael import RAW_SCHEMA
 
     # GIVEN
     # Define interval and DAG run parameters
@@ -35,7 +36,7 @@ def test_notion_habits(dag_bag: DagBag, dag_id: str, time_period: int):
     dag = dag_bag.get_dag(dag_id=dag_id)
     args = {
         "execution_date": DATA_INTERVAL_START,
-        "conf": {"raw_schema": RAW_TEST_SCHEMA},
+        "conf": {"raw_schema": RAW_SCHEMA},
     }
     if time_period:
         DATA_INTERVAL_END = DATA_INTERVAL_START + datetime.timedelta(days=time_period)

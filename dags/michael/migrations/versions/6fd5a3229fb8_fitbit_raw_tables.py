@@ -8,10 +8,15 @@ Create Date:
     2025-04-10 23:16:49.495902
 """
 
+# Base imports
 from typing import Sequence, Union
-import os
+
+# PyPI imports
 from alembic import op
 import sqlalchemy as sa
+
+# Local imports
+from dags.michael.datasets import RAW_SCHEMA
 
 
 # revision identifiers, used by Alembic.
@@ -19,10 +24,6 @@ revision: str = "6fd5a3229fb8"
 down_revision: Union[str, None] = "fe3875770e8b"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
-
-
-# Raw schema to copy system data as-is
-RAW_SCHEMA = os.getenv("RAW_SCHEMA", default="raw")
 
 
 def upgrade() -> None:

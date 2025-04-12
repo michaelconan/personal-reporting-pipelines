@@ -5,7 +5,6 @@ DAGs to load daily and weekly habits from Notion API into BigQuery.
 """
 
 # Basic imports
-import os
 import pendulum
 import jsonlines
 from typing import Any
@@ -19,6 +18,7 @@ from airflow.datasets import Dataset
 from airflow.hooks.base import BaseHook
 
 # Common custom tasks
+from dags.michael import RAW_SCHEMA, IS_TEST
 from michael.common.bigquery import load_file_to_bq
 from michael.datasets import (
     NOTION_DAILY_HABITS_DS,
@@ -26,7 +26,6 @@ from michael.datasets import (
     NOTION_MONTHLY_HABITS_DS,
 )
 
-IS_TEST = os.getenv("TEST") or os.getenv("CI")
 
 # Notion connection
 NOTION_CONN_ID = "notion_productivity"
@@ -136,7 +135,7 @@ def create_notion_dag(
         schedule=schedule,
         start_date=pendulum.datetime(2024, 10, 1),
         catchup=False,
-        params={"raw_schema": "raw"},
+        params={"raw_schema": RAW_SCHEMA},
         user_defined_macros={"BQ_TABLE": bq_table},
         tags=["notion", "habits", "raw"],
     ) as dag:

@@ -1,10 +1,14 @@
+# Base imports
 from logging.config import fileConfig
 import os
 
+# PyPI imports
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
-
 from alembic import context
+
+# Local imports
+from dags.michael.datasets import ADMIN_SCHEMA, VERSION_TABLE
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -25,10 +29,6 @@ target_metadata = None
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
-
-
-SCHEMA = os.getenv("ADMIN_SCHEMA", "admin")
-VERSION_TABLE = os.getenv("VERSION_TABLE", "alembic_version")
 
 
 def run_migrations_offline() -> None:
@@ -72,7 +72,7 @@ def run_migrations_online() -> None:
         context.configure(
             connection=connection,
             target_metadata=target_metadata,
-            version_table=f"{SCHEMA}.alembic_version",
+            version_table=f"{ADMIN_SCHEMA}.{VERSION_TABLE}",
         )
 
         with context.begin_transaction():

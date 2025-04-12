@@ -17,6 +17,9 @@ import logging
 from google.auth import default
 import google.cloud.bigquery as bigquery
 
+# Local imports
+from dags.michael.datasets import RAW_SCHEMA, DBT_SCHEMA
+
 
 # revision identifiers, used by Alembic.
 revision: str = "fe52ae40c7c1"
@@ -29,8 +32,6 @@ logger = logging.getLogger(__name__)
 
 # Raw schema to copy system data as-is
 BQ_LOCATION = os.getenv("BQ_LOCATION", default="US")
-RAW_SCHEMA = os.getenv("RAW_SCHEMA", default="raw")
-DBT_SCHEMA = os.getenv("DBT_SCHEMA", default="reporting")
 
 
 def upgrade() -> None:
