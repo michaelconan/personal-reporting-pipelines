@@ -61,7 +61,8 @@ OBJECT_KEY = {
         ],
     },
     "engagements": {
-        "types": ["CALL", "WHATS_APP", "MEETING", "NOTE", "SMS"],
+        # Exclude: TASK, NOTE
+        "types": ["CALL", "WHATS_APP", "MEETING", "SMS", "EMAIL", "LINKEDIN_MESSAGE"],
         "properties": [
             "lastUpdated",
             "type",

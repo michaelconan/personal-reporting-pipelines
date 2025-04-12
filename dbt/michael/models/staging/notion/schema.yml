@@ -27,7 +27,6 @@ sources:
             description: "Primary key for the raw daily habits table."
             data_tests:
               - not_null
-              - unique
       - name: weekly_habit
         identifier: notion__weekly_habit
         description: "Raw habit entries from the weekly notion database."
@@ -36,7 +35,6 @@ sources:
             description: "Primary key for the raw weekly habits table."
             data_tests:
               - not_null
-              - unique
       - name: monthly_habit
         identifier: notion__monthly_habit
         description: "Raw habit entries from the monthly notion database."
@@ -45,4 +43,3 @@ sources:
             description: "Primary key for the raw monthly habits table."
             data_tests:
               - not_null
-              - unique

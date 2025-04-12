@@ -1,5 +1,4 @@
 -- staging model for hubspot contact data
-
 with contacts as (
 
     select
@@ -8,10 +7,23 @@ with contacts as (
         email,
         firstname as first_name,
         lastname as last_name,
-        createdAt as created_at,
-        updatedAt as updated_at
-    from {{ source('hubspot', 'contact') }}
+        createdat as created_at,
+        updatedat as updated_at,
+        row_number() over (
+            partition by id
+            order by updatedat desc
+        ) as row_num
+    from
+        {{ source('hubspot', 'contact') }}
 
 )
 
-select * from contacts
+select
+    id,
+    company_id,
+    first_name,
+    last_name,
+    created_at,
+    updated_at
+from contacts
+where row_num = 1

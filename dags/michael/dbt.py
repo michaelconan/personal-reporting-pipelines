@@ -23,6 +23,12 @@ PROJECT_DIR = os.path.join(os.path.dirname(os.path.abspath(DAGS_FOLDER)), "dbt/m
 KEYFILE_PATH = os.path.join(PROFILES_DIR, "bq-service-account.json")
 PROFILE_PATH = os.path.join(PROFILES_DIR, "profiles.yml")
 
+TARGETS = (
+    "dev",
+    "test",
+    "prod",
+)
+
 
 @task(
     task_id="generate_dbt_profile",
@@ -37,23 +43,27 @@ def generate_dbt_profile(params: dict):
         f.write(conn.extra_dejson.get("keyfile_dict"))
 
     # Generate profile with BigQuery details
+    profile_outputs = {
+        "type": "bigquery",
+        "method": "service-account",
+        "keyfile": KEYFILE_PATH,
+        "project": conn.extra_dejson.get("project"),
+        "location": conn.extra_dejson.get("location"),
+        "priority": "interactive",
+        "job_execution_timeout_seconds": 300,
+        "job_retries": 1,
+        "threads": 1,
+    }
     profile = {
         "michael": {
             "outputs": {
-                "dev": {
-                    "type": "bigquery",
-                    "method": "service-account",
-                    "keyfile": KEYFILE_PATH,
-                    "dataset": params["dataset"],
-                    "project": conn.extra_dejson.get("project"),
-                    "location": conn.extra_dejson.get("location"),
-                    "priority": "interactive",
-                    "job_execution_timeout_seconds": 300,
-                    "job_retries": 1,
-                    "threads": 1,
-                },
+                t: {
+                    **profile_outputs.copy(),
+                    **{"dataset": (f"{t}_" if t != "prod" else "") + "reporting"},
+                }
+                for t in TARGETS
             },
-            "target": "dev",
+            "target": params["target"],
         },
     }
     # Create profile file for dbt run
@@ -83,7 +93,7 @@ def cleanup_files():
     catchup=False,
     start_date=pendulum.datetime(2025, 1, 1),
     dagrun_timeout=datetime.timedelta(minutes=20),
-    params={"dataset": "reporting"},
+    params={"target": "prod"},
     tags=["dbt", "transform"],
 )
 def run_dbt():

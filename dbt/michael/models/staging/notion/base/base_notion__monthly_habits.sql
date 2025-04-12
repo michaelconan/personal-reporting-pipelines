@@ -1,14 +1,14 @@
 with raw_monthly_habit as (
-    
+
     select
         database_id,
         id,
         `Date` as `date`,
         `Name` as `name`,
-        Budget,
-        Serve,
-        Travel,
-        Blog,
+        budget,
+        serve,
+        travel,
+        blog,
         created_time,
         last_edited_time,
         row_number() over (
@@ -32,9 +32,9 @@ all_monthly_habit as (
         created_time,
         last_edited_time
     from raw_monthly_habit
-        unpivot(
-            is_complete for habit in (Budget, Serve, Travel, Blog)
-        )
+    unpivot (
+        is_complete for habit in (budget, serve, travel, blog)
+    )
     where row_num = 1
 
 )
