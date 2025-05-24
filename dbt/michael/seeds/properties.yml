@@ -1,0 +1,11 @@
+version: 2
+
+seeds:
+  - name: habit_categories
+    config:
+      quote_columns: false
+      column_types:
+        habit: str
+        frequency: str
+        category: str
+      delimiter: ","
