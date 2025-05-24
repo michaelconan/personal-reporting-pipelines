@@ -3,8 +3,8 @@ with daily_habit_unpivoted as (
     select
         database_id,
         id,
-        `Date` as `date`,
-        `Name` as `name`,
+        `date`,
+        `name`,
         habit,
         is_complete,
         created_time,
@@ -23,8 +23,8 @@ weekly_habit_unpivoted as (
     select
         database_id,
         id,
-        `Date` as `date`,
-        `Name` as `name`,
+        `date`,
+        `name`,
         habit,
         is_complete,
         created_time,
@@ -43,8 +43,8 @@ monthly_habit_unpivoted as (
     select
         database_id,
         id,
-        `Date` as `date`,
-        `Name` as `name`,
+        `date`,
+        `name`,
         habit,
         is_complete,
         created_time,

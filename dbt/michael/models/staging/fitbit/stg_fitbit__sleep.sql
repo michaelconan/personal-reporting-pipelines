@@ -8,6 +8,8 @@ with sleep as (
         endtime as end_time,
         `type`,
         logtype as log_type,
+        -- Check if duration exceeded set goal
+        duration >= {{ var('sleep_goal') }} as sleep_goal_met,
         row_number() over (
             partition by logid
             order by dateofsleep desc
@@ -24,7 +26,8 @@ select
     start_time,
     end_time,
     `type`,
-    log_type
+    log_type,
+    sleep_goal_met
 from
     sleep
 where

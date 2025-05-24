@@ -4,11 +4,12 @@
 
 Model layers have been implemented as recommended by [DBT project structure](https://docs.getdbt.com/best-practices/how-we-structure/1-guide-overview).
 
-   Layer      |           Description                          |                         Scope
---------------|------------------------------------------------|---------------------------------------------------------
- Staging      | Foundational models organised by source system | Renaming, type casting, basic computations, categorising
- Intermediate | Apply complex transformations by focus area    | Structural simplification, re-graining, isolating complex operations
- Marts        | Entity or concept layer, denormalised          | Standard entity concepts, built wide, and extended thoughtfully
+   Layer      |           Description                          |                         Scope                                        |        Notes   
+--------------|------------------------------------------------|----------------------------------------------------------------------|----------------------
+ Staging      | Foundational models organised by source system | Renaming, type casting, basic computations, categorising             | Standardise names to snake case, deduplicate for change data loading
+ Intermediate | Apply complex transformations by focus area    | Structural simplification, re-graining, isolating complex operations |
+ Marts        | Entity or concept layer, denormalised          | Standard entity concepts, built wide, and extended thoughtfully      | 
+ Analyses / Summaries (TBC) | Used for reporting use cases         |  Aggregation, calculation, etc                                       |
 
 
 ## Tests
