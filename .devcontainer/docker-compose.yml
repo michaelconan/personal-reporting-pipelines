@@ -4,6 +4,7 @@ services:
       AIRFLOW_HOME: "."
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: "postgresql+psycopg2://postgres:postgres@db/postgres"
       AIRFLOW__CORE__FERNET_KEY: ""
+      AIRFLOW__CORE__EXECUTOR: "LocalExecutor"
       AIRFLOW__WEBSERVER__INSTANCE_NAME: "Local Instance"
       AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "true"
     build:

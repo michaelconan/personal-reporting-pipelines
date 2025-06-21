@@ -4,10 +4,11 @@
 
 set -e
 
-# Set development environment variables
-export VERSION_TABLE="dev_alembic_version"
-export RAW_SCHEMA="dev_raw"
-export DBT_SCHEMA="dev_reporting"
+echo "Running from $PWD"
+
+# Load environment file and export variables
+export AIRFLOW__CORE__EXECUTOR=LocalExecutor
+export PYTHONPATH="/workspaces/personal-reporting"
 export DBT_TARGET="dev"
 
 # Start the application using honcho
