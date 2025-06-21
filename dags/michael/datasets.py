@@ -9,6 +9,7 @@ from airflow.datasets import Dataset
 # Raw datasets used for airflow DAG scheduling
 
 # Notion Datasets
+NOTION_DS = Dataset("notion_habits")
 NOTION_DAILY_HABITS_DS = Dataset("notion_daily_habits")
 NOTION_WEEKLY_HABITS_DS = Dataset("notion_weekly_habits")
 NOTION_MONTHLY_HABITS_DS = Dataset("notion_monthly_habits")
