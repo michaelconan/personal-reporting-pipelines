@@ -1,0 +1,56 @@
+name: run
+
+on:
+  pull_request:
+    branches: [ main ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ghcr.io/${{ github.repository }}-devcontainer
+  CONNECTIONS_FILE: ./config/connections.json
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+    env:
+      DBT_TARGET: prod
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Load Airflow connections
+        env:
+          AIRFLOW_CONNECTIONS: ${{ secrets.AIRFLOW_CONNECTIONS }}
+        run: |
+          echo "$AIRFLOW_CONNECTIONS" > ${{ env.CONNECTIONS_FILE }}
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pre-build dev container image
+        uses: devcontainers/ci@v0.3
+        with:
+          imageName: ${{ env.IMAGE_NAME }}
+          cacheFrom: ${{ env.IMAGE_NAME }}
+          push: always
+  
+      - name: Build container and run dags
+        uses: devcontainers/ci@v0.3
+        with:
+          imageName: ${{ env.IMAGE_NAME }}
+          cacheFrom: ${{ env.IMAGE_NAME }}
+          # Run dags
+          runCmd: |
+            script/trigger
+
+      - name: Cleanup Files
+        if: always()
+        run: |
+          rm -f ${{ env.CONNECTIONS_FILE }}
