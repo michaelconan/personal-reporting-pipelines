@@ -59,20 +59,20 @@ graph TB
 
 ## Frameworks
 
-1. [Alembic](https://alembic.sqlalchemy.org/en/latest/) database migrations for raw tables which should generally match the schema of the source system, run via [Airflow provider package](https://pypi.org/project/airflow-provider-alembic/)
-2. [Airflow](https://airflow.apache.org/) to orchestrate data loading scripts and additional automated workflows
-3. [DBT core](https://docs.getdbt.com/) to define data models and transformations, again orchestrated by Airflow (via CLI / bash TaskFlow)
+1. [Apache Airflow](https://airflow.apache.org/) to orchestrate data loading, transformation, and additional automated workflows
+2. [dlt hub](https://dlthub.com/docs/intro) to extract source data and load to the warehouse in raw form
+3. [dbt core](https://docs.getdbt.com/) to define data models and transformations, again orchestrated by Airflow (via CLI / bash TaskFlow)
 
 ### Structures and Naming
 
 The project has been structured and designed with inspiration from [dbt project recommendations](https://docs.getdbt.com/best-practices/how-we-structure/1-guide-overview) and other sources.
 
-- DBT projects stored in separate subdirectory from DAGs (at least now)
-- DAGs and DBT projects organised at the top level by owner (should more get involved)
+- `dbt` projects stored in separate subdirectory from DAGs (at least now)
+- DAGs and `dbt` projects organised at the top level by owner (should more get involved)
 - Further organisation by data source and / or function
-- Naming generally follows DBT recommended `[layer]_[source]__[entity]`, adapted for Airflow DAGs with `__[refresh-type]` and other modifications as needed. 
+- Naming generally follows `dbt` recommended `[layer]_[source]__[entity]`, adapted for Airflow DAGs with `__[refresh-type]` and other modifications as needed. 
 
-Refer to additional [DBT project documentation](/dbt/michael/README.md).
+Refer to additional [dbt project documentation](/dbt/michael/README.md).
 
 ## Setup
 
@@ -83,6 +83,8 @@ While it generally isn't recommended to maintain infrastructure and workflows in
 To run Airflow on a single instance, I used Honcho to run multiple processes via Procfile (webserver + scheduler)
 
 ### Azure Setup
+
+The project was deployed on Azure when I had credits, before I lost access to the program.
 
 1. Create Web App + PostgreSQL with Python
 2. Turn on Application Insights, Logging
@@ -99,7 +101,7 @@ To run Airflow on a single instance, I used Honcho to run multiple processes via
     - Reference [quick start](https://airflow.apache.org/docs/apache-airflow/stable/start.html) for guidance on this setup process
     - It may be necessary to run these via startup command to get the app to launch
 
-### Automated Deployment
+#### Automated Deployment
 
 1. I referenced [this workflow](https://learn.microsoft.com/en-us/azure/app-service/deploy-github-actions?tabs=applevel%2Cpython%2Cpythonn) to deploy Python app to App Service using Publish Profile basic authentication
 
@@ -119,12 +121,12 @@ Unit testing and the local instance are connected to a separate Google Cloud Pla
 ### Setup Steps
 
 1. Build Dev Container in VSCode, this will run `script/setup` to install dependencies (with dev)
-2. To run server locally, run `honcho start` in the terminal
+2. To run server locally, run `script/run` in the terminal
 3. Add connection settings in the interface or upload via file
 4. Write and run [unit tests for DAGs](https://airflow.apache.org/docs/apache-airflow/stable/best-practices.html#unit-tests)
 
-### DBT Steps
+### dbt Steps
 
-Due to functionality of utilities like SQLFluff, it is helpful to open the DBT project as the root directory for development.
+Due to functionality of utilities like SQLFluff, it is helpful to open the dbt project as the root directory for development.
 
-The Airflow DAG dynamically generates the DBT profile file and BigQuery service account key, these can be copied to the standard `~/.dbt` folder for local development.
+The Airflow DAG dynamically generates the dbt profile file and BigQuery service account key, these can be copied to the standard `~/.dbt` folder for local development.
