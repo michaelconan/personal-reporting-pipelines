@@ -18,83 +18,6 @@ from dags.michael.datasets import NOTION_DS
 NOTION_CONN_ID = "notion_productivity"
 BQ_CONN_ID = "bigquery_reporting"
 
-NOTION_TYPES = {
-    "checkbox": {
-        "type": "bool",
-    },
-    "date": {
-        "type": "date",
-        "key": "start",
-    },
-    "number": {
-        "type": "decimal",
-    },
-    "select": {
-        "type": "text",
-        "key": "name",
-    },
-    "text": {
-        "type": "text",
-        "key": "content",
-    },
-}
-
-
-def get_property_schema(item: dict) -> dict:
-    # Return only the keys that are not 'id' or 'type'
-    hints = {
-        "properties": {},
-    }
-    list_columns = list()
-    for key, value in item["properties"].items():
-
-        # Handle special cases for formula and relation types
-        field_type = value["type"]
-        if isinstance(value[field_type], list):
-            list_columns.append(key)
-        else:
-            field_key = ("properties", key)
-            type_info = NOTION_TYPES.get(field_type, None)
-            # Handle nested type fields
-            if type_info and "key" in type_info:
-                hints[field_key] = {}
-                field_key = ("properties", key, field_type)
-                column = {
-                    "name": type_info["key"],
-                    "data_type": type_info["type"],
-                }
-            else:
-                # Handle formula and rollup types with nested primitive values
-                if field_type in ("formula", "rollup"):
-                    hints[field_key] = {}
-                    field_key = ("properties", key, field_type)
-                    field_type = value["formula"]["type"]
-                    type_info = NOTION_TYPES.get(field_type, None)
-
-                column = {
-                    "name": field_type,
-                    "data_type": type_info["type"] if type_info else "text",
-                }
-
-            # Add the field to the hints
-            hints[field_key] = dlt.mark.make_nested_hints(
-                columns=[column],
-            )
-
-    # Keep lists as JSON type to avoid related table creation
-    if list_columns:
-        hints["properties"] = dlt.mark.make_nested_hints(
-            columns=[
-                {
-                    "name": col,
-                    "data_type": "json",
-                }
-                for col in list_columns
-            ],
-        )
-
-    return hints
-
 
 def exclude_fields(item: dict, fields: list) -> dict:
 
@@ -166,7 +89,7 @@ def get_notion_source(
     }
 
     rows_resource = {
-        "name": "notion_database_rows",
+        "name": "notion__database_rows",
         # Add dynamic table name for the database rows resource
         "table_name": lambda r: f"notion__database_{r['parent']['database_id']}",
         # Prevent nested tables for multi-value properties
@@ -174,7 +97,7 @@ def get_notion_source(
         # Prior attempt to exclude nested fields like id and type
         # "nested_hints": get_property_schema,
         "endpoint": {
-            "path": "databases/{resources.notion_databases.id}/query",
+            "path": "databases/{resources.notion__databases.id}/query",
             "data_selector": "results",
             "json": {
                 "filter": {
@@ -252,10 +175,6 @@ def create_notion_dag(
         bq_destination = bigquery(
             credentials=bq_conn.extra_dejson.get("keyfile_dict"),
         )
-
-        # Limit the number of rows for testing purposes
-        # if IS_TEST:
-        #     notion_source.add_limit(100)
 
         # Modify the pipeline parameters
         pipeline = dlt.pipeline(

@@ -6,7 +6,6 @@ from dlt.destinations import bigquery
 from dlt.helpers.airflow_helper import PipelineTasksGroup
 from dlt.sources.helpers.rest_client.paginators import (
     JSONResponseCursorPaginator,
-    OffsetPaginator,
 )
 
 # Airflow hooks and operators
@@ -14,6 +13,7 @@ from airflow.models import DAG
 from airflow.hooks.base import BaseHook
 
 # Common custom tasks
+from dags.michael.common.dlt_rest import HasMorePaginator
 from dags.michael import DEFAULT_ARGS, RAW_SCHEMA, IS_TEST
 from dags.michael.datasets import HUBSPOT_DS
 
@@ -30,64 +30,15 @@ def iso_to_unix(iso_date: str) -> int:
     return int(dt.timestamp() * 1000)
 
 
-def get_search_filters(context: dict, object_info: dict, is_incremental: bool) -> dict:
-    """
-    Generate search filters for HubSpot API based on context.
-    """
-    body = {
-        "limit": 100,
-        "properties": object_info["properties"],
-    }
-    if is_incremental:
-        body["filterGroups"] = [
-            {
-                "propertyName": object_info["filter_key"],
-                "operator": "GTE",
-                "value": iso_to_unix(context["incremental"]["start_value"]),
-            },
-            {
-                "propertyName": object_info["filter_key"],
-                "operator": "LTE",
-                "value": iso_to_unix(context["incremental"]["end_value"]),
-            },
-        ]
-
-    return body
-
-
-def get_engagement_endpoint(
-    context: dict, properties: list, is_incremental: bool
-) -> dict:
-
-    endpoint = (
-        {
-            "path": "engagements/v1/engagements/paged",
-            "method": "GET",
-            "data_selector": "results",
-            "json": {
-                "properties": properties,
-            },
-        },
-    )
-    if is_incremental:
-        # NOTE: Endpoint only supports 30 days of history or 10K records
-        start = pendulum.parse(context["incremental"]["start_value"])
-        if pendulum.now("UTC") - start < pendulum.duration(days=30):
-            endpoint["path"] = "/engagements/v1/engagements/recent/modified"
-            endpoint["params"] = {
-                "since": iso_to_unix(start.isoformat()),
-            }
-            endpoint["paginator"] = OffsetPaginator(
-                offset_param="offset",
-                limit_param="limit",
-                limit=250,
-            )
-
-    return endpoint
+def map_engagement(item: dict) -> dict:
+    item["engagement"]["lastUpdated"] = pendulum.from_timestamp(
+        item["engagement"]["lastUpdated"] / 1000,
+        tz="UTC",
+    ).isoformat()
+    return item
 
 
 def get_hubspot_source(
-    db_name: str,
     api_key: str,
     initial_date: str = "2024-01-01",
     is_incremental: bool = True,
@@ -103,6 +54,7 @@ def get_hubspot_source(
 
     CRM_OBJECTS = {
         "contacts": {
+            "type": "object",
             "filter_key": "lastmodifieddate",
             "properties": [
                 "email",
@@ -113,6 +65,7 @@ def get_hubspot_source(
             ],
         },
         "companies": {
+            "type": "object",
             "filter_key": "hs_lastmodifieddate",
             "properties": [
                 "name",
@@ -121,6 +74,7 @@ def get_hubspot_source(
             ],
         },
         "engagements": {
+            "type": "activity",
             # Exclude: TASK, NOTE
             "types": [
                 "CALL",
@@ -154,45 +108,111 @@ def get_hubspot_source(
         },
         "resource_defaults": {
             "write_disposition": "append",
-            # Placeholders for incremental loading
-            "endpoint": {
-                "initial_value": initial_date,
-                "end_value": end_dt.isoformat(),
-            },
         },
-        "resources": [
-            {
-                "name": "hubspot__engagements",
-                "endpoint": lambda ctx: get_engagement_endpoint(
-                    context=ctx,
-                    properties=CRM_OBJECTS["engagements"]["properties"],
-                    is_incremental=is_incremental,
-                ),
-            },
-        ],
+        "resources": [],
     }
 
+    # NOTE: Endpoint only supports 30 days of history or 10K records
+    # If incremental and beyond 30 days, engagements will not be loaded
+    days_ago = pendulum.now("UTC") - initial_dt
+    if not is_incremental or days_ago < pendulum.duration(days=30):
+        # Define base HubSpot engagements resource
+        engagement_resouce = {
+            "name": "hubspot__engagements",
+            "processing_steps": [{"map": map_engagement}],
+            "endpoint": {
+                "path": "engagements/v1/engagements/paged",
+                "method": "GET",
+                "data_selector": "results",
+                "incremental": {
+                    "cursor_path": "engagement.lastUpdated",
+                    "initial_value": initial_date,
+                    "end_value": end_dt.isoformat(),
+                    "convert": iso_to_unix,
+                },
+                "paginator": HasMorePaginator(
+                    offset_param="offset",
+                    limit_param="limit",
+                    total_path=None,
+                    stop_after_empty_page=True,
+                    limit=250,
+                    has_more_path="has_more",
+                ),
+            },
+        }
+        # Update for incremental properties if incremental load
+        if is_incremental:
+            # If incremental, use modified engagements endpoint
+            engagement_resouce["endpoint"][
+                "path"
+            ] = "engagements/v1/engagements/recent/modified"
+            engagement_resouce["endpoint"]["params"] = {
+                "since": "{incremental.start_value}",
+            }
+
+        # Add engagement resource to API config
+        api_config["resources"].append(engagement_resouce)
+
+    # Add CRM object endpoint resources
     for object_name, object_config in CRM_OBJECTS.items():
-        # Generate resource configuration for each CRM object
-        api_config["resources"].append(
-            {
+        # Add schema resource for the HubSpot object
+        schema_resource = {
+            "name": f"hubspot__schemas_{object_name}",
+            "table_name": "hubspot__schemas",
+            "endpoint": {
+                "path": f"crm-object-schemas/v3/schemas/{object_name}",
+                "method": "GET",
+                "data_selector": "$",
+            },
+            "primary_key": "id",
+            "write_disposition": "merge",
+        }
+        api_config["resources"].append(schema_resource)
+
+        if object_config["type"] == "object":
+            # Generate resource configuration for each CRM object
+            object_resource = {
                 "name": f"hubspot__{object_name}",
                 "endpoint": {
                     "path": f"crm/v3/objects/{object_name}/search",
                     "method": "POST",
                     "data_selector": "results",
+                    "incremental": {
+                        "cursor_path": "updatedAt",
+                        "initial_value": initial_date,
+                        "end_value": end_dt.isoformat(),
+                        "convert": iso_to_unix,
+                    },
                     "paginator": JSONResponseCursorPaginator(
                         cursor_path="paging.next.after",
                         cursor_body_path="after",
                     ),
-                    "json": lambda ctx: get_search_filters(
-                        context=ctx,
-                        object_info=object_config,
-                        is_incremental=is_incremental,
-                    ),
                 },
             }
-        )
+
+            # Define base JSON body for search
+            body = {
+                "limit": 100,
+                "properties": object_config["properties"],
+            }
+            # Add search filters if incremental load
+            if is_incremental:
+                body["filterGroups"] = [
+                    {
+                        "propertyName": object_config["filter_key"],
+                        "operator": "GTE",
+                        "value": "{incremental.start_value}",
+                    },
+                    {
+                        "propertyName": object_config["filter_key"],
+                        "operator": "LTE",
+                        "value": "{incremental.end_value}",
+                    },
+                ]
+            object_resource["endpoint"]["json"] = body
+
+            # Add object resource to API config
+            api_config["resources"].append(object_resource)
 
     return rest_api_source(api_config)
 
@@ -233,7 +253,6 @@ def create_hubspot_dag(
 
         # create hubspot crm dlt source
         hubspot_source = get_hubspot_source(
-            db_name="Disciplines",
             api_key=BaseHook.get_connection(HUBSPOT_CONN_ID).password,
             is_incremental=is_incremental,
         )
@@ -243,10 +262,6 @@ def create_hubspot_dag(
         bq_destination = bigquery(
             credentials=bq_conn.extra_dejson.get("keyfile_dict"),
         )
-
-        # Limit the number of rows for testing purposes
-        # if IS_TEST:
-        #     notion_source.add_limit(100)
 
         # Modify the pipeline parameters
         pipeline = dlt.pipeline(

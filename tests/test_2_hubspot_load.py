@@ -15,22 +15,18 @@ from tests.conftest import run_dag
 @pytest.mark.parametrize(
     ("dag_id", "time_period"),
     (
-        ("raw_hubspot__contacts__full", None),
-        ("raw_hubspot__companies__full", None),
-        ("raw_hubspot__engagements__full", None),
-        ("raw_hubspot__contacts__changed", 30),
-        ("raw_hubspot__companies__changed", 30),
-        ("raw_hubspot__engagements__changed", 15),
+        ("raw_hubspot__crm__full", None),
+        ("raw_hubspot__crm__changed", 30),
     ),
 )
-def test_hubspot_load(dag_bag: DagBag, dag_id: str, time_period: int):
+def test_hubspot_dlt(dag_bag: DagBag, dag_id: str, time_period: int):
 
     # Delayed import to capture DBT target variable
     from dags.michael import RAW_SCHEMA
 
     # GIVEN
     # Define interval and DAG run parameters
-    DATA_INTERVAL_START = pendulum.now().add(days=-15)
+    DATA_INTERVAL_START = pendulum.now().add(days=-30)
 
     # Get DAG from DagBag to set context
     dag = dag_bag.get_dag(dag_id=dag_id)
