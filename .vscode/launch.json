@@ -12,7 +12,7 @@
             "args": [
                 "--no-cov"
             ],
-            "justMyCode": true
+            "justMyCode": false
         }
     ]
 }

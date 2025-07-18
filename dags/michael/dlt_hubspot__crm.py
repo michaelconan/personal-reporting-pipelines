@@ -1,3 +1,9 @@
+"""
+raw_hubspot__crm.py
+
+DAGs to load Hubspot CRM data into BigQuery.
+"""
+
 import pendulum
 
 import dlt
@@ -155,19 +161,23 @@ def get_hubspot_source(
 
     # Add CRM object endpoint resources
     for object_name, object_config in CRM_OBJECTS.items():
-        # Add schema resource for the HubSpot object
-        schema_resource = {
-            "name": f"hubspot__schemas_{object_name}",
-            "table_name": "hubspot__schemas",
-            "endpoint": {
-                "path": f"crm-object-schemas/v3/schemas/{object_name}",
-                "method": "GET",
-                "data_selector": "$",
-            },
-            "primary_key": "id",
-            "write_disposition": "merge",
-        }
-        api_config["resources"].append(schema_resource)
+        # Only update schema during full load
+        if not is_incremental:
+            # Add schema resource for the HubSpot object
+            schema_resource = {
+                "name": f"hubspot__schemas_{object_name}",
+                "table_name": "hubspot__schemas",
+                "endpoint": {
+                    "path": f"crm-object-schemas/v3/schemas/{object_name}",
+                    "method": "GET",
+                    "data_selector": "$",
+                },
+                # Must merge as multiple objects are loaded to same schema tables
+                # Unless we can do partition overwrite, TBD
+                "write_disposition": "merge",
+                "primary_key": "id",
+            }
+            api_config["resources"].append(schema_resource)
 
         if object_config["type"] == "object":
             # Generate resource configuration for each CRM object
