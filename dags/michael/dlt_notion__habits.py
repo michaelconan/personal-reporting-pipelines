@@ -1,3 +1,9 @@
+"""
+raw_notion__habits.py
+
+DAGs to load daily and weekly habits from Notion API into BigQuery.
+"""
+
 import pendulum
 
 import dlt
@@ -13,18 +19,28 @@ from airflow.hooks.base import BaseHook
 # Common custom tasks
 from dags.michael import DEFAULT_ARGS, RAW_SCHEMA, IS_TEST
 from dags.michael.datasets import NOTION_DS
+from dags.michael.common.utils import filter_fields
 
 # Connection IDs
 NOTION_CONN_ID = "notion_productivity"
 BQ_CONN_ID = "bigquery_reporting"
 
-
-def exclude_fields(item: dict, fields: list) -> dict:
-
-    for field in fields:
-        item.pop(field, None)
-
-    return item
+# list[str]: JSONPath expressions to exclude attributes from the Notion source records
+EXCLUDE_PATHS = [
+    # Exclude standard database metadata fields (object, type)
+    # e.g., parent__type ("database_id"), created_by__object ("user")
+    # and database property metadata fields (id, type)
+    # e.g., properties__name__type ("title"), properties__date__id ("abZq")
+    # This does not exclude relation property IDs (e.g., "$.properties.relation[*].id")
+    "$..object",
+    "$..type",
+    "$.properties.*.id",
+    # Exclude database property list paginator flags (boolean)
+    # If longer lists were expected, would need transformer for additional API calls
+    "$.properties.*.has_more",
+    # Exclude database property annotations (rich text)
+    "$.properties..annotations",
+]
 
 
 def get_notion_source(
@@ -70,8 +86,13 @@ def get_notion_source(
                 "max_table_nesting": 1,
                 "columns": {"title": {"data_type": "json"}},
                 "processing_steps": [
-                    # Exclude database property metadata details
-                    {"map": lambda r: exclude_fields(r, ["properties"])},
+                    # Exclude database property metadata details entirely
+                    {
+                        "map": lambda r: filter_fields(
+                            r,
+                            EXCLUDE_PATHS + ["$.properties"],
+                        )
+                    },
                 ],
                 "endpoint": {
                     "path": "search",
@@ -94,8 +115,9 @@ def get_notion_source(
         "table_name": lambda r: f"notion__database_{r['parent']['database_id']}",
         # Prevent nested tables for multi-value properties
         "max_table_nesting": 2,
-        # Prior attempt to exclude nested fields like id and type
-        # "nested_hints": get_property_schema,
+        "processing_steps": [
+            {"map": lambda r: filter_fields(r, EXCLUDE_PATHS)},
+        ],
         "endpoint": {
             "path": "databases/{resources.notion__databases.id}/query",
             "data_selector": "results",

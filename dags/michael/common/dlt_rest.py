@@ -1,7 +1,10 @@
 from typing import Any, List, Optional
-from requests import Response
+from requests import Request, Response
 from dlt.common import jsonpath
-from dlt.sources.helpers.rest_client.paginators import OffsetPaginator
+from dlt.sources.helpers.rest_client.paginators import (
+    OffsetPaginator,
+    RangePaginator,
+)
 
 
 class HasMorePaginator(OffsetPaginator):
