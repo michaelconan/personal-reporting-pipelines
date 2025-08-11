@@ -34,12 +34,13 @@ jobs:
           
       - name: Write keyfile
         run: |
-          echo ${{ secrets.GCP_SVC_KEY }} > $GOOGLE_APPLICATION_CREDENTIALS
+          cat << 'EOF' > $GOOGLE_APPLICATION_CREDENTIALS
+          ${{ secrets.GCP_SVC_KEY }}
+          EOF
 
       - name: Run Notion Pipeline
         env:
           FORCE_FULL_REFRESH: ${{ inputs.force_full_refresh }}
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCP_SVC_KEY }}
           RUNTIME__LOG_LEVEL: "INFO"
         run: |
           pipenv run python -m pipelines.notion
