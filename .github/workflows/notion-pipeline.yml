@@ -13,6 +13,8 @@ on:
 jobs:
   run-pipeline:
     runs-on: ubuntu-latest
+    env:
+      GOOGLE_APPLICATION_CREDENTIALS: $HOME/sa_key.json
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -30,6 +32,10 @@ jobs:
         run: |
           make install
           
+      - name: Write keyfile
+        run: |
+          echo ${{ secrets.GCP_SVC_KEY }} > $GOOGLE_APPLICATION_CREDENTIALS
+
       - name: Run Notion Pipeline
         env:
           FORCE_FULL_REFRESH: ${{ inputs.force_full_refresh }}
@@ -38,6 +44,11 @@ jobs:
         run: |
           pipenv run python -m pipelines.notion
           
+      - name: Remove keyfile
+        if: always()
+        run: |
+          rm $GOOGLE_APPLICATION_CREDENTIALS
+
       - name: Upload dlt state files
         if: always()
         uses: actions/upload-artifact@v4
