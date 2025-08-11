@@ -12,5 +12,8 @@
     "editor.formatOnSave": true,
     "[json]": {
         "editor.defaultFormatter": "vscode.json-language-features"
+    },
+    "[sql]": {
+        "editor.defaultFormatter": "dorzey.vscode-sqlfluff"
     }
 }

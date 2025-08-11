@@ -1,0 +1,66 @@
+name: Pipeline Tests
+on:
+  pull_request:
+    paths:
+      - 'pipelines/**'
+      - 'tests/**'
+      - 'Pipfile'
+      - 'Pipfile.lock'
+      - 'Makefile'
+  push:
+    branches:
+      - main
+    paths:
+      - 'pipelines/**'
+      - 'tests/**'
+
+jobs:
+  test-pipelines:
+    runs-on: ubuntu-latest
+    env:
+      GOOGLE_APPLICATION_CREDENTIALS: $HOME/sa_key.json
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+          
+      - name: Install pipenv
+        run: |
+          pip install pipenv
+          
+      - name: Install dependencies
+        run: |
+          make install
+          
+      - name: Write keyfile
+        run: |
+          echo ${{ secrets.GCP_SVC_KEY }} > $GOOGLE_APPLICATION_CREDENTIALS
+
+      - name: Run tests
+        env:
+          RUNTIME__LOG_LEVEL: "INFO"
+        run: |
+          make test
+          
+      - name: Generate coverage report
+        run: |
+          make test-coverage
+
+      - name: Remove keyfile
+        if: always()
+        run: |
+          rm $GOOGLE_APPLICATION_CREDENTIALS
+          
+      - name: Upload test coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-reports
+          path: |
+            htmlcov/
+            coverage.xml
+            .coverage
+          retention-days: 30
