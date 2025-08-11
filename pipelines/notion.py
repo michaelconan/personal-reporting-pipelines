@@ -44,9 +44,9 @@ EXCLUDE_PATHS = [
 ]
 
 DATABASE_MAP = {
-    "10140b50_0f0d_43d2_905a_7ed714ef7f2c": "daily_habits",
-    "11e09eb8_3f76_80e7_8fac_e8d0bb538fb0": "weekly_habits",
-    "18f09eb8_3f76_805c_a567_dde667374441": "monthly_habits",
+    "10140b50-0f0d-43d2-905a-7ed714ef7f2c": "daily_habits",
+    "11e09eb8-3f76-80e7-8fac-e8d0bb538fb0": "weekly_habits",
+    "18f09eb8-3f76-805c-a567-dde667374441": "monthly_habits",
 }
 
 
@@ -135,22 +135,22 @@ def notion_source(
             "data_selector": "results",
             "json": {
                 "filter": {
-                    "and": [
-                        {
-                            "property": "Last edited time",
-                            "date": {"after": "{incremental.start_value}"},
-                        },
-                        {
-                            "property": "Last edited time",
-                            "date": {"before": "{incremental.end_value}"},
-                        },
-                    ]
+                    # "and": [
+                    # {
+                    "property": "Last edited time",
+                    "date": {"after": "{incremental.start_value}"},
+                    # },
+                    #     {
+                    #         "property": "Last edited time",
+                    #         "date": {"before": "{incremental.end_value}"},
+                    #     },
+                    # ]
                 },
             },
             "incremental": {
                 "cursor_path": "last_edited_time",
                 "initial_value": initial_date,
-                "end_value": end_dt.isoformat(),
+                # "end_value": end_dt.isoformat(),
             },
         },
     }
