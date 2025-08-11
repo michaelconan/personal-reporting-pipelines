@@ -4,8 +4,9 @@ __pycache__
 .coverage*
 
 # Logs
-logs
+logs/*
 *.log
+!logs/.gitkeep
 
 # Data files
 *.csv
@@ -13,6 +14,7 @@ logs
 # Secrets and variables
 .env
 config/*
+.secrets
 *.pid
 
 # DBT compiled files

@@ -1,7 +1,0 @@
-#!/bin/sh
-
-# script/run: Start webserver and scheduler instances for the application.
-
-set -e
-
-honcho start

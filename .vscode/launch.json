@@ -2,6 +2,17 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Python Debugger: Current File",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        },
+        {
             // Disable coverage check to allow breakpoints in debug
             "name": "Python Debugger: PyTest No Coverage",
             "type": "debugpy",
@@ -12,7 +23,7 @@
             "args": [
                 "--no-cov"
             ],
-            "justMyCode": true
+            "justMyCode": false
         }
     ]
 }

@@ -1,5 +1,0 @@
-# Install all production dependencies
--r requirements.txt
-# Unit testing, code coverage and pre-commit
-pytest-cov==6.0.0
-pre-commit==3.7.1

@@ -1,0 +1,22 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+dlt = {extras = ["bigquery", "parquet"], version = ">=1.15"}
+google-cloud-bigquery-storage = "*"
+google-cloud-secret-manager = "*"
+google-api-python-client = "*"
+dbt-core = "*"
+psutil = "*"
+
+[dev-packages]
+pytest-cov = "*"
+pre-commit = "*"
+# SQL / dbt linting and formatting
+sqlfluff = "*"
+sqlfluff-templater-dbt = "*"
+
+[requires]
+python_version = "3.12"
