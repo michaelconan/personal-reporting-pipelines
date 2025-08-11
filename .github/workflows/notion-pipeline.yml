@@ -14,7 +14,7 @@ jobs:
   run-pipeline:
     runs-on: ubuntu-latest
     env:
-      GOOGLE_APPLICATION_CREDENTIALS: $HOME/sa_key.json
+      GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa_key.json
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
