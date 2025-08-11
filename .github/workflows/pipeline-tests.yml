@@ -1,0 +1,56 @@
+name: Pipeline Tests
+on:
+  pull_request:
+    paths:
+      - 'pipelines/**'
+      - 'tests/**'
+      - 'Pipfile'
+      - 'Pipfile.lock'
+      - 'Makefile'
+  push:
+    branches:
+      - main
+    paths:
+      - 'pipelines/**'
+      - 'tests/**'
+
+jobs:
+  test-pipelines:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+          
+      - name: Install pipenv
+        run: |
+          pip install pipenv
+          
+      - name: Install dependencies
+        run: |
+          make install
+          
+      - name: Run tests
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCP_SVC_KEY }}
+          RUNTIME__LOG_LEVEL: "INFO"
+        run: |
+          make test
+          
+      - name: Generate coverage report
+        run: |
+          make test-coverage
+          
+      - name: Upload test coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-reports
+          path: |
+            htmlcov/
+            coverage.xml
+            .coverage
+          retention-days: 30

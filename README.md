@@ -1,10 +1,10 @@
-# personal-reporting-airflow
+# personal-reporting-pipelines
 
-Airflow server for personal data integration and experimentation.
+Personal data integration and analytics platform using dlt and dbt against BigQuery, orchestrated with GitHub Actions.
 
 ## Overview
 
-This repository contains a Docker Development Container for VSCode and the infrastructure and workflows for my personal airflow instance. It has been deployed as a Python 3.12 application to Azure App Service on a relatively small instance with a small PostgreSQL metadatabase.
+This repository contains a Docker Development Container for VSCode and the infrastructure and workflows for my personal data platform. It leverages Google Cloud Platform services including BigQuery for data warehousing and Secret Manager for secure credential management, with automated orchestration through GitHub Actions.
 
 ## Data Sources
 
@@ -57,76 +57,309 @@ graph TB
     R6 --> C4
 ```
 
-## Frameworks
+## Architecture
 
-1. [Apache Airflow](https://airflow.apache.org/) to orchestrate data loading, transformation, and additional automated workflows
-2. [dlt hub](https://dlthub.com/docs/intro) to extract source data and load to the warehouse in raw form
-3. [dbt core](https://docs.getdbt.com/) to define data models and transformations, again orchestrated by Airflow (via CLI / bash TaskFlow)
+### Data Pipeline Stack
 
-### Structures and Naming
+1. **[dlt hub](https://dlthub.com/docs/intro)** - Extract, load, and transform source data into BigQuery raw layer
+2. **[dbt core](https://docs.getdbt.com/)** - Transform raw data into analytics-ready models and views
+3. **[BigQuery](https://cloud.google.com/bigquery)** - Cloud data warehouse for storage and analysis
+4. **[GCP Secret Manager](https://cloud.google.com/secret-manager)** - Secure credential management for API keys and connections
+5. **[GitHub Actions](https://github.com/features/actions)** - Automated orchestration and scheduling of data pipelines
 
-The project has been structured and designed with inspiration from [dbt project recommendations](https://docs.getdbt.com/best-practices/how-we-structure/1-guide-overview) and other sources.
+### Project Structure
 
-- `dbt` projects stored in separate subdirectory from DAGs (at least now)
-- DAGs and `dbt` projects organised at the top level by owner (should more get involved)
-- Further organisation by data source and / or function
-- Naming generally follows `dbt` recommended `[layer]_[source]__[entity]`, adapted for Airflow DAGs with `__[refresh-type]` and other modifications as needed. 
+The project follows modern data engineering best practices with clear separation of concerns:
 
-Refer to additional [dbt project documentation](/dbt/michael/README.md).
+```
+├── pipelines/           # dlt data extraction pipelines
+│   ├── hubspot.py      # HubSpot CRM data pipeline
+│   ├── fitbit.py       # Fitbit health data pipeline
+│   ├── notion.py       # Notion habits data pipeline
+│   └── common/         # Shared utilities and helpers
+├── dbt/                # dbt transformation models
+│   └── michael/        # Personal dbt project
+├── .github/            # GitHub Actions workflows
+│   └── workflows/      # CI/CD and orchestration
+├── scripts/            # Utility scripts and helpers
+└── config/             # Configuration files and templates
+```
+
+### Naming Conventions
+
+- **dlt pipelines**: `{source}__{entity}` (e.g., `hubspot__contacts`, `fitbit__sleep`)
+- **dbt models**: `{layer}_{source}__{entity}` (e.g., `staging_hubspot__contacts`, `contacts`)
+- **GitHub Actions**: `{actions}-{frequency}` (e.g., `dlt-daily`)
 
 ## Setup
 
-### Airflow Setup
+### Prerequisites
 
-While it generally isn't recommended to maintain infrastructure and workflows in the same repository, it is not a major concern for this basic setup. The `AIRFLOW_HOME` variable is mapped to the repository root to load updated configurations across environments from `airflow.cfg` and `webserver_config.py`, some of which are overriden by environment variables outlined below.
+1. **Google Cloud Platform Account** with BigQuery and Secret Manager APIs enabled
+2. **GitHub Account** with repository access
+3. **Python 3.12+** and pip for local development
+4. **Docker** (optional, for containerized development)
 
-To run Airflow on a single instance, I used Honcho to run multiple processes via Procfile (webserver + scheduler)
+### GCP Setup
 
-### Azure Setup
+1. **Create a GCP Project** and enable required APIs:
+   - BigQuery API
+   - Secret Manager API
 
-The project was deployed on Azure when I had credits, before I lost access to the program.
+2. **Set up BigQuery**:
+   - Create a dataset for raw data (`raw_data`)
+   - Create a dataset for transformed data (`analytics`)
+   - Ensure proper IAM permissions for service accounts
 
-1. Create Web App + PostgreSQL with Python
-2. Turn on Application Insights, Logging
-3. Set relevant environment variables for Airflow
-    - `AIRFLOW_HOME=/home/site/wwwroot` to run airflow from deployed application folders
-    - `AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://{username}:{password}@{host}:{port}/{database}` from the Azure database
-    - `AIRFLOW__CORE__FERNKET_KEY={generated-key}` following [this guidance](https://airflow.apache.org/docs/apache-airflow/1.10.8/howto/secure-connections.html) to encrypt connection data
-    - `AIRFLOW__CORE__INTERNAL_API_SECRET_KEY={generated-secret1}` following [this guidance](https://flask.palletsprojects.com/en/stable/config/#SECRET_KEY)
-    - `AIRFLOW__WEBSERVER__SECRET_KEY={generated-secret2}` following guidance above
-    - `AIRFLOW__WEBSERVER__INSTANCE_NAME=MY INSTANCE!`
-4. Generate Publish Profile file and deploy application code from GitHub
-5. Set startup command to use the `startup.txt` file
-6. Run database migrations (`airflow db migrate`) and user setup (`airflow users create`) as one-off admin process, Procfile just for main processes
-    - Reference [quick start](https://airflow.apache.org/docs/apache-airflow/stable/start.html) for guidance on this setup process
-    - It may be necessary to run these via startup command to get the app to launch
+3. **Configure Secret Manager**:
+   - Configure GCP service account key as default application credentials
+   - Store static keys and credentials for each data source in TOML fragments:
+     ```toml
+     [sources.hubspot]
+     api_key = "your-key"
 
-#### Automated Deployment
+     [sources.notion]
+     api_key = "your-key"
 
-1. I referenced [this workflow](https://learn.microsoft.com/en-us/azure/app-service/deploy-github-actions?tabs=applevel%2Cpython%2Cpythonn) to deploy Python app to App Service using Publish Profile basic authentication
+     [sources.fitbit]
+     client_id = "your-id"
+     client_secret = "your-secret"
+     ```
+   - After authorising Fitbit OAuth client, store refresh token in dedicated secert
+     - `sources-fitbit-refresh_token`
+
+4. **Create Service Account**:
+   - Service account with BigQuery Admin and Secret Manager Secret Accessor roles
+   - Download JSON key file for GitHub Actions
+
+### Local Development Setup
+
+1. **Clone and setup**:
+   ```bash
+   git clone <repository-url>
+   cd personal-reporting-pipelines
+   make install
+   ```
+
+2. **Configure credentials**:
+   ```bash
+   # Set GCP project
+   gcloud config set project YOUR_PROJECT_ID
+   
+   # Authenticate with GCP
+   gcloud auth application-default login
+   ```
+
+3. **Set environment variables**:
+   ```bash
+   export GCP_PROJECT_ID=your-project-id
+   export BIGQUERY_DATASET=raw_data
+   ```
+
+### GitHub Actions Setup
+
+1. **Add repository secrets**:
+   - `GOOGLE_APPLICATION_CREDENTIALS`: Service account JSON key
+
+2. **Configure workflow schedules** in `.github/workflows/`:
+   - Daily pipelines for HubSpot and Fitbit
+   - Weekly pipelines for Notion
+   - Manual triggers for full refresh scenarios
 
 ### Integrations
 
-1. Google Cloud BigQuery using [Airflow BigQuery Provider](https://airflow.apache.org/docs/apache-airflow-providers-google/stable/operators/cloud/bigquery.html#upsert-table) and dbt
-2. Notion using [Notion Client](https://pypi.org/project/notion-client/)
-3. Hubspot using [Hubspot API Client](https://pypi.org/project/hubspot-api-client/)
-4. Fitbit using [Fitbit Client](https://pypi.org/project/fitbit/)
+1. **Google Cloud BigQuery** - Data warehouse using [dbt BigQuery adapter](https://docs.getdbt.com/reference/warehouse-profiles/bigquery-profile)
+2. **GCP Secret Manager** - Secure credential management for API keys and service accounts
+
+## Pipeline Refresh Patterns
+
+Your pipelines support flexible refresh modes for data loading:
+
+- **Incremental (default)**: Only loads new/changed data since last run
+- **Full refresh**: Completely reloads all data, useful for data quality issues or schema changes
+
+### How to Trigger Full Refresh
+
+#### Method 1: Environment Variable Override (Global)
+```bash
+export FORCE_FULL_REFRESH=true
+pipenv run python -m pipelines.hubspot
+```
+
+#### Method 2: Pipeline-Specific Override
+```bash
+# Force full refresh for HubSpot only
+export PIPELINE_NAME=HUBSPOT
+export HUBSPOT_FULL_REFRESH=true
+pipenv run python -m pipelines.hubspot
+```
+
+#### Method 3: Direct Function Parameter
+```python
+from pipelines.hubspot import refresh_hubspot
+
+# Force full refresh
+refresh_hubspot(is_incremental=False)
+
+# Use environment-based detection (default)
+refresh_hubspot()  # or refresh_hubspot(is_incremental=None)
+```
+
+#### Method 4: GitHub Actions Integration
+```yaml
+# .github/workflows/hubspot-pipeline.yml
+name: HubSpot Pipeline
+on:
+  schedule:
+    - cron: '0 2 * * *'  # Daily at 2 AM UTC
+  workflow_dispatch:
+    inputs:
+      force_full_refresh:
+        description: 'Force full refresh'
+        required: false
+        default: 'false'
+        type: boolean
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Install dependencies
+        run: make install
+      - name: Run HubSpot Pipeline
+        env:
+          FORCE_FULL_REFRESH: ${{ inputs.force_full_refresh }}
+        run: |
+          pipenv run python -m pipelines.hubspot
+```
+
+### Environment Variables Reference
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `FORCE_FULL_REFRESH` | Global override for all pipelines | `export FORCE_FULL_REFRESH=true` |
+| `PIPELINE_NAME` | Pipeline identifier for specific overrides | `export PIPELINE_NAME=HUBSPOT` |
+| `{PIPELINE_NAME}_FULL_REFRESH` | Pipeline-specific full refresh flag | `export HUBSPOT_FULL_REFRESH=true` |
+
+### Best Practices
+
+1. **Default to incremental**: Always use incremental loading for regular operations
+2. **Use full refresh sparingly**: Only when necessary for data quality or schema changes
+3. **Environment-based control**: Use environment variables for production deployments
+4. **Logging**: Always log the refresh mode being used for debugging
+5. **GitHub Actions integration**: Use workflow inputs and environment variables to control refresh mode dynamically
+6. **Secret management**: Store all credentials in GCP Secret Manager, never in code
+7. **Monitoring**: Set up alerts for pipeline failures and data quality issues
 
 ## Development and Testing
 
 ### Environments
 
-Unit testing and the local instance are connected to a separate Google Cloud Platform project for development purposes.
+- **Development**: Local development with GCP dev project
+- **Staging**: GitHub Actions testing environment
+- **Production**: Automated production pipelines via GitHub Actions
 
-### Setup Steps
+### Local Development
 
-1. Build Dev Container in VSCode, this will run `script/setup` to install dependencies (with dev)
-2. To run server locally, run `script/run` in the terminal
-3. Add connection settings in the interface or upload via file
-4. Write and run [unit tests for DAGs](https://airflow.apache.org/docs/apache-airflow/stable/best-practices.html#unit-tests)
+1. **Build Dev Container** in VSCode, this will run `script/setup` to install dependencies
+2. **Run pipelines locally** for testing:
+   ```bash
+   pipenv run python -m pipelines.hubspot
+   pipenv run python -m pipelines.fitbit
+   pipenv run python -m pipelines.notion
+   ```
+3. **Test dbt models**:
+   ```bash
+   cd dbt/michael
+   pipenv run dbt run --target dev
+   pipenv run dbt test --target dev
+   ```
 
-### dbt Steps
+### Testing
 
-Due to functionality of utilities like SQLFluff, it is helpful to open the dbt project as the root directory for development.
+1. **Unit tests** for pipeline functions and utilities
+2. **Integration tests** for dlt sources and dbt models
+3. **End-to-end tests** for complete pipeline execution
+4. **Data quality tests** using dbt's built-in testing framework
 
-The Airflow DAG dynamically generates the dbt profile file and BigQuery service account key, these can be copied to the standard `~/.dbt` folder for local development.
+### dbt Development
+
+1. **Open dbt project** as root directory for SQLFluff and other utilities
+2. **Local profile**: Copy BigQuery service account key to `~/.dbt/profiles.yml`
+3. **Model development**: Use `pipenv run dbt run --select model_name` for iterative development
+4. **Documentation**: Generate with `pipenv run dbt docs generate` and `pipenv run dbt docs serve`
+
+## GitHub Actions Orchestration
+
+### Workflow Structure
+
+The project uses GitHub Actions for automated pipeline execution:
+
+- **Scheduled runs**: Daily/weekly automated data ingestion
+- **Manual triggers**: On-demand pipeline execution with full refresh options
+- **Pull request validation**: Automated testing on code changes
+- **Deployment**: Automated deployment to production environment
+
+### Pipeline Workflows
+
+1. **HubSpot Pipeline** (`.github/workflows/hubspot-pipeline.yml`)
+   - Daily execution at 2 AM UTC
+   - Manual trigger with full refresh option
+   - Uses `make install` and `pipenv run python -m pipelines.hubspot`
+   - dlt state files (`~/.dlt/**/state.json`) uploaded for debugging
+
+2. **Fitbit Pipeline** (`.github/workflows/fitbit-pipeline.yml`)
+   - Daily execution at 3 AM UTC
+   - Health data synchronization
+   - Uses `make install` and `pipenv run python -m pipelines.fitbit`
+   - dlt state files uploaded for debugging and monitoring
+
+3. **Notion Pipeline** (`.github/workflows/notion-pipeline.yml`)
+   - Weekly execution on Sundays at 9 AM UTC
+   - Habits and productivity data
+   - Uses `make install` and `pipenv run python -m pipelines.notion`
+   - dlt state files uploaded for data quality validation
+
+4. **dbt Transform** (`.github/workflows/dbt-transform.yml`)
+   - Daily execution at 4 AM UTC (after data ingestion)
+   - Automatically triggered after successful pipeline runs
+   - Runs dbt models, tests, and generates documentation
+   - Uses `make install` and pipenv for dbt operations
+
+5. **Pipeline Tests** (`.github/workflows/pipeline-tests.yml`)
+   - Runs on pull requests and main branch pushes
+   - Executes `make test` for comprehensive testing
+   - Uploads test coverage reports as artifacts
+
+### Monitoring and Alerts
+
+- **Pipeline status**: GitHub Actions workflow status monitoring
+- **Data quality**: dbt test results and alerts
+- **Performance**: Execution time tracking and optimization
+- **Error handling**: Automated retry logic and failure notifications
+
+### dlt Logging and Artifacts
+
+dlt pipelines handle logging and artifacts differently than traditional applications:
+
+- **Console logging**: All pipeline output goes to stdout/stderr (captured by GitHub Actions)
+- **Pipeline state**: Stored in `~/.dlt/` folder (home directory) with metadata, progress, and state information
+- **No log files**: dlt doesn't create separate log files in a `logs/` directory
+- **Targeted artifacts**: GitHub Actions uploads only `state.json` files for debugging and monitoring
+- **Pipeline info**: The `pipeline.run()` method returns execution information that gets logged
+
+**Note**: The `~/.dlt/` folder location is dlt's default behavior. You can customize this using the `DLT_DATA_DIR` environment variable if needed, but for GitHub Actions, the default home directory location works well.
+
+### What's in state.json Files
+
+The `state.json` files contain essential pipeline information without the bulk of raw data:
+
+- **Pipeline execution status**: Success/failure states and timestamps
+- **Resource progress**: Which data sources were processed and their status
+- **Incremental state**: Cursor values and last processed timestamps
+- **Error information**: Any failures and their context
+- **Schema changes**: Data structure modifications detected during execution
+
+This targeted approach provides debugging insights while keeping artifact sizes manageable.
