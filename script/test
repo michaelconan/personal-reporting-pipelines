@@ -1,9 +1,0 @@
-#!/bin/bash
-
-set -e
-
-# Run pytest with settings from VSCode configuration
-python -m pytest tests \
-    --cov=dags/ \
-    --log-cli-level=INFO \
-    "$@"

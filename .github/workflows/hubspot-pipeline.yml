@@ -1,0 +1,48 @@
+name: HubSpot Pipeline
+on:
+  schedule:
+    - cron: '0 2 * * *'  # Daily at 2 AM UTC
+  workflow_dispatch:
+    inputs:
+      force_full_refresh:
+        description: 'Force full refresh'
+        required: false
+        default: 'false'
+        type: boolean
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+          
+      - name: Install pipenv
+        run: |
+          pip install pipenv
+          
+      - name: Install dependencies
+        run: |
+          make install
+          
+      - name: Run HubSpot Pipeline
+        env:
+          FORCE_FULL_REFRESH: ${{ inputs.force_full_refresh }}
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCP_SVC_KEY }}
+          RUNTIME__LOG_LEVEL: "INFO"
+        run: |
+          pipenv run python -m pipelines.hubspot
+          
+      - name: Upload dlt state files
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hubspot-pipeline-state
+          path: |
+            ~/.dlt/**/state.json
+          retention-days: 7 
