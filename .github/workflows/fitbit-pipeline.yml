@@ -14,7 +14,7 @@ jobs:
   run-pipeline:
     runs-on: ubuntu-latest
     steps:
-      - name: Set environment variables
+      - name: Set Google Credentials Environment Variable
         run: |
           echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/sa_key.json" >> $GITHUB_ENV
           
