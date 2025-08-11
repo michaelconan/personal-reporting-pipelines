@@ -134,6 +134,11 @@ def hubspot_source(
         for object_name in ["contacts", "companies"]:
             schema_resource = {
                 "name": f"hubspot__schemas_{object_name}",
+                "max_table_nesting": 1,
+                "columns": {
+                    "searchable_properties": {"data_type": "json"},
+                    "secondary_display_properties": {"data_type": "json"},
+                },
                 "table_name": "hubspot__schemas",
                 "endpoint": {
                     "path": f"crm-object-schemas/v3/schemas/{object_name}",
@@ -154,6 +159,7 @@ def hubspot_source(
         if days_ago < pendulum.duration(days=30):
             engagement_resource = {
                 "name": "hubspot__engagements",
+                "max_table_nesting": 1,
                 "processing_steps": [{"map": map_engagement}],
                 "endpoint": {
                     "path": "engagements/v1/engagements/recent/modified",
@@ -168,7 +174,7 @@ def hubspot_source(
                         total_path=None,
                         stop_after_empty_page=True,
                         limit=250,
-                        has_more_path="has_more",
+                        has_more_path="hasMore",
                     ),
                 },
             }
@@ -183,6 +189,7 @@ def hubspot_source(
         # Full refresh: use paged endpoint with date range (no 30-day limitation)
         engagement_resource = {
             "name": "hubspot__engagements",
+            "max_table_nesting": 1,
             "processing_steps": [{"map": map_engagement}],
             "endpoint": {
                 "path": "engagements/v1/engagements/paged",
@@ -191,7 +198,7 @@ def hubspot_source(
                 "incremental": {
                     "cursor_path": "engagement.lastUpdated",
                     "initial_value": initial_date,
-                    "end_value": end_dt.isoformat(),
+                    # "end_value": end_dt.isoformat(),
                     "convert": iso_to_unix,
                 },
                 "paginator": OffsetPaginator(
@@ -200,7 +207,7 @@ def hubspot_source(
                     total_path=None,
                     stop_after_empty_page=True,
                     limit=250,
-                    has_more_path="has_more",
+                    has_more_path="hasMore",
                 ),
             },
         }
@@ -236,7 +243,7 @@ def hubspot_source(
                 object_resource["endpoint"]["incremental"] = {
                     "cursor_path": "updatedAt",
                     "initial_value": initial_date,
-                    "end_value": end_dt.isoformat(),
+                    # "end_value": end_dt.isoformat(),
                     "convert": iso_to_unix,
                 }
                 # Add search filters for incremental load
@@ -246,11 +253,11 @@ def hubspot_source(
                         "operator": "GTE",
                         "value": "{incremental.start_value}",
                     },
-                    {
-                        "propertyName": object_config["filter_key"],
-                        "operator": "LTE",
-                        "value": "{incremental.end_value}",
-                    },
+                    # {
+                    #     "propertyName": object_config["filter_key"],
+                    #     "operator": "LTE",
+                    #     "value": "{incremental.end_value}",
+                    # },
                 ]
 
             object_resource["endpoint"]["json"] = body
