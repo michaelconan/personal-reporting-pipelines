@@ -13,9 +13,11 @@ on:
 jobs:
   run-pipeline:
     runs-on: ubuntu-latest
-    env:
-      GOOGLE_APPLICATION_CREDENTIALS: $HOME/sa_key.json
     steps:
+      - name: Set Google Credentials Environment Variable
+        run: |
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/sa_key.json" >> $GITHUB_ENV
+          
       - name: Checkout code
         uses: actions/checkout@v4
         
