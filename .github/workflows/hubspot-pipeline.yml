@@ -34,7 +34,9 @@ jobs:
           
       - name: Write keyfile
         run: |
-          echo ${{ secrets.GCP_SVC_KEY }} > $GOOGLE_APPLICATION_CREDENTIALS
+          cat << 'EOF' > $GOOGLE_APPLICATION_CREDENTIALS
+          ${{ secrets.GCP_SVC_KEY }}
+          EOF
 
       - name: Run HubSpot Pipeline
         env:
