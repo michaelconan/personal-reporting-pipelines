@@ -17,6 +17,8 @@ on:
 jobs:
   test-pipelines:
     runs-on: ubuntu-latest
+    env:
+      GOOGLE_APPLICATION_CREDENTIALS: $HOME/sa_key.json
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -34,9 +36,12 @@ jobs:
         run: |
           make install
           
+      - name: Write keyfile
+        run: |
+          echo ${{ secrets.GCP_SVC_KEY }} > $GOOGLE_APPLICATION_CREDENTIALS
+
       - name: Run tests
         env:
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCP_SVC_KEY }}
           RUNTIME__LOG_LEVEL: "INFO"
         run: |
           make test
@@ -44,6 +49,11 @@ jobs:
       - name: Generate coverage report
         run: |
           make test-coverage
+
+      - name: Remove keyfile
+        if: always()
+        run: |
+          rm $GOOGLE_APPLICATION_CREDENTIALS
           
       - name: Upload test coverage
         uses: actions/upload-artifact@v4
