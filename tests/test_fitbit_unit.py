@@ -30,4 +30,8 @@ def test_fitbit_source_config(monkeypatch, mocker):
     assert call_args["client"]["base_url"] == "https://api.fitbit.com/"
     assert len(call_args["resources"]) == 2
     sleep_resource = next(r for r in call_args["resources"] if r["name"] == "fitbit__sleep")
-    assert sleep_resource["endpoint"]["path"] == "1.2/user/-/sleep/list.json"
+    assert "incremental" in sleep_resource["endpoint"]
+    assert "afterDate" in sleep_resource["endpoint"]["params"]
+    activities_resource = next(r for r in call_args["resources"] if r["name"] == "fitbit__activities")
+    assert "incremental" in activities_resource["endpoint"]
+    assert "afterDate" in activities_resource["endpoint"]["params"]

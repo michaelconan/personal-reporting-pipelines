@@ -10,7 +10,6 @@ API Resources:
 """
 
 from logging import getLogger, Logger
-import pendulum
 from typing import Optional
 
 import dlt
@@ -58,17 +57,11 @@ def notion_source(
     db_name: str,
     api_key: str = dlt.secrets.value,
     initial_date: str = "2024-01-01",
-    is_incremental: bool = True,
 ):
 
     # Set default incremental dates
     if IS_TEST:
         initial_date = "2025-01-01"
-    initial_dt = pendulum.parse(initial_date)
-    if IS_TEST:
-        end_dt = initial_dt.add(days=90)
-    else:
-        end_dt = pendulum.now("UTC")
 
     api_config = {
         "client": {
@@ -118,44 +111,30 @@ def notion_source(
                     },
                 },
             },
-        ],
-    }
-
-    rows_resource = {
-        "name": "notion__database_rows",
-        # Add dynamic table name for the database rows resource
-        "table_name": lambda r: f"notion__database_{DATABASE_MAP[r['parent']['database_id']]}",
-        # Prevent nested tables for multi-value properties
-        "max_table_nesting": 2,
-        "processing_steps": [
-            {"map": lambda r: filter_fields(r, EXCLUDE_PATHS)},
-        ],
-        "endpoint": {
-            "path": "databases/{resources.notion__databases.id}/query",
-            "data_selector": "results",
-            "json": {
-                "filter": {
-                    # "and": [
-                    # {
-                    "property": "Last edited time",
-                    "date": {"after": "{incremental.start_value}"},
-                    # },
-                    #     {
-                    #         "property": "Last edited time",
-                    #         "date": {"before": "{incremental.end_value}"},
-                    #     },
-                    # ]
+            {
+                "name": "notion__database_rows",
+                "table_name": lambda r: f"notion__database_{DATABASE_MAP[r['parent']['database_id']]}",
+                "max_table_nesting": 2,
+                "processing_steps": [
+                    {"map": lambda r: filter_fields(r, EXCLUDE_PATHS)},
+                ],
+                "endpoint": {
+                    "path": "databases/{resources.notion__databases.id}/query",
+                    "data_selector": "results",
+                    "json": {
+                        "filter": {
+                            "property": "Last edited time",
+                            "date": {"after": "{incremental.start_value}"},
+                        },
+                    },
+                    "incremental": {
+                        "cursor_path": "last_edited_time",
+                        "initial_value": initial_date,
+                    },
                 },
-            },
-            "incremental": {
-                "cursor_path": "last_edited_time",
-                "initial_value": initial_date,
-                # "end_value": end_dt.isoformat(),
-            },
-        },
+            }
+        ],
     }
-
-    api_config["resources"].append(rows_resource)
 
     yield from rest_api_resources(api_config)
 
@@ -183,7 +162,6 @@ def refresh_notion(
     pipeline_name = "notion_habits_pipeline"
     nt_source = notion_source(
         db_name="Disciplines",
-        is_incremental=is_incremental,
     )
 
     if not pipeline:
@@ -205,10 +183,9 @@ def refresh_notion(
         write_disposition=write_disposition,
         loader_file_format="jsonl",
     )
-
+    logger.info(info)
     return info
 
 
 if __name__ == "__main__":
     info = refresh_notion()
-    logger.info(info)
