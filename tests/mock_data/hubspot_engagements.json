@@ -1,0 +1,34 @@
+{
+  "results": [
+    {
+      "engagement": {
+        "id": 1,
+        "lastUpdated": 1704067200000,
+        "type": "CALL"
+      },
+      "associations": {
+        "contactIds": [
+          1
+        ],
+        "companyIds": [
+          1
+        ]
+      }
+    },
+    {
+      "engagement": {
+        "id": 2,
+        "lastUpdated": 1704153600000,
+        "type": "EMAIL"
+      },
+      "associations": {
+        "contactIds": [
+          2
+        ],
+        "companyIds": [
+          2
+        ]
+      }
+    }
+  ]
+}

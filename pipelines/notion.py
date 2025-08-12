@@ -162,12 +162,14 @@ def notion_source(
 
 def refresh_notion(
     is_incremental: Optional[bool] = None,
+    pipeline: Optional[dlt.Pipeline] = None,
 ):
     """
     Refresh Notion habits data pipeline.
 
     Args:
         is_incremental: Override incremental mode. If None, uses environment-based detection.
+        pipeline: dlt pipeline object. If None, a new one is created.
     """
 
     # Determine refresh mode if not explicitly provided
@@ -184,14 +186,15 @@ def refresh_notion(
         is_incremental=is_incremental,
     )
 
-    # Modify the pipeline parameters
-    pipeline = dlt.pipeline(
-        pipeline_name=pipeline_name,
-        # TODO: Sort out how to define schema using params
-        dataset_name=RAW_SCHEMA,
-        destination="bigquery",
-        progress="log",
-    )
+    if not pipeline:
+        # Modify the pipeline parameters
+        pipeline = dlt.pipeline(
+            pipeline_name=pipeline_name,
+            # TODO: Sort out how to define schema using params
+            dataset_name=RAW_SCHEMA,
+            destination="bigquery",
+            progress="log",
+        )
 
     # Get appropriate write disposition
     write_disposition = get_write_disposition(is_incremental)

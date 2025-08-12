@@ -1,0 +1,21 @@
+{
+    "labels": {
+        "singular": "Contact",
+        "plural": "Contacts"
+    },
+    "requiredProperties": [
+        "firstname",
+        "lastname",
+        "email"
+    ],
+    "searchableProperties": [
+        "email",
+        "firstname",
+        "lastname"
+    ],
+    "primaryDisplayProperty": "firstname",
+    "secondaryDisplayProperties": [],
+    "archived": false,
+    "id": "0-1",
+    "name": "contacts"
+}

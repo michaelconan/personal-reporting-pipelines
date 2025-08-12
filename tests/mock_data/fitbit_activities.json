@@ -1,0 +1,26 @@
+{
+  "activities": [
+    {
+      "logId": 1,
+      "activityName": "Walking",
+      "lastModified": "2024-01-01T10:00:00.000Z",
+      "startTime": "2024-01-01T10:00:00.000Z",
+      "duration": 1800000
+    },
+    {
+      "logId": 2,
+      "activityName": "Running",
+      "lastModified": "2024-01-02T10:00:00.000Z",
+      "startTime": "2024-01-02T10:00:00.000Z",
+      "duration": 1800000
+    }
+  ],
+  "pagination": {
+    "beforeDate": "2024-01-03",
+    "limit": 100,
+    "next": "",
+    "offset": 0,
+    "previous": "",
+    "sort": "asc"
+  }
+}

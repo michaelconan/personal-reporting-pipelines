@@ -1,0 +1,28 @@
+{
+  "results": [
+    {
+      "id": "1",
+      "properties": {
+        "createdate": "2024-01-01T00:00:00Z",
+        "name": "Company A",
+        "hs_lastmodifieddate": "2024-01-01T00:00:00Z",
+        "updatedAt": "2024-01-01T00:00:00Z"
+      },
+      "createdAt": "2024-01-01T00:00:00Z",
+      "updatedAt": "2024-01-01T00:00:00Z",
+      "archived": false
+    },
+    {
+      "id": "2",
+      "properties": {
+        "createdate": "2024-01-02T00:00:00Z",
+        "name": "Company B",
+        "hs_lastmodifieddate": "2024-01-02T00:00:00Z",
+        "updatedAt": "2024-01-02T00:00:00Z"
+      },
+      "createdAt": "2024-01-02T00:00:00Z",
+      "updatedAt": "2024-01-02T00:00:00Z",
+      "archived": false
+    }
+  ]
+}
