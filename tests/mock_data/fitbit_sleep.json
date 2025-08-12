@@ -1,0 +1,34 @@
+{
+  "sleep": [
+    {
+      "logId": 1,
+      "dateOfSleep": "2024-01-01",
+      "duration": 28800000,
+      "efficiency": 95,
+      "startTime": "2024-01-01T00:00:00.000",
+      "endTime": "2024-01-01T08:00:00.000",
+      "minutesAsleep": 480,
+      "minutesAwake": 0,
+      "timeInBed": 480
+    },
+    {
+      "logId": 2,
+      "dateOfSleep": "2024-01-02",
+      "duration": 28800000,
+      "efficiency": 95,
+      "startTime": "2024-01-02T00:00:00.000",
+      "endTime": "2024-01-02T08:00:00.000",
+      "minutesAsleep": 480,
+      "minutesAwake": 0,
+      "timeInBed": 480
+    }
+  ],
+  "pagination": {
+    "beforeDate": "2024-01-03",
+    "limit": 100,
+    "next": "",
+    "offset": 0,
+    "previous": "",
+    "sort": "asc"
+  }
+}

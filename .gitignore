@@ -10,6 +10,7 @@ logs/*
 
 # Data files
 *.csv
+*.duckdb*
 
 # Secrets and variables
 .env
