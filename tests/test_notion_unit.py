@@ -27,4 +27,6 @@ def test_notion_source_config(monkeypatch, mocker):
     assert call_args["client"]["base_url"] == "https://api.notion.com/v1"
     assert len(call_args["resources"]) == 2
     rows_resource = next(r for r in call_args["resources"] if r["name"] == "notion__database_rows")
-    assert rows_resource["endpoint"]["path"] == "databases/{resources.notion__databases.id}/query"
+    assert "incremental" in rows_resource["endpoint"]
+    assert "json" in rows_resource["endpoint"]
+    assert "filter" in rows_resource["endpoint"]["json"]

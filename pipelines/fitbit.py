@@ -31,7 +31,7 @@ from dlt.sources.helpers.rest_client.paginators import (
 )
 
 # Common custom tasks
-from pipelines import RAW_SCHEMA, IS_TEST
+from pipelines import RAW_SCHEMA
 from pipelines.common.utils import (
     get_refresh_mode,
     get_write_disposition,
@@ -80,12 +80,7 @@ def get_fitbit_token() -> str:
 def fitbit_source(
     api_key: str,
     initial_date: str = "2024-01-01",
-    is_incremental: bool = True,
 ):
-
-    # Set default incremental dates
-    # Should be overriden by Airflow data interval
-    initial_dt = pendulum.parse(initial_date)
 
     api_config = {
         "client": {
@@ -111,7 +106,7 @@ def fitbit_source(
                     "data_selector": "sleep",
                     "params": {
                         "sort": "asc",
-                        "afterDate": initial_date,
+                        "afterDate": "{incremental.start_value}",
                     },
                     "paginator": OffsetPaginator(
                         limit=100,
@@ -119,6 +114,10 @@ def fitbit_source(
                         offset_param="offset",
                         total_path=None,
                     ),
+                    "incremental": {
+                        "cursor_path": "dateOfSleep",
+                        "initial_value": initial_date,
+                    },
                 },
             },
             {
@@ -131,7 +130,7 @@ def fitbit_source(
                     "data_selector": "activities",
                     "params": {
                         "sort": "asc",
-                        "afterDate": initial_date,
+                        "afterDate": "{incremental.start_value}",
                     },
                     "paginator": OffsetPaginator(
                         limit=100,
@@ -139,28 +138,14 @@ def fitbit_source(
                         offset_param="offset",
                         total_path=None,
                     ),
+                    "incremental": {
+                        "cursor_path": "lastModified",
+                        "initial_value": initial_date,
+                    },
                 },
             },
         ],
     }
-
-    # Only add incremental configuration if incremental loading is enabled
-    if is_incremental:
-        for resource in api_config["resources"]:
-            if resource["name"] == "fitbit__sleep":
-                resource["endpoint"]["incremental"] = {
-                    "cursor_path": "dateOfSleep",
-                    "initial_value": initial_date,
-                }
-            elif resource["name"] == "fitbit__activities":
-                resource["endpoint"]["incremental"] = {
-                    "cursor_path": "lastModified",
-                    "initial_value": initial_date,
-                }
-            if IS_TEST:
-                resource["endpoint"]["incremental"]["end_value"] = initial_dt.add(
-                    days=7
-                ).isoformat()
 
     return rest_api_source(api_config)
 
@@ -191,7 +176,6 @@ def refresh_fitbit(
     fb_token = get_fitbit_token()
     fb_source = fitbit_source(
         api_key=fb_token,
-        is_incremental=is_incremental,
     )
 
     if not pipeline:
@@ -211,7 +195,7 @@ def refresh_fitbit(
         fb_source,
         write_disposition=write_disposition,
     )
-
+    logger.info(info)
     return info
 
 
