@@ -1,6 +1,6 @@
 import os
 
-IS_TEST = os.getenv("TEST") or os.getenv("CI")
+# IS_TEST = os.getenv("TEST") or os.getenv("CI")
 
 # Load and set dynamic schema and table variables based on DBT target
 DBT_TARGET = os.getenv("DBT_TARGET", default="prod")

@@ -2,7 +2,7 @@
     "python.testing.pytestArgs": [
         "tests",
         // Coverage of source code
-        "--cov=dags/",
+        "--cov=pipelines/",
         // INFO level pytest logging
         "--log-cli-level=INFO",
     ],

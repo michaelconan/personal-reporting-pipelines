@@ -22,13 +22,5 @@
       "minutesAwake": 0,
       "timeInBed": 480
     }
-  ],
-  "pagination": {
-    "beforeDate": "2024-01-03",
-    "limit": 100,
-    "next": "",
-    "offset": 0,
-    "previous": "",
-    "sort": "asc"
-  }
+  ]
 }

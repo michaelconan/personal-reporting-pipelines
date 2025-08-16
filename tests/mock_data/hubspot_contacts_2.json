@@ -1,0 +1,31 @@
+{
+  "total": 0,
+  "paging": {
+    "next": {
+      "link": null,
+      "after": null
+    }
+  },
+  "results": [
+    {
+      "createdAt": "2025-08-16T22:16:41.217Z",
+      "archived": false,
+      "archivedAt": "2025-08-16T22:16:41.217Z",
+      "propertiesWithHistory": "",
+      "id": "514",
+      "objectWriteTraceId": "string",
+      "properties": "{\"email\":\"mark.s@lumon.industries\",\"lastname\":\"S.\",\"firstname\":\"Mark\"}",
+      "updatedAt": "2025-08-16T22:16:41.217Z"
+    },
+    {
+      "createdAt": "2025-08-16T22:16:41.217Z",
+      "archived": false,
+      "archivedAt": "2025-08-16T22:16:41.217Z",
+      "propertiesWithHistory": "",
+      "id": "515",
+      "objectWriteTraceId": "string",
+      "properties": "{\"email\":\"mark.s@lumon.industries\",\"lastname\":\"S.\",\"firstname\":\"Mark\"}",
+      "updatedAt": "2025-08-16T22:16:41.217Z"
+    }
+  ]
+}
