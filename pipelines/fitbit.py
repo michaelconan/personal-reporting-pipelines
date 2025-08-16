@@ -80,6 +80,7 @@ def get_fitbit_token() -> str:
 def fitbit_source(
     api_key: str,
     initial_date: str = "2024-01-01",
+    session: Optional[requests.Session] = None,
 ):
 
     api_config = {
@@ -146,6 +147,8 @@ def fitbit_source(
             },
         ],
     }
+    if session:
+        api_config["client"]["session"] = session
 
     return rest_api_source(api_config)
 

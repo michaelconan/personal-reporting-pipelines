@@ -17,6 +17,7 @@ from typing import Optional
 
 # PyPI
 import pendulum
+import requests
 
 # dlt
 import dlt
@@ -58,11 +59,12 @@ def map_engagement(item: dict) -> dict:
 def hubspot_source(
     api_key: str = dlt.secrets.value,
     initial_date: str = "2024-01-01",
+    session: Optional[requests.Session] = None,
 ):
 
     # Set default incremental dates
     if IS_TEST:
-        initial_date = pendulum.date(2025, 1, 1)
+        initial_date = pendulum.date(2025, 1, 1).to_iso8601_string()
 
     CRM_OBJECTS = {
         "contacts": {
@@ -123,6 +125,8 @@ def hubspot_source(
         },
         "resources": [],
     }
+    if session:
+        api_config["client"]["session"] = session
 
     # Add schema resources
     for object_name in ["contacts", "companies"]:
@@ -151,22 +155,8 @@ def hubspot_source(
         "processing_steps": [{"map": map_engagement}],
         "endpoint": {
             "path": "engagements/v1/engagements/paged",
-            "method": "POST", # Changed to POST to support body
+            "method": "GET",
             "data_selector": "results",
-            "json": {
-                "filterGroups": [
-                    {
-                        "filters": [
-                            {
-                                "propertyName": "lastupdatedate",
-                                "operator": "GTE",
-                                "value": "{incremental.start_value}",
-                            }
-                        ]
-                    }
-                ],
-                "sorts": [{"propertyName": "lastupdatedate", "direction": "ASCENDING"}],
-            },
             "incremental": {
                 "cursor_path": "engagement.lastUpdated",
                 "initial_value": initial_date,

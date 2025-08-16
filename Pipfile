@@ -10,6 +10,7 @@ google-cloud-secret-manager = "*"
 google-api-python-client = "*"
 dbt-core = "*"
 psutil = "*"
+responses = "*"
 
 [dev-packages]
 pytest-cov = "*"
