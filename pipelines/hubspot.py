@@ -28,7 +28,7 @@ from dlt.sources.helpers.rest_client.paginators import (
 )
 
 # Common custom tasks
-from pipelines import RAW_SCHEMA, IS_TEST
+from pipelines import RAW_SCHEMA
 from pipelines.common.utils import (
     get_refresh_mode,
     get_write_disposition,
@@ -61,10 +61,6 @@ def hubspot_source(
     initial_date: str = "2024-01-01",
     session: Optional[requests.Session] = None,
 ):
-
-    # Set default incremental dates
-    if IS_TEST:
-        initial_date = pendulum.date(2025, 1, 1).to_iso8601_string()
 
     CRM_OBJECTS = {
         "contacts": {
@@ -159,8 +155,8 @@ def hubspot_source(
             "data_selector": "results",
             "incremental": {
                 "cursor_path": "engagement.lastUpdated",
-                "initial_value": initial_date,
-                "convert": iso_to_unix,
+                "initial_value": iso_to_unix(initial_date),
+                # "convert": iso_to_unix,
             },
             "paginator": OffsetPaginator(
                 offset_param="offset",

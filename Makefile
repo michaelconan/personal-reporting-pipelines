@@ -18,6 +18,7 @@ help: ## Show this help message
 ## Environment Setup
 .PHONY: install
 install: ## Install Python dependencies using pipenv
+	pip install pipenv
 	pipenv install --dev
 
 ## Testing
@@ -34,3 +35,8 @@ test: ## Run tests with coverage
 test-coverage: ## Generate coverage reports only
 	$(PIPENV) coverage html
 	$(PIPENV) coverage xml
+
+.PHONY: dlt-clean
+dlt-clean:
+	@rm -rf ~/.dlt
+	@rm -f *.duckdb
