@@ -1,9 +1,9 @@
 {
-  "total": 0,
+  "total": 3,
   "paging": {
     "next": {
-      "link": null,
-      "after": null
+      "link": "?after=NTI1Cg%3D%3D",
+      "after": "NTI1Cg%3D%3D"
     }
   },
   "results": [
@@ -12,7 +12,7 @@
       "archived": false,
       "archivedAt": "2025-08-16T22:16:41.217Z",
       "propertiesWithHistory": "",
-      "id": "514",
+      "id": "512",
       "objectWriteTraceId": "string",
       "properties": "{\"email\":\"mark.s@lumon.industries\",\"lastname\":\"S.\",\"firstname\":\"Mark\"}",
       "updatedAt": "2025-08-16T22:16:41.217Z"
@@ -22,7 +22,7 @@
       "archived": false,
       "archivedAt": "2025-08-16T22:16:41.217Z",
       "propertiesWithHistory": "",
-      "id": "515",
+      "id": "513",
       "objectWriteTraceId": "string",
       "properties": "{\"email\":\"mark.s@lumon.industries\",\"lastname\":\"S.\",\"firstname\":\"Mark\"}",
       "updatedAt": "2025-08-16T22:16:41.217Z"

@@ -39,12 +39,12 @@ from pipelines.common.utils import (
 logger: Logger = getLogger(__name__)
 
 
-def iso_to_unix(iso_date: str) -> str:
+def iso_to_unix(iso_date: str) -> int:
     """
     Convert ISO date string to Unix timestamp in milliseconds.
     """
     dt = pendulum.parse(iso_date)
-    return str(int(dt.timestamp() * 1000))
+    return int(dt.timestamp() * 1000)
 
 
 def map_engagement(item: dict) -> dict:
@@ -58,8 +58,9 @@ def map_engagement(item: dict) -> dict:
 @dlt.source
 def hubspot_source(
     api_key: str = dlt.secrets.value,
-    initial_date: str = "2024-01-01",
     session: Optional[requests.Session] = None,
+    initial_date: str = "2020-01-01",
+    end_date: Optional[str] = None,
 ):
 
     CRM_OBJECTS = {
@@ -148,7 +149,7 @@ def hubspot_source(
     engagement_resource = {
         "name": "hubspot__engagements",
         "max_table_nesting": 1,
-        "processing_steps": [{"map": map_engagement}],
+        # "processing_steps": [{"map": map_engagement}],
         "endpoint": {
             "path": "engagements/v1/engagements/paged",
             "method": "GET",
@@ -213,6 +214,8 @@ def hubspot_source(
 def refresh_hubspot(
     is_incremental: Optional[bool] = None,
     pipeline: Optional[dlt.Pipeline] = None,
+    initial_date: str = "2020-01-01",
+    end_date: str = None,
 ):
     """
     Refresh HubSpot CRM data pipeline.
@@ -233,7 +236,7 @@ def refresh_hubspot(
     pipeline_name = "hubspot_crm_pipeline"
 
     # create hubspot crm dlt source
-    hs_source = hubspot_source()
+    hs_source = hubspot_source(initial_date=initial_date, end_date=end_date)
 
     if not pipeline:
         # Modify the pipeline parameters
