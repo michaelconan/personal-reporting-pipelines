@@ -10,11 +10,11 @@ google-cloud-secret-manager = "*"
 google-api-python-client = "*"
 dbt-core = "*"
 psutil = "*"
-responses = "*"
 
 [dev-packages]
 pytest-cov = "*"
 pytest-mock = "*"
+pytest-responses = "*"
 pre-commit = "*"
 sqlfluff = "*"
 sqlfluff-templater-dbt = "*"

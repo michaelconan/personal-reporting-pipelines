@@ -19,7 +19,7 @@ def fitbit_sleep_callback(request):
 
     if offset == 0:
         # Return actual data for first page
-        with open("tests/mock_data/fitbit_sleep.json", "r") as f:
+        with open("/fitbit_sleep.json", "r") as f:
             return (200, {}, json.dumps(json.load(f)))
     else:
         # Return empty page for subsequent requests
