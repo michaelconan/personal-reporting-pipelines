@@ -1,5 +1,5 @@
 {
-  "total": 3,
+  "total": 5,
   "paging": {
     "next": {
       "link": "?after=NTI1Cg%3D%3D",
@@ -25,7 +25,17 @@
       "id": "513",
       "objectWriteTraceId": "string",
       "properties": "{\"property_date\":\"1572480000000\",\"property_radio\":\"option_1\",\"property_number\":\"17\",\"property_string\":\"value\",\"property_checkbox\":\"false\",\"property_dropdown\":\"choice_b\",\"property_multiple_checkboxes\":\"chocolate;strawberry\"}",
-      "updatedAt": "2025-08-16T22:17:10.043Z"
+      "updatedAt": "2025-08-17T22:17:10.043Z"
+    },
+    {
+      "createdAt": "2025-08-16T22:17:10.043Z",
+      "archived": false,
+      "archivedAt": "2025-08-16T22:17:10.043Z",
+      "propertiesWithHistory": "",
+      "id": "514",
+      "objectWriteTraceId": "string",
+      "properties": "{\"property_date\":\"1572480000000\",\"property_radio\":\"option_1\",\"property_number\":\"17\",\"property_string\":\"value\",\"property_checkbox\":\"false\",\"property_dropdown\":\"choice_b\",\"property_multiple_checkboxes\":\"chocolate;strawberry\"}",
+      "updatedAt": "2025-08-18T22:17:10.043Z"
     }
   ]
 }

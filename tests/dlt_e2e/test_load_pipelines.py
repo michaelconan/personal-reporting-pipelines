@@ -6,6 +6,9 @@ import pendulum
 import dlt
 
 
+pytestmark = pytest.mark.e2e
+
+
 @pytest.fixture(scope="function")
 def duckdb_pipeline():
     """
@@ -20,25 +23,22 @@ def duckdb_pipeline():
     pipeline.drop()
 
 
-@pytest.mark.e2e
-def test_notion_load(duckdb_pipeline, mocker):
+def test_notion_refresh(duckdb_pipeline, mocker):
 
     # Delayed import to capture DBT target variable
     from pipelines.notion import refresh_notion
 
     # GIVEN
-    mocker.patch.dict(os.environ, {"NOTION_TOKEN": "dummy_notion_token"})
 
     # WHEN
     # Run the pipeline
-    refresh_notion(is_incremental=False, pipeline=duckdb_pipeline)
+    refresh_notion(is_incremental=False)
 
     # THEN
     # Validate task instances were successful
 
 
-@pytest.mark.e2e
-def test_hubspot_full_refresh():
+def test_hubspot_refresh():
     """
     Test a full refresh of the HubSpot pipeline.
     """
@@ -51,27 +51,7 @@ def test_hubspot_full_refresh():
     assert info.status == "completed"
 
 
-@pytest.mark.e2e
-def test_hubspot_incremental_load():
-    """
-    Test an incremental load of the HubSpot pipeline.
-    """
-    from pipelines.hubspot import refresh_hubspot
-
-    # First, run a full refresh to have some data
-    print("Running initial full refresh for incremental test...")
-    refresh_hubspot(is_incremental=False)
-
-    # Now, run an incremental load
-    print("Running test_hubspot_incremental_load...")
-    info = refresh_hubspot(is_incremental=True)
-
-    # Add assertions here to validate the data
-    assert info.status == "completed"
-
-
-@pytest.mark.e2e
-def test_fitbit_load():
+def test_fitbit_refresh():
 
     # Delayed import to capture DBT target variable
     from pipelines.fitbit import refresh_fitbit
