@@ -7,8 +7,11 @@ import json
 import pytest_responses
 from urllib.parse import parse_qs, urlparse
 
-from pipelines.hubspot import hubspot_source
-from tests.dlt_unit.conftest import MOCK_FOLDER, sample_data, sample_response
+from pipelines.hubspot import hubspot_source, iso_to_unix
+from tests.dlt_unit.conftest import sample_data, sample_response
+
+
+pytestmark = pytest.mark.local
 
 
 @pytest.fixture
@@ -22,9 +25,14 @@ def mock_hs_apis(monkeypatch, responses):
     def search_callback(request, object: str):
         payload = json.loads(request.body)
         after = payload.get("after")
+        filters = payload["filterGroups"][0]["filters"]
+        start_filter = [f for f in filters if f["operator"] == "GTE"][0]
         if after is None:
             # Return data for first page
             return sample_response(f"hubspot_{object}_run1-page1.json")
+        elif int(start_filter["value"]) > iso_to_unix("2025-01-01"):
+            # Return data for subsequent run
+            return sample_response(f"hubspot_{object}_run2.json")
         else:
             # Return data for second page
             return sample_response(f"hubspot_{object}_run1-page2.json")
@@ -87,9 +95,9 @@ def hs_pipeline() -> dlt.Pipeline:
 @pytest.mark.parametrize(
     ("resource", "expected_tables", "configs"),
     (
-        ("contacts", 2, None),
-        ("companies", 2, None),
-        ("engagements", 4, None),
+        ("contacts", 2, {}),
+        ("companies", 2, {}),
+        ("engagements", 4, {}),
         (
             "schemas_contacts",
             5,
@@ -104,7 +112,7 @@ def hs_pipeline() -> dlt.Pipeline:
         ),
     ),
 )
-class TestHubspot:
+class TestHubspotPhases:
 
     def test_extract(
         self,
@@ -135,7 +143,7 @@ class TestHubspot:
     ):
 
         # GIVEN
-        expected_rows = 2
+        expected_rows = 3
         file_name = f"hubspot_{resource}_run1-page1.json"
         file_name2 = f"hubspot_{resource}.json"
         source = sample_data(file_name, fallback=file_name2)
@@ -163,8 +171,76 @@ class TestHubspot:
         expected_tables: int,
         configs: dict | None,
     ):
-        # TODO
-        pass
+        # GIVEN
+        file_name = f"hubspot_{resource}_run1-page1.json"
+        file_name2 = f"hubspot_{resource}.json"
+        source = sample_data(file_name, fallback=file_name2)
+        if "results" in source:
+            source = source["results"]
+        else:
+            source = [source]
+        hs_pipeline.extract(source, table_name=resource, **configs)
+        hs_pipeline.normalize()
+
+        # WHEN
+        info = hs_pipeline.load()
+
+        # THEN
+        assert info.first_run
+        assert info.has_failed_jobs is False
+        assert all(p.state == "loaded" for p in info.load_packages)
+
+
+@pytest.mark.parametrize(
+    ("resource", "increment"),
+    (
+        ("contacts", True),
+        ("companies", True),
+        ("contacts", False),
+        ("companies", False),
+        ("engagements", False),
+        ("schemas_contacts", False),
+    ),
+)
+def test_hubspot_refresh(
+    mock_hs_apis,
+    hs_pipeline: dlt.Pipeline,
+    resource: str,
+    increment: bool,
+):
+    # GIVEN (1)
+    # Dataset from pipeline (dev mode)
+    dataset = hs_pipeline.dataset_name
+    # Defaults to append for most resources
+    write_disposition = None if increment else "replace"
+
+    # WHEN (1)
+    source = hubspot_source().with_resources(f"hubspot__{resource}")
+    info = hs_pipeline.run(source)
+
+    # THEN (1)
+    # Run pipeline the first time
+    assert info.first_run is True
+    assert info.has_failed_jobs is False
+    # Validate loaded data from initial run
+    with hs_pipeline.sql_client() as client:
+        table_rows = client.execute_sql(f"SELECT 1 FROM {dataset}.hubspot__{resource}")
+    assert len(table_rows) == 5
+
+    # GIVEN (2)
+    expected_rows = 6 if increment else 5
+
+    # WHEN (2)
+    info2 = hs_pipeline.run(source, write_disposition=write_disposition)
+
+    # THEN (2)
+    # Run pipeline again
+    assert info2.first_run is False
+    assert info2.has_failed_jobs is False
+    # Validate loaded data from incremental run
+    with hs_pipeline.sql_client() as client:
+        table_rows2 = client.execute_sql(f"SELECT 1 FROM {dataset}.hubspot__{resource}")
+    assert len(table_rows2) == expected_rows
 
 
 def test_hubspot_pipeline(mock_hs_apis, hs_pipeline):
@@ -180,6 +256,7 @@ def test_hubspot_pipeline(mock_hs_apis, hs_pipeline):
 
     # THEN
     # Assert that the pipeline ran successfully
+    assert info.first_run is True
     assert info.has_failed_jobs is False
     assert len(info.loads_ids) == 1
 
@@ -187,31 +264,24 @@ def test_hubspot_pipeline(mock_hs_apis, hs_pipeline):
     dataset = hs_pipeline.dataset_name
     with hs_pipeline.sql_client() as client:
         # Check schemas table
-        schema_table = client.execute_sql(
-            f"SELECT name FROM {dataset}.hubspot__schemas"
-        )
+        schema_table = client.execute_sql(f"SELECT 1 FROM {dataset}.hubspot__schemas")
 
         assert len(schema_table) == 1
 
         # Check contacts table
         contacts_table = client.execute_sql(
-            f"SELECT id FROM {dataset}.hubspot__contacts"
+            f"SELECT 1 FROM {dataset}.hubspot__contacts"
         )
-        assert len(contacts_table) == 4
-        assert contacts_table[0][0] == "512"
+        assert len(contacts_table) == 5
 
         # Check companies table
         companies_table = client.execute_sql(
-            f"SELECT id FROM {dataset}.hubspot__companies"
+            f"SELECT 1 FROM {dataset}.hubspot__companies"
         )
-        assert len(companies_table) == 2
-        assert companies_table[0][0] == "512"
+        assert len(companies_table) == 5
 
         # Check engagements table
         engagements_table = client.execute_sql(
-            f"""SELECT engagement__id, engagement__type
-            FROM {dataset}.hubspot__engagements"""
+            f"""SELECT 1 FROM {dataset}.hubspot__engagements"""
         )
-        assert len(engagements_table) == 4
-        assert engagements_table[0][0] == 29090716
-        assert engagements_table[0][1] == "NOTE"
+        assert len(engagements_table) == 5

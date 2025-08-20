@@ -1,5 +1,5 @@
 {
-  "total": 3,
+  "total": 5,
   "paging": {
     "next": {
       "link": "?after=NTI1Cg%3D%3D",
@@ -25,7 +25,17 @@
       "id": "513",
       "objectWriteTraceId": "string",
       "properties": "{\"email\":\"mark.s@lumon.industries\",\"lastname\":\"S.\",\"firstname\":\"Mark\"}",
-      "updatedAt": "2025-08-16T22:16:41.217Z"
+      "updatedAt": "2025-08-17T22:16:41.217Z"
+    },
+    {
+      "createdAt": "2025-08-16T22:16:41.217Z",
+      "archived": false,
+      "archivedAt": "2025-08-16T22:16:41.217Z",
+      "propertiesWithHistory": "",
+      "id": "514",
+      "objectWriteTraceId": "string",
+      "properties": "{\"email\":\"mark.s@lumon.industries\",\"lastname\":\"S.\",\"firstname\":\"Mark\"}",
+      "updatedAt": "2025-08-18T22:16:41.217Z"
     }
   ]
 }

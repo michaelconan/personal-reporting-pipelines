@@ -6,7 +6,7 @@
         "portalId": 62515,
         "active": true,
         "createdAt": 1444223400781,
-        "lastUpdated": 1444223400781,
+        "lastUpdated": 1735789600000,
         "createdBy": 215482,
         "modifiedBy": 215482,
         "ownerId": 70,
@@ -33,7 +33,37 @@
         "portalId": 62515,
         "active": true,
         "createdAt": 1428586724779,
-        "lastUpdated": 1428586724779,
+        "lastUpdated": 1735889600000,
+        "createdBy": 215482,
+        "modifiedBy": 215482,
+        "ownerId": 70,
+        "type": "CALL",
+        "timestamp": 1428565020000
+      },
+      "associations": {
+        "contactIds": [
+          832
+        ],
+        "companyIds": [
+          8347
+        ],
+        "dealIds": [],
+        "ownerIds": [],
+        "workflowIds": []
+      },
+      "attachments": [],
+      "metadata": {
+        "durationMilliseconds": 24000,
+        "body": "test call"
+      }
+    },
+    {
+      "engagement": {
+        "id": 4709089,
+        "portalId": 62515,
+        "active": true,
+        "createdAt": 1428586724779,
+        "lastUpdated": 1735989600000,
         "createdBy": 215482,
         "modifiedBy": 215482,
         "ownerId": 70,
