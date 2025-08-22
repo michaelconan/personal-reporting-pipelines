@@ -1,0 +1,34 @@
+{
+  "object": "list",
+  "results": [
+    {
+      "object": "page",
+      "id": "page-006",
+      "created_time": "2025-01-01T19:05:00.000Z",
+      "last_edited_time": "2025-01-01T20:25:00.000Z",
+      "parent": {
+        "type": "database_id", 
+        "database_id": "10140b50-0f0d-43d2-905a-7ed714ef7f2c"
+      },
+      "properties": {
+        "Name": {
+          "id": "title",
+          "type": "title",
+          "title": [{"type": "text", "text": {"content": "New Year Resolution", "link": null}}]
+        },
+        "Date": {
+          "id": "date",
+          "type": "date",
+          "date": {"start": "2025-01-01", "end": null}
+        },
+        "Completed": {
+          "id": "checkbox",
+          "type": "checkbox",
+          "checkbox": true
+        }
+      }
+    }
+  ],
+  "next_cursor": null,
+  "has_more": false
+}

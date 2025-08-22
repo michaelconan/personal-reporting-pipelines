@@ -1,0 +1,22 @@
+{
+  "activities": [
+    {
+      "logId": 4,
+      "activityName": "Swimming",
+      "lastModified": "2024-06-04T15:30:00.000Z",
+      "startTime": "2024-01-04T15:30:00.000Z",
+      "duration": 2700000,
+      "calories": 300,
+      "steps": 0
+    },
+    {
+      "logId": 5,
+      "activityName": "Yoga",
+      "lastModified": "2024-06-05T07:00:00.000Z",
+      "startTime": "2024-01-05T07:00:00.000Z",
+      "duration": 3600000,
+      "calories": 120,
+      "steps": 100
+    }
+  ]
+}

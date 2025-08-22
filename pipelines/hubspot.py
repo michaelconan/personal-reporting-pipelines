@@ -28,7 +28,7 @@ from dlt.sources.helpers.rest_client.paginators import (
 )
 
 # Common custom tasks
-from pipelines import RAW_SCHEMA
+from pipelines import RAW_SCHEMA, BASE_DATE
 from pipelines.common.utils import (
     get_refresh_mode,
     get_write_disposition,
@@ -57,11 +57,11 @@ def map_engagement(item: dict) -> dict:
 
 @dlt.source
 def hubspot_source(
-    api_key: str = dlt.secrets.value,
     session: Optional[requests.Session] = None,
-    initial_date: str = "2020-01-01",
+    initial_date: str = BASE_DATE,
     end_date: Optional[str] = None,
 ):
+    api_key = dlt.secrets["sources.hubspot.api_key"]
 
     CRM_OBJECTS = {
         "contacts": {
@@ -149,14 +149,14 @@ def hubspot_source(
     engagement_resource = {
         "name": "hubspot__engagements",
         "max_table_nesting": 1,
-        # "processing_steps": [{"map": map_engagement}],
+        "processing_steps": [{"map": map_engagement}],
         "endpoint": {
             "path": "engagements/v1/engagements/paged",
             "method": "GET",
             "data_selector": "results",
             "incremental": {
                 "cursor_path": "engagement.lastUpdated",
-                "initial_value": iso_to_unix(initial_date),
+                "initial_value": initial_date,
                 # "convert": iso_to_unix,
             },
             "paginator": OffsetPaginator(
@@ -202,10 +202,23 @@ def hubspot_source(
                     "incremental": {
                         "cursor_path": "updatedAt",
                         "initial_value": initial_date,
+                        "end_value": end_date,
                         "convert": iso_to_unix,
                     },
                 },
             }
+
+            if end_date:
+                object_resource["endpoint"]["json"]["filterGroups"][0][
+                    "filters"
+                ].append(
+                    {
+                        "propertyName": object_config["filter_key"],
+                        "operator": "LTE",
+                        "value": "{incremental.end_value}",
+                    }
+                )
+
             api_config["resources"].append(object_resource)
 
     yield from rest_api_resources(api_config)
@@ -214,8 +227,8 @@ def hubspot_source(
 def refresh_hubspot(
     is_incremental: Optional[bool] = None,
     pipeline: Optional[dlt.Pipeline] = None,
-    initial_date: str = "2020-01-01",
-    end_date: str = None,
+    initial_date: str = BASE_DATE,
+    end_date: Optional[str] = None,
 ):
     """
     Refresh HubSpot CRM data pipeline.

@@ -1,12 +1,17 @@
-import pytest
-import dlt
+# base imports
 import re
 import json
-
-# import responses
-import pytest_responses
+from typing import Callable
 from urllib.parse import parse_qs, urlparse
 
+# PyPI imports
+import pytest
+from pytest import MonkeyPatch
+import dlt
+import pytest_responses
+from responses import RequestsMock
+
+# local imports
 from pipelines.hubspot import hubspot_source, iso_to_unix
 from tests.dlt_unit.conftest import sample_data, sample_response
 
@@ -15,7 +20,7 @@ pytestmark = pytest.mark.local
 
 
 @pytest.fixture
-def mock_hs_apis(monkeypatch, responses):
+def mock_hs_apis(monkeypatch: MonkeyPatch, responses: RequestsMock) -> Callable:
 
     BASE_URL = "https://api.hubapi.com"
 
@@ -51,45 +56,43 @@ def mock_hs_apis(monkeypatch, responses):
         else:
             return (200, {}, json.dumps({"results": []}))
 
-    # Mock the API responses
-    responses.add_callback(
-        responses.GET,
-        BASE_URL + "/engagements/v1/engagements/paged",
-        callback=engagement_callback,
-        content_type="application/json",
-    )
-    responses.add_callback(
-        responses.POST,
-        BASE_URL + "/crm/v3/objects/contacts/search",
-        callback=lambda r: search_callback(r, "contacts"),
-        content_type="application/json",
-    )
-    responses.add_callback(
-        responses.POST,
-        BASE_URL + "/crm/v3/objects/companies/search",
-        callback=lambda r: search_callback(r, "companies"),
-        content_type="application/json",
-    )
-    responses.add(
-        responses.GET,
-        re.compile(BASE_URL + r"/crm-object-schemas/v3/schemas/\w+"),
-        json=sample_data("hubspot_schemas_contacts.json"),
-        status=200,
-    )
+    def setup(endpoints=[]):
+        """Nested function to only register mock endpoints for tests.
 
+        Args:
+            endpoints (list, optional): Specific endpoints to register. Defaults to [] (all).
+        """
+        # Mock the API responses
+        if not endpoints or "engagements" in endpoints:
+            responses.add_callback(
+                responses.GET,
+                BASE_URL + "/engagements/v1/engagements/paged",
+                callback=engagement_callback,
+                content_type="application/json",
+            )
+        if not endpoints or "contacts" in endpoints:
+            responses.add_callback(
+                responses.POST,
+                BASE_URL + "/crm/v3/objects/contacts/search",
+                callback=lambda r: search_callback(r, "contacts"),
+                content_type="application/json",
+            )
+        if not endpoints or "companies" in endpoints:
+            responses.add_callback(
+                responses.POST,
+                BASE_URL + "/crm/v3/objects/companies/search",
+                callback=lambda r: search_callback(r, "companies"),
+                content_type="application/json",
+            )
+        if not endpoints or "schemas_contacts" in endpoints:
+            responses.add(
+                responses.GET,
+                re.compile(BASE_URL + r"/crm-object-schemas/v3/schemas/\w+"),
+                json=sample_data("hubspot_schemas_contacts.json"),
+                status=200,
+            )
 
-@pytest.fixture
-def hs_pipeline() -> dlt.Pipeline:
-    # Test pipeline
-    pipeline = dlt.pipeline(
-        pipeline_name="hubspot_unit_test",
-        destination="duckdb",
-        dataset_name="hubspot_data",
-        dev_mode=True,
-    )
-    yield pipeline
-    # Cleanup
-    pipeline.drop()
+    return setup
 
 
 @pytest.mark.parametrize(
@@ -117,7 +120,7 @@ class TestHubspotPhases:
     def test_extract(
         self,
         mock_hs_apis,
-        hs_pipeline: dlt.Pipeline,
+        duckdb_pipeline: dlt.Pipeline,
         resource: str,
         expected_tables: int,
         configs: dict | None,
@@ -125,18 +128,18 @@ class TestHubspotPhases:
 
         # GIVEN
         # Mocked APIs
+        mock_hs_apis(endpoints=[resource])
 
         # WHEN
         source = hubspot_source().with_resources(f"hubspot__{resource}")
-        info = hs_pipeline.extract(source)
+        info = duckdb_pipeline.extract(source)
 
         # THEN
-        assert info.first_run
         assert len(info.loads_ids) == 1
 
     def test_normalize(
         self,
-        hs_pipeline: dlt.Pipeline,
+        duckdb_pipeline: dlt.Pipeline,
         resource: str,
         expected_tables: int,
         configs: dict | None,
@@ -152,26 +155,29 @@ class TestHubspotPhases:
         else:
             source = [source]
             expected_rows = 1
-        hs_pipeline.extract(source, table_name=resource, **configs)
+        duckdb_pipeline.extract(source, table_name=resource, **configs)
 
         # WHEN
-        info = hs_pipeline.normalize()
+        info = duckdb_pipeline.normalize()
 
         # THEN
-        assert info.first_run
         # _dlt_state table, source table, and any child tables
-        assert len(info.row_counts) == expected_tables
+        assert (
+            len([r for r in info.row_counts if r.startswith(resource)])
+            == expected_tables
+        )
         # first page record count
         assert info.row_counts[resource] == expected_rows
 
     def test_load(
         self,
-        hs_pipeline: dlt.Pipeline,
+        duckdb_pipeline: dlt.Pipeline,
         resource: str,
         expected_tables: int,
         configs: dict | None,
     ):
         # GIVEN
+        # Files to load for sample test
         file_name = f"hubspot_{resource}_run1-page1.json"
         file_name2 = f"hubspot_{resource}.json"
         source = sample_data(file_name, fallback=file_name2)
@@ -179,14 +185,13 @@ class TestHubspotPhases:
             source = source["results"]
         else:
             source = [source]
-        hs_pipeline.extract(source, table_name=resource, **configs)
-        hs_pipeline.normalize()
+        duckdb_pipeline.extract(source, table_name=resource, **configs)
+        duckdb_pipeline.normalize()
 
         # WHEN
-        info = hs_pipeline.load()
+        info = duckdb_pipeline.load()
 
         # THEN
-        assert info.first_run
         assert info.has_failed_jobs is False
         assert all(p.state == "loaded" for p in info.load_packages)
 
@@ -204,46 +209,50 @@ class TestHubspotPhases:
 )
 def test_hubspot_refresh(
     mock_hs_apis,
-    hs_pipeline: dlt.Pipeline,
+    duckdb_pipeline: dlt.Pipeline,
     resource: str,
     increment: bool,
 ):
     # GIVEN (1)
+    # Mock APIs
+    mock_hs_apis(endpoints=[resource])
+    expected_rows = 1 if "schemas" in resource else 5
     # Dataset from pipeline (dev mode)
-    dataset = hs_pipeline.dataset_name
+    dataset = duckdb_pipeline.dataset_name
+    table = resource.split("_")[0]
     # Defaults to append for most resources
     write_disposition = None if increment else "replace"
 
     # WHEN (1)
     source = hubspot_source().with_resources(f"hubspot__{resource}")
-    info = hs_pipeline.run(source)
+    info = duckdb_pipeline.run(source)
 
     # THEN (1)
     # Run pipeline the first time
     assert info.first_run is True
     assert info.has_failed_jobs is False
     # Validate loaded data from initial run
-    with hs_pipeline.sql_client() as client:
-        table_rows = client.execute_sql(f"SELECT 1 FROM {dataset}.hubspot__{resource}")
-    assert len(table_rows) == 5
+    with duckdb_pipeline.sql_client() as client:
+        table_rows = client.execute_sql(f"SELECT 1 FROM {dataset}.hubspot__{table}")
+    assert len(table_rows) == expected_rows
 
     # GIVEN (2)
-    expected_rows = 6 if increment else 5
+    expected_rows += 1 if increment else 0
 
     # WHEN (2)
-    info2 = hs_pipeline.run(source, write_disposition=write_disposition)
+    info2 = duckdb_pipeline.run(source, write_disposition=write_disposition)
 
     # THEN (2)
     # Run pipeline again
     assert info2.first_run is False
     assert info2.has_failed_jobs is False
     # Validate loaded data from incremental run
-    with hs_pipeline.sql_client() as client:
-        table_rows2 = client.execute_sql(f"SELECT 1 FROM {dataset}.hubspot__{resource}")
+    with duckdb_pipeline.sql_client() as client:
+        table_rows2 = client.execute_sql(f"SELECT 1 FROM {dataset}.hubspot__{table}")
     assert len(table_rows2) == expected_rows
 
 
-def test_hubspot_pipeline(mock_hs_apis, hs_pipeline):
+def test_hubspot_pipeline(mock_hs_apis, duckdb_pipeline):
     """
     Test that the HubSpot pipeline runs and loads data correctly.
     """
@@ -252,7 +261,7 @@ def test_hubspot_pipeline(mock_hs_apis, hs_pipeline):
     # WHEN
     # Run the pipeline
     source = hubspot_source()
-    info = hs_pipeline.run(source)
+    info = duckdb_pipeline.run(source)
 
     # THEN
     # Assert that the pipeline ran successfully
@@ -261,8 +270,8 @@ def test_hubspot_pipeline(mock_hs_apis, hs_pipeline):
     assert len(info.loads_ids) == 1
 
     # Check the loaded data
-    dataset = hs_pipeline.dataset_name
-    with hs_pipeline.sql_client() as client:
+    dataset = duckdb_pipeline.dataset_name
+    with duckdb_pipeline.sql_client() as client:
         # Check schemas table
         schema_table = client.execute_sql(f"SELECT 1 FROM {dataset}.hubspot__schemas")
 

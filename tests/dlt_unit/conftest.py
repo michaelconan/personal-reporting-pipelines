@@ -1,6 +1,10 @@
+# base imports
 import os
 import json
+
+# PyPI imports
 import pytest
+import dlt
 
 # This environment variable is set to disable the Google Secrets provider for all dlt unit tests.
 # It needs to be set before any dlt modules are imported, which is why it's at the top of this file.
@@ -22,3 +26,17 @@ def sample_data(file_name: str, fallback: str = None) -> dict:
 def sample_response(file_name: str) -> tuple[int, dict, str]:
     with open(os.path.join(MOCK_FOLDER, file_name), "r") as f:
         return (200, {}, f.read())
+
+
+@pytest.fixture(scope="class")
+def duckdb_pipeline() -> dlt.Pipeline:
+    # Test pipeline
+    pipeline = dlt.pipeline(
+        pipeline_name="local_unit_test",
+        destination="duckdb",
+        dataset_name="local_data",
+        dev_mode=True,
+    )
+    yield pipeline
+    # Cleanup
+    pipeline.drop()
