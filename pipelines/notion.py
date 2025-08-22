@@ -10,15 +10,15 @@ API Resources:
 """
 
 from logging import getLogger, Logger
-import pendulum
 from typing import Optional
 
 import dlt
+import requests
 from dlt.sources.rest_api import rest_api_resources
 from dlt.sources.helpers.rest_client.paginators import JSONResponseCursorPaginator
 
 # Common custom tasks
-from pipelines import RAW_SCHEMA, IS_TEST
+from pipelines import RAW_SCHEMA, BASE_DATE
 from pipelines.common.utils import (
     get_refresh_mode,
     get_write_disposition,
@@ -53,22 +53,20 @@ DATABASE_MAP = {
 logger: Logger = getLogger(__name__)
 
 
+def name_db_table(row: dict):
+    db_id = row["parent"]["database_id"]
+    suffix = DATABASE_MAP.get(db_id, db_id)
+    return f"notion__database_{suffix}"
+
+
 @dlt.source
 def notion_source(
     db_name: str,
-    api_key: str = dlt.secrets.value,
-    initial_date: str = "2024-01-01",
-    is_incremental: bool = True,
+    initial_date: Optional[str] = BASE_DATE,
+    end_date: Optional[str] = None,
+    session: Optional[requests.Session] = None,
 ):
-
-    # Set default incremental dates
-    if IS_TEST:
-        initial_date = "2025-01-01"
-    initial_dt = pendulum.parse(initial_date)
-    if IS_TEST:
-        end_dt = initial_dt.add(days=90)
-    else:
-        end_dt = pendulum.now("UTC")
+    api_key = dlt.secrets["sources.notion.api_key"]
 
     api_config = {
         "client": {
@@ -124,7 +122,7 @@ def notion_source(
     rows_resource = {
         "name": "notion__database_rows",
         # Add dynamic table name for the database rows resource
-        "table_name": lambda r: f"notion__database_{DATABASE_MAP[r['parent']['database_id']]}",
+        "table_name": name_db_table,
         # Prevent nested tables for multi-value properties
         "max_table_nesting": 2,
         "processing_steps": [
@@ -135,39 +133,52 @@ def notion_source(
             "data_selector": "results",
             "json": {
                 "filter": {
-                    # "and": [
-                    # {
                     "property": "Last edited time",
                     "date": {"after": "{incremental.start_value}"},
-                    # },
-                    #     {
-                    #         "property": "Last edited time",
-                    #         "date": {"before": "{incremental.end_value}"},
-                    #     },
-                    # ]
                 },
             },
             "incremental": {
                 "cursor_path": "last_edited_time",
                 "initial_value": initial_date,
-                # "end_value": end_dt.isoformat(),
+                "end_value": end_date,
             },
         },
     }
 
+    if end_date:
+        # Add end date to filters
+        rows_resource["endpoint"]["json"]["filter"] = {
+            "and": [
+                rows_resource["endpoint"]["json"]["filter"],
+                {
+                    "property": "Last edited time",
+                    "date": {"before": "{incremental.end_value}"},
+                },
+            ]
+        }
+        # Add end date to incremental load range
+        # rows_resource["endpoint"]["incremental"]["end_value"] = end_date
+
     api_config["resources"].append(rows_resource)
+
+    if session:
+        api_config["client"]["session"] = session
 
     yield from rest_api_resources(api_config)
 
 
 def refresh_notion(
     is_incremental: Optional[bool] = None,
+    pipeline: Optional[dlt.Pipeline] = None,
+    initial_date: Optional[str] = BASE_DATE,
+    end_date: Optional[str] = None,
 ):
     """
     Refresh Notion habits data pipeline.
 
     Args:
         is_incremental: Override incremental mode. If None, uses environment-based detection.
+        pipeline: dlt pipeline object. If None, a new one is created.
     """
 
     # Determine refresh mode if not explicitly provided
@@ -181,17 +192,19 @@ def refresh_notion(
     pipeline_name = "notion_habits_pipeline"
     nt_source = notion_source(
         db_name="Disciplines",
-        is_incremental=is_incremental,
+        initial_date=initial_date,
+        end_date=end_date,
     )
 
-    # Modify the pipeline parameters
-    pipeline = dlt.pipeline(
-        pipeline_name=pipeline_name,
-        # TODO: Sort out how to define schema using params
-        dataset_name=RAW_SCHEMA,
-        destination="bigquery",
-        progress="log",
-    )
+    if not pipeline:
+        # Modify the pipeline parameters
+        pipeline = dlt.pipeline(
+            pipeline_name=pipeline_name,
+            # TODO: Sort out how to define schema using params
+            dataset_name=RAW_SCHEMA,
+            destination="bigquery",
+            progress="log",
+        )
 
     # Get appropriate write disposition
     write_disposition = get_write_disposition(is_incremental)
@@ -202,10 +215,10 @@ def refresh_notion(
         write_disposition=write_disposition,
         loader_file_format="jsonl",
     )
+    logger.info(info)
 
     return info
 
 
 if __name__ == "__main__":
     info = refresh_notion()
-    logger.info(info)

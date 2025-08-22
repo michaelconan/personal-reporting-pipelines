@@ -1,0 +1,31 @@
+{
+  "activities": [
+    {
+      "logId": 1,
+      "activityName": "Walking",
+      "lastModified": "2024-06-01T10:00:00.000Z",
+      "startTime": "2024-06-01T10:00:00.000Z",
+      "duration": 1800000,
+      "calories": 150,
+      "steps": 2500
+    },
+    {
+      "logId": 2,
+      "activityName": "Running",
+      "lastModified": "2024-06-02T08:30:00.000Z",
+      "startTime": "2024-06-02T08:30:00.000Z",
+      "duration": 2400000,
+      "calories": 350,
+      "steps": 4500
+    },
+    {
+      "logId": 3,
+      "activityName": "Cycling",
+      "lastModified": "2024-06-03T17:00:00.000Z",
+      "startTime": "2024-06-03T17:00:00.000Z",
+      "duration": 3600000,
+      "calories": 400,
+      "steps": 0
+    }
+  ]
+}

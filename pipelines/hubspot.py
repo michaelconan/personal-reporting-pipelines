@@ -17,6 +17,7 @@ from typing import Optional
 
 # PyPI
 import pendulum
+import requests
 
 # dlt
 import dlt
@@ -27,7 +28,7 @@ from dlt.sources.helpers.rest_client.paginators import (
 )
 
 # Common custom tasks
-from pipelines import RAW_SCHEMA, IS_TEST
+from pipelines import RAW_SCHEMA, BASE_DATE
 from pipelines.common.utils import (
     get_refresh_mode,
     get_write_disposition,
@@ -56,18 +57,11 @@ def map_engagement(item: dict) -> dict:
 
 @dlt.source
 def hubspot_source(
-    api_key: str = dlt.secrets.value,
-    initial_date: str = "2024-01-01",
-    is_incremental: bool = True,
+    session: Optional[requests.Session] = None,
+    initial_date: str = BASE_DATE,
+    end_date: Optional[str] = None,
 ):
-
-    # Set default incremental dates
-    initial_dt = pendulum.parse(initial_date)
-    if IS_TEST:
-        initial_date = pendulum.date(2025, 1, 1)
-        end_dt = initial_dt.add(days=90)
-    else:
-        end_dt = pendulum.now("UTC")
+    api_key = dlt.secrets["sources.hubspot.api_key"]
 
     CRM_OBJECTS = {
         "contacts": {
@@ -128,139 +122,103 @@ def hubspot_source(
         },
         "resources": [],
     }
+    if session:
+        api_config["client"]["session"] = session
 
-    # Add schema resources only during full refresh
-    if not is_incremental:
-        for object_name in ["contacts", "companies"]:
-            schema_resource = {
-                "name": f"hubspot__schemas_{object_name}",
-                "max_table_nesting": 1,
-                "columns": {
-                    "searchable_properties": {"data_type": "json"},
-                    "secondary_display_properties": {"data_type": "json"},
-                },
-                "table_name": "hubspot__schemas",
-                "endpoint": {
-                    "path": f"crm-object-schemas/v3/schemas/{object_name}",
-                    "method": "GET",
-                    "data_selector": "$",
-                },
-                "write_disposition": "merge",
-                "primary_key": "id",
-            }
-            api_config["resources"].append(schema_resource)
+    # Add schema resources
+    for object_name in ["contacts", "companies"]:
+        schema_resource = {
+            "name": f"hubspot__schemas_{object_name}",
+            "max_table_nesting": 1,
+            "columns": {
+                "searchable_properties": {"data_type": "json"},
+                "secondary_display_properties": {"data_type": "json"},
+            },
+            "table_name": "hubspot__schemas",
+            "endpoint": {
+                "path": f"crm-object-schemas/v3/schemas/{object_name}",
+                "method": "GET",
+                "data_selector": "$",
+            },
+            "write_disposition": "merge",
+            "primary_key": "id",
+        }
+        api_config["resources"].append(schema_resource)
 
     # Add engagements resource
-    # For incremental: use modified endpoint (30-day limitation)
-    # For full refresh: use paged endpoint with date range (no 30-day limitation)
-    if is_incremental:
-        # Incremental: use modified engagements endpoint (30-day limitation)
-        days_ago = pendulum.now("UTC") - initial_dt
-        if days_ago < pendulum.duration(days=30):
-            engagement_resource = {
-                "name": "hubspot__engagements",
-                "max_table_nesting": 1,
-                "processing_steps": [{"map": map_engagement}],
-                "endpoint": {
-                    "path": "engagements/v1/engagements/recent/modified",
-                    "method": "GET",
-                    "data_selector": "results",
-                    "params": {
-                        "since": "{incremental.start_value}",
-                    },
-                    "paginator": OffsetPaginator(
-                        offset_param="offset",
-                        limit_param="limit",
-                        total_path=None,
-                        stop_after_empty_page=True,
-                        limit=250,
-                        has_more_path="hasMore",
-                    ),
-                },
-            }
-        else:
-            # Skip engagements for incremental beyond 30 days
-            engagement_resource = None
-            logger.warning(
-                "Skipping engagements for incremental load beyond 30 days "
-                "due to HubSpot API limitations on recent/modified endpoint"
-            )
-    else:
-        # Full refresh: use paged endpoint with date range (no 30-day limitation)
-        engagement_resource = {
-            "name": "hubspot__engagements",
-            "max_table_nesting": 1,
-            "processing_steps": [{"map": map_engagement}],
-            "endpoint": {
-                "path": "engagements/v1/engagements/paged",
-                "method": "GET",
-                "data_selector": "results",
-                "incremental": {
-                    "cursor_path": "engagement.lastUpdated",
-                    "initial_value": initial_date,
-                    # "end_value": end_dt.isoformat(),
-                    "convert": iso_to_unix,
-                },
-                "paginator": OffsetPaginator(
-                    offset_param="offset",
-                    limit_param="limit",
-                    total_path=None,
-                    stop_after_empty_page=True,
-                    limit=250,
-                    has_more_path="hasMore",
-                ),
+    engagement_resource = {
+        "name": "hubspot__engagements",
+        "max_table_nesting": 1,
+        "processing_steps": [{"map": map_engagement}],
+        "endpoint": {
+            "path": "engagements/v1/engagements/paged",
+            "method": "GET",
+            "data_selector": "results",
+            "incremental": {
+                "cursor_path": "engagement.lastUpdated",
+                "initial_value": initial_date,
+                # "convert": iso_to_unix,
             },
-        }
-
-    if engagement_resource:
-        api_config["resources"].append(engagement_resource)
+            "paginator": OffsetPaginator(
+                offset_param="offset",
+                limit_param="limit",
+                total_path=None,
+                stop_after_empty_page=True,
+                limit=250,
+                has_more_path="hasMore",
+            ),
+        },
+    }
+    api_config["resources"].append(engagement_resource)
 
     # Add CRM object endpoint resources
     for object_name, object_config in CRM_OBJECTS.items():
         if object_config["type"] == "object":
-            # Generate resource configuration for each CRM object
             object_resource = {
                 "name": f"hubspot__{object_name}",
                 "endpoint": {
                     "path": f"crm/v3/objects/{object_name}/search",
                     "method": "POST",
                     "data_selector": "results",
+                    "json": {
+                        "limit": 100,
+                        "properties": object_config["properties"],
+                        "filterGroups": [
+                            {
+                                "filters": [
+                                    {
+                                        "propertyName": object_config["filter_key"],
+                                        "operator": "GTE",
+                                        "value": "{incremental.start_value}",
+                                    }
+                                ]
+                            }
+                        ],
+                    },
                     "paginator": JSONResponseCursorPaginator(
                         cursor_path="paging.next.after",
                         cursor_body_path="after",
                     ),
+                    "incremental": {
+                        "cursor_path": "updatedAt",
+                        "initial_value": initial_date,
+                        "end_value": end_date,
+                        "convert": iso_to_unix,
+                    },
                 },
             }
 
-            # Define base JSON body for search
-            body = {
-                "limit": 100,
-                "properties": object_config["properties"],
-            }
-
-            # Add incremental configuration if incremental loading is enabled
-            if is_incremental:
-                object_resource["endpoint"]["incremental"] = {
-                    "cursor_path": "updatedAt",
-                    "initial_value": initial_date,
-                    # "end_value": end_dt.isoformat(),
-                    "convert": iso_to_unix,
-                }
-                # Add search filters for incremental load
-                body["filterGroups"] = [
+            if end_date:
+                object_resource["endpoint"]["json"]["filterGroups"][0][
+                    "filters"
+                ].append(
                     {
                         "propertyName": object_config["filter_key"],
-                        "operator": "GTE",
-                        "value": "{incremental.start_value}",
-                    },
-                    # {
-                    #     "propertyName": object_config["filter_key"],
-                    #     "operator": "LTE",
-                    #     "value": "{incremental.end_value}",
-                    # },
-                ]
+                        "operator": "LTE",
+                        "value": "{incremental.end_value}",
+                    }
+                )
 
-            object_resource["endpoint"]["json"] = body
             api_config["resources"].append(object_resource)
 
     yield from rest_api_resources(api_config)
@@ -268,12 +226,16 @@ def hubspot_source(
 
 def refresh_hubspot(
     is_incremental: Optional[bool] = None,
+    pipeline: Optional[dlt.Pipeline] = None,
+    initial_date: str = BASE_DATE,
+    end_date: Optional[str] = None,
 ):
     """
     Refresh HubSpot CRM data pipeline.
 
     Args:
         is_incremental: Override incremental mode. If None, uses environment-based detection.
+        pipeline: dlt pipeline object. If None, a new one is created.
     """
 
     # Determine refresh mode if not explicitly provided
@@ -287,17 +249,16 @@ def refresh_hubspot(
     pipeline_name = "hubspot_crm_pipeline"
 
     # create hubspot crm dlt source
-    hs_source = hubspot_source(
-        is_incremental=is_incremental,
-    )
+    hs_source = hubspot_source(initial_date=initial_date, end_date=end_date)
 
-    # Modify the pipeline parameters
-    pipeline = dlt.pipeline(
-        pipeline_name=pipeline_name,
-        # TODO: Sort out how to define schema using params
-        dataset_name=RAW_SCHEMA,
-        destination="bigquery",
-    )
+    if not pipeline:
+        # Modify the pipeline parameters
+        pipeline = dlt.pipeline(
+            pipeline_name=pipeline_name,
+            # TODO: Sort out how to define schema using params
+            dataset_name=RAW_SCHEMA,
+            destination="bigquery",
+        )
 
     # Get appropriate write disposition
     write_disposition = get_write_disposition(is_incremental)
@@ -307,10 +268,9 @@ def refresh_hubspot(
         hs_source,
         write_disposition=write_disposition,
     )
-
+    logger.info(info)
     return info
 
 
 if __name__ == "__main__":
     info = refresh_hubspot()
-    logger.info(info)
