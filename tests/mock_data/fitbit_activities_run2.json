@@ -1,0 +1,13 @@
+{
+  "activities": [
+    {
+      "logId": 6,
+      "activityName": "Strength Training",
+      "lastModified": "2025-07-01T18:00:00.000Z",
+      "startTime": "2025-01-01T18:00:00.000Z",
+      "duration": 4200000,
+      "calories": 280,
+      "steps": 200
+    }
+  ]
+}

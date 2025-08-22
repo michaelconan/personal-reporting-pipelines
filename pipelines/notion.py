@@ -18,7 +18,7 @@ from dlt.sources.rest_api import rest_api_resources
 from dlt.sources.helpers.rest_client.paginators import JSONResponseCursorPaginator
 
 # Common custom tasks
-from pipelines import RAW_SCHEMA
+from pipelines import RAW_SCHEMA, BASE_DATE
 from pipelines.common.utils import (
     get_refresh_mode,
     get_write_disposition,
@@ -62,11 +62,11 @@ def name_db_table(row: dict):
 @dlt.source
 def notion_source(
     db_name: str,
-    api_key: str = dlt.secrets.value,
-    initial_date: Optional[str] = "2024-01-01",
+    initial_date: Optional[str] = BASE_DATE,
     end_date: Optional[str] = None,
     session: Optional[requests.Session] = None,
 ):
+    api_key = dlt.secrets["sources.notion.api_key"]
 
     api_config = {
         "client": {
@@ -140,6 +140,7 @@ def notion_source(
             "incremental": {
                 "cursor_path": "last_edited_time",
                 "initial_value": initial_date,
+                "end_value": end_date,
             },
         },
     }
@@ -156,7 +157,7 @@ def notion_source(
             ]
         }
         # Add end date to incremental load range
-        rows_resource["endpoint"]["incremental"]["end_value"] = end_date
+        # rows_resource["endpoint"]["incremental"]["end_value"] = end_date
 
     api_config["resources"].append(rows_resource)
 
@@ -169,7 +170,7 @@ def notion_source(
 def refresh_notion(
     is_incremental: Optional[bool] = None,
     pipeline: Optional[dlt.Pipeline] = None,
-    initial_date: Optional[str] = "2024-01-01",
+    initial_date: Optional[str] = BASE_DATE,
     end_date: Optional[str] = None,
 ):
     """
@@ -191,7 +192,6 @@ def refresh_notion(
     pipeline_name = "notion_habits_pipeline"
     nt_source = notion_source(
         db_name="Disciplines",
-        is_incremental=is_incremental,
         initial_date=initial_date,
         end_date=end_date,
     )

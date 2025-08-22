@@ -6,62 +6,58 @@ import pendulum
 import dlt
 
 
-pytestmark = pytest.mark.e2e
+# label as end-to-end and disable response mock plugin
+pytestmark = [pytest.mark.e2e, pytest.mark.withoutresponses]
 
 
-@pytest.fixture(scope="function")
-def duckdb_pipeline():
-    """
-    Fixture to create and tear down a duckdb pipeline.
-    """
-    pipeline = dlt.pipeline(
-        pipeline_name="test_pipeline",
-        dataset_name="test_data",
-        destination="duckdb",
-    )
-    yield pipeline
-    pipeline.drop()
+class TestPipelines:
 
+    # Define limited date interval to run tests
+    REFRESH_ARGS = {
+        "is_incremental": False,
+        "initial_date": "2025-01-01",
+        "end_date": "2025-06-30",
+    }
 
-def test_notion_refresh(duckdb_pipeline, mocker):
+    def test_notion_refresh(self, bigquery_pipeline):
 
-    # Delayed import to capture DBT target variable
-    from pipelines.notion import refresh_notion
+        # Delayed import to capture DBT target variable
+        from pipelines.notion import refresh_notion
 
-    # GIVEN
+        # GIVEN
 
-    # WHEN
-    # Run the pipeline
-    refresh_notion(is_incremental=False)
+        # WHEN
+        # Run the pipeline
+        info = refresh_notion(**self.REFRESH_ARGS, pipeline=bigquery_pipeline)
 
-    # THEN
-    # Validate task instances were successful
+        # THEN
+        # Validate jobs were successful
+        assert info.has_failed_jobs is False
 
+    def test_hubspot_refresh(self, bigquery_pipeline):
+        """
+        Test a full refresh of the HubSpot pipeline.
+        """
+        from pipelines.hubspot import refresh_hubspot
 
-def test_hubspot_refresh():
-    """
-    Test a full refresh of the HubSpot pipeline.
-    """
-    from pipelines.hubspot import refresh_hubspot
+        # WHEN
+        info = refresh_hubspot(**self.REFRESH_ARGS, pipeline=bigquery_pipeline)
 
-    print("Running test_hubspot_full_refresh...")
-    info = refresh_hubspot(is_incremental=False)
-    print(info)
-    # Add assertions here to validate the data
-    assert info.status == "completed"
+        # THEN
+        # Validate jobs were successful
+        assert info.has_failed_jobs is False
 
+    def test_fitbit_refresh(self, bigquery_pipeline):
 
-def test_fitbit_refresh():
+        # Delayed import to capture DBT target variable
+        from pipelines.fitbit import refresh_fitbit
 
-    # Delayed import to capture DBT target variable
-    from pipelines.fitbit import refresh_fitbit
+        # GIVEN
 
-    # GIVEN
+        # WHEN
+        # Run the pipeline
+        info = refresh_fitbit(**self.REFRESH_ARGS, pipeline=bigquery_pipeline)
 
-    # WHEN
-    # Run the DAG
-    info = refresh_fitbit(is_incremental=False)
-
-    # THEN
-    print(info)
-    assert info.status == "completed"
+        # THEN
+        # Validate jobs were successful
+        assert info.has_failed_jobs is False

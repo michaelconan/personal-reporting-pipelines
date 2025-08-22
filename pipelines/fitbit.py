@@ -31,7 +31,7 @@ from dlt.sources.helpers.rest_client.paginators import (
 )
 
 # Common custom tasks
-from pipelines import RAW_SCHEMA
+from pipelines import RAW_SCHEMA, BASE_DATE
 from pipelines.common.utils import (
     get_refresh_mode,
     get_write_disposition,
@@ -79,8 +79,9 @@ def get_fitbit_token() -> str:
 
 def fitbit_source(
     api_key: str,
-    initial_date: str = "2024-01-01",
+    initial_date: str = BASE_DATE,
     session: Optional[requests.Session] = None,
+    end_date: str | None = None,
 ):
 
     api_config = {
@@ -118,6 +119,7 @@ def fitbit_source(
                     "incremental": {
                         "cursor_path": "dateOfSleep",
                         "initial_value": initial_date,
+                        "end_value": end_date,
                     },
                 },
             },
@@ -142,6 +144,7 @@ def fitbit_source(
                     "incremental": {
                         "cursor_path": "lastModified",
                         "initial_value": initial_date,
+                        "end_value": end_date,
                     },
                 },
             },
@@ -156,6 +159,8 @@ def fitbit_source(
 def refresh_fitbit(
     is_incremental: Optional[bool] = None,
     pipeline: Optional[dlt.Pipeline] = None,
+    initial_date: Optional[str] = BASE_DATE,
+    end_date: Optional[str] = None,
 ):
     """
     Refresh Fitbit health data pipeline.
@@ -179,6 +184,8 @@ def refresh_fitbit(
     fb_token = get_fitbit_token()
     fb_source = fitbit_source(
         api_key=fb_token,
+        initial_date=initial_date,
+        end_date=end_date,
     )
 
     if not pipeline:

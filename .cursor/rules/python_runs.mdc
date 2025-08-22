@@ -1,0 +1,40 @@
+---
+description: Rules to apply when running python commands
+globs:
+alwaysApply: true
+---
+
+# Python Environment Rules
+
+## Python Environment
+- **ALWAYS use pipenv** when running Python commands in this workspace
+- Use `pipenv run python` instead of just `python`
+- Use `pipenv run pip` instead of just `pip`
+- Use `pipenv run pytest` instead of just `pytest`
+- Use `pipenv shell` to activate the virtual environment if needed
+
+## Examples
+```bash
+# ✅ Correct
+pipenv run python -c "import dlt; print(dlt.__version__)"
+pipenv run pytest tests/
+pipenv run pip install new-package
+
+# ❌ Incorrect
+python -c "import dlt"
+pytest tests/
+pip install new-package
+```
+
+## Why This Matters
+- This workspace uses pipenv for dependency management
+- The virtual environment contains all required packages (dlt, pytest, etc.)
+- Running Python commands without pipenv will result in ModuleNotFoundError
+- This ensures consistency with the project's dependency management approach
+
+## When to Use pipenv
+- Running any Python script
+- Installing packages
+- Running tests
+- Running Python REPL commands
+- Any Python-related terminal operations
