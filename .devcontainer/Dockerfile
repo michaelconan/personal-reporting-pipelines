@@ -9,9 +9,12 @@ ENV PATH="/home/vscode/.local/bin:${PATH}"
 
 # Install git and other dependencies
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends git sudo curl && \
+    apt-get install -y --no-install-recommends git sudo curl make && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
+
+# Install duckdb for local development
+RUN curl https://install.duckdb.org | sh
 
 # Create and run as non-root user
 RUN addgroup --gid $GID vscode && \

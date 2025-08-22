@@ -31,7 +31,7 @@ from dlt.sources.helpers.rest_client.paginators import (
 )
 
 # Common custom tasks
-from pipelines import RAW_SCHEMA, IS_TEST
+from pipelines import RAW_SCHEMA, BASE_DATE
 from pipelines.common.utils import (
     get_refresh_mode,
     get_write_disposition,
@@ -79,13 +79,10 @@ def get_fitbit_token() -> str:
 
 def fitbit_source(
     api_key: str,
-    initial_date: str = "2024-01-01",
-    is_incremental: bool = True,
+    initial_date: str = BASE_DATE,
+    session: Optional[requests.Session] = None,
+    end_date: str | None = None,
 ):
-
-    # Set default incremental dates
-    # Should be overriden by Airflow data interval
-    initial_dt = pendulum.parse(initial_date)
 
     api_config = {
         "client": {
@@ -111,7 +108,7 @@ def fitbit_source(
                     "data_selector": "sleep",
                     "params": {
                         "sort": "asc",
-                        "afterDate": initial_date,
+                        "afterDate": "{incremental.start_value}",
                     },
                     "paginator": OffsetPaginator(
                         limit=100,
@@ -119,6 +116,11 @@ def fitbit_source(
                         offset_param="offset",
                         total_path=None,
                     ),
+                    "incremental": {
+                        "cursor_path": "dateOfSleep",
+                        "initial_value": initial_date,
+                        "end_value": end_date,
+                    },
                 },
             },
             {
@@ -131,7 +133,7 @@ def fitbit_source(
                     "data_selector": "activities",
                     "params": {
                         "sort": "asc",
-                        "afterDate": initial_date,
+                        "afterDate": "{incremental.start_value}",
                     },
                     "paginator": OffsetPaginator(
                         limit=100,
@@ -139,40 +141,33 @@ def fitbit_source(
                         offset_param="offset",
                         total_path=None,
                     ),
+                    "incremental": {
+                        "cursor_path": "lastModified",
+                        "initial_value": initial_date,
+                        "end_value": end_date,
+                    },
                 },
             },
         ],
     }
-
-    # Only add incremental configuration if incremental loading is enabled
-    if is_incremental:
-        for resource in api_config["resources"]:
-            if resource["name"] == "fitbit__sleep":
-                resource["endpoint"]["incremental"] = {
-                    "cursor_path": "dateOfSleep",
-                    "initial_value": initial_date,
-                }
-            elif resource["name"] == "fitbit__activities":
-                resource["endpoint"]["incremental"] = {
-                    "cursor_path": "lastModified",
-                    "initial_value": initial_date,
-                }
-            if IS_TEST:
-                resource["endpoint"]["incremental"]["end_value"] = initial_dt.add(
-                    days=7
-                ).isoformat()
+    if session:
+        api_config["client"]["session"] = session
 
     return rest_api_source(api_config)
 
 
 def refresh_fitbit(
     is_incremental: Optional[bool] = None,
+    pipeline: Optional[dlt.Pipeline] = None,
+    initial_date: Optional[str] = BASE_DATE,
+    end_date: Optional[str] = None,
 ):
     """
     Refresh Fitbit health data pipeline.
 
     Args:
         is_incremental: Override incremental mode. If None, uses environment-based detection.
+        pipeline: dlt pipeline object. If None, a new one is created.
     """
 
     # Determine refresh mode if not explicitly provided
@@ -189,16 +184,18 @@ def refresh_fitbit(
     fb_token = get_fitbit_token()
     fb_source = fitbit_source(
         api_key=fb_token,
-        is_incremental=is_incremental,
+        initial_date=initial_date,
+        end_date=end_date,
     )
 
-    # Modify the pipeline parameters
-    pipeline = dlt.pipeline(
-        pipeline_name=pipeline_name,
-        # TODO: Sort out how to define schema using params
-        dataset_name=RAW_SCHEMA,
-        destination="bigquery",
-    )
+    if not pipeline:
+        # Modify the pipeline parameters
+        pipeline = dlt.pipeline(
+            pipeline_name=pipeline_name,
+            # TODO: Sort out how to define schema using params
+            dataset_name=RAW_SCHEMA,
+            destination="bigquery",
+        )
 
     # Get appropriate write disposition
     write_disposition = get_write_disposition(is_incremental)
@@ -208,7 +205,7 @@ def refresh_fitbit(
         fb_source,
         write_disposition=write_disposition,
     )
-
+    logger.info(info)
     return info
 
 
