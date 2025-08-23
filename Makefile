@@ -50,7 +50,7 @@ test-coverage: ## Generate coverage reports only
 	$(PIPENV) coverage report --show-missing
 	$(PIPENV) coverage html
 
-.PHONY test-all
+.PHONY: test-all
 test-all:
 	test-local test-e2e test-coverage
 
