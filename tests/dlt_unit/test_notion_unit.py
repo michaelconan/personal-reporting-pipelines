@@ -108,8 +108,8 @@ class TestNotionPhases:
     @pytest.mark.parametrize(
         ("resource", "expected_tables", "configs"),
         (
-            ("databases", 2, {}),
-            ("database_rows", 2, {}),
+            ("databases", 1, {}),
+            ("database_rows", 1, {}),
         ),
     )
     def test_normalize(

@@ -6,13 +6,14 @@ import json
 import pytest
 import dlt
 
+MOCK_FOLDER = "tests/mock_data"
+
+
 # This environment variable is set to disable the Google Secrets provider for all dlt unit tests.
 # It needs to be set before any dlt modules are imported, which is why it's at the top of this file.
+# Only applies to unit tests - E2E tests should not be affected
 os.environ["PROVIDERS__ENABLE_GOOGLE_SECRETS"] = "false"
 os.environ["DLT_TELEMETRY_DISABLED"] = "1"
-
-
-MOCK_FOLDER = "tests/mock_data"
 
 
 def sample_data(file_name: str, fallback: str = None) -> dict:

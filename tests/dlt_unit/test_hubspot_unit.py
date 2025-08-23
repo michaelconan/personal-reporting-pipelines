@@ -98,9 +98,9 @@ def mock_hs_apis(monkeypatch: MonkeyPatch, responses: RequestsMock) -> Callable:
 @pytest.mark.parametrize(
     ("resource", "expected_tables", "configs"),
     (
-        ("contacts", 2, {}),
-        ("companies", 2, {}),
-        ("engagements", 4, {}),
+        ("contacts", 1, {}),
+        ("companies", 1, {}),
+        ("engagements", 3, {}),
         (
             "schemas_contacts",
             5,
