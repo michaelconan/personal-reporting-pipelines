@@ -1,5 +1,14 @@
+# base imports
+import os
+
+# PyPI imports
 import pytest
 import dlt
+
+# Ensure Google Secrets are enabled for E2E tests
+# This counteracts any unit test configuration that might disable them
+os.environ["PROVIDERS__ENABLE_GOOGLE_SECRETS"] = "true"
+os.environ["DLT_TELEMETRY_DISABLED"] = "1"
 
 
 @pytest.fixture(scope="class")
