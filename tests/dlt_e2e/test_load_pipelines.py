@@ -2,8 +2,6 @@
 # NOTE: these tests require credentials to run
 # and will be skipped by default
 import pytest
-import pendulum
-import dlt
 
 
 # label as end-to-end and disable response mock plugin

@@ -48,11 +48,7 @@ jobs:
         env:
           RUNTIME__LOG_LEVEL: "INFO"
         run: |
-          make test
-          
-      - name: Generate coverage report
-        run: |
-          make test-coverage
+          make test-all
 
       - name: Remove keyfile
         if: always()
@@ -65,6 +61,5 @@ jobs:
           name: coverage-reports
           path: |
             htmlcov/
-            coverage.xml
             .coverage
           retention-days: 30
