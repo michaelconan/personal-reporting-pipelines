@@ -40,9 +40,8 @@ test-local: ## Run offline local tests only
 		--cov-config=.coveragerc \
 		--cov-append \
 		--cov-report= \
-		--log-cli-level=INFO \
-		-v
-	@mv .coverage .coverage.local
+.PHONY: test-all
+test-all: test-local test-e2e test-coverage
 
 .PHONY: test-coverage
 test-coverage: ## Generate coverage reports only
