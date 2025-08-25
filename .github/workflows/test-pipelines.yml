@@ -1,17 +1,21 @@
-name: Notion Pipeline
+name: Pipeline Tests
 on:
-  schedule:
-    - cron: '0 9 * * 0'  # Weekly on Sundays at 9 AM UTC
-  workflow_dispatch:
-    inputs:
-      force_full_refresh:
-        description: 'Force full refresh'
-        required: false
-        default: 'false'
-        type: boolean
+  pull_request:
+    paths:
+      - 'pipelines/**'
+      - 'tests/**'
+      - 'Pipfile'
+      - 'Pipfile.lock'
+      - 'Makefile'
+  push:
+    branches:
+      - main
+    paths:
+      - 'pipelines/**'
+      - 'tests/**'
 
 jobs:
-  run-pipeline:
+  test-pipelines:
     runs-on: ubuntu-latest
     steps:
       - name: Set environment variables
@@ -40,23 +44,29 @@ jobs:
           ${{ secrets.GCP_SVC_KEY }}
           EOF
 
-      - name: Run Notion Pipeline
+      - name: Run tests
+        id: run_tests
         env:
-          FORCE_FULL_REFRESH: ${{ inputs.force_full_refresh }}
           RUNTIME__LOG_LEVEL: "INFO"
         run: |
-          pipenv run python -m pipelines.notion
-          
+          make test-all
+
+      - name: coverage
+        if: ${{ steps.run_tests.conclusion == 'success' || steps.run_tests.conclusion == 'failure' }}
+        run: |
+          make coverage
+
       - name: Remove keyfile
         if: always()
         run: |
           rm $GOOGLE_APPLICATION_CREDENTIALS
-
-      - name: Upload dlt state files
-        if: always()
+          
+      - name: Upload test coverage
+        if: ${{ steps.run_tests.conclusion == 'success' || steps.run_tests.conclusion == 'failure' }}
         uses: actions/upload-artifact@v4
         with:
-          name: notion-pipeline-state
+          name: coverage-reports
           path: |
-            ~/.dlt/**/state.json
-          retention-days: 7 
+            htmlcov/
+            .coverage
+          retention-days: 30

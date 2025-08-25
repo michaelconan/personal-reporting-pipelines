@@ -5,7 +5,7 @@ import pytest
 
 
 # label as end-to-end and disable response mock plugin
-pytestmark = [pytest.mark.e2e, pytest.mark.withoutresponses]
+pytestmark = [pytest.mark.e2e]
 
 
 class TestPipelines:

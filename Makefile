@@ -23,8 +23,9 @@ install: ## Install Python dependencies using pipenv
 
 ## Testing
 .PHONY: test-e2e
-test: ## Run tests with coverage
+test-e2e: ## Run tests with coverage
 	$(PIPENV) pytest tests/dlt_e2e \
+	    -p no:pytest-responses \
 		--cov=pipelines \
 		--cov-config=.coveragerc \
 		--cov-append \
@@ -35,7 +36,8 @@ test: ## Run tests with coverage
 
 .PHONY: test-local
 test-local: ## Run offline local tests only
-	$(PIPENV) pytest tests/dlt_unit \
+	$(PIPENV) pytest tests -p pytest-responses \
+		-m local \
 		--cov=pipelines \
 		--cov-config=.coveragerc \
 		--cov-append \
