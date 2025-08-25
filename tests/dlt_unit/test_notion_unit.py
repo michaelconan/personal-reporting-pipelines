@@ -7,19 +7,17 @@ from typing import Callable
 import pytest
 from pytest import MonkeyPatch
 import dlt
-import pytest_responses
-from responses import RequestsMock
 
 # local imports
 from pipelines.notion import notion_source
-from tests.dlt_unit.conftest import sample_data, sample_response
+from tests.dlt_unit.conftest import sample_data, sample_response, sample_resource
 
 
 pytestmark = pytest.mark.local
 
 
 @pytest.fixture
-def mock_notion_apis(monkeypatch: MonkeyPatch, responses: RequestsMock) -> Callable:
+def mock_notion_apis(monkeypatch: MonkeyPatch, responses) -> Callable:
 
     BASE_URL = "https://api.notion.com/v1"
 
@@ -87,6 +85,14 @@ def mock_notion_apis(monkeypatch: MonkeyPatch, responses: RequestsMock) -> Calla
 
 class TestNotionPhases:
 
+    TEST_PARAMS = (
+        ("resource", "expected_tables", "configs"),
+        (
+            ("databases", 1, {"max_table_nesting": 1}),
+            ("database_rows", 1, {"max_table_nesting": 2}),
+        ),
+    )
+
     def test_extract(
         self,
         mock_notion_apis,
@@ -105,31 +111,26 @@ class TestNotionPhases:
         # THEN
         assert len(info.loads_ids) == 1
 
-    @pytest.mark.parametrize(
-        ("resource", "expected_tables", "configs"),
-        (
-            ("databases", 1, {}),
-            ("database_rows", 1, {}),
-        ),
-    )
+    @pytest.mark.parametrize(*TEST_PARAMS)
     def test_normalize(
         self,
         duckdb_pipeline: dlt.Pipeline,
         resource: str,
         expected_tables: int,
-        configs: dict | None,
+        configs: dict,
     ):
 
         # GIVEN
+        expected_rows = 3 if "rows" in resource else 1
         file_name = f"notion_{resource}_run1-page1.json"
         file_name2 = f"notion_{resource}.json"
-        source = sample_data(file_name, fallback=file_name2)
-
-        if "results" in source:
-            source = source["results"]
-        expected_rows = len(source)
-
-        duckdb_pipeline.extract(source, table_name=resource, **configs)
+        source = sample_resource(
+            file_name,
+            fallback=file_name2,
+            data_selector="results",
+            resource_configs=configs,
+        )
+        duckdb_pipeline.extract(source, table_name=resource)
 
         # WHEN
         info = duckdb_pipeline.normalize()
@@ -143,28 +144,24 @@ class TestNotionPhases:
         # record count from sample data
         assert info.row_counts[resource] == expected_rows
 
-    @pytest.mark.parametrize(
-        ("resource", "configs"),
-        (
-            ("databases", {}),
-            ("database_rows", {}),
-        ),
-    )
+    @pytest.mark.parametrize(*TEST_PARAMS)
     def test_load(
         self,
         duckdb_pipeline: dlt.Pipeline,
         resource: str,
-        configs: dict | None,
+        expected_tables: int,
+        configs: dict,
     ):
         # GIVEN
         file_name = f"notion_{resource}_run1-page1.json"
         file_name2 = f"notion_{resource}.json"
-        source = sample_data(file_name, fallback=file_name2)
-
-        if "results" in source:
-            source = source["results"]
-
-        duckdb_pipeline.extract(source, table_name=resource, **configs)
+        source = sample_resource(
+            file_name,
+            fallback=file_name2,
+            data_selector="results",
+            resource_configs=configs,
+        )
+        duckdb_pipeline.extract(source, table_name=resource)
         duckdb_pipeline.normalize()
 
         # WHEN

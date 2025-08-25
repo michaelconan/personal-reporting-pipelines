@@ -1,10 +1,14 @@
 # base imports
 import os
 import json
+from typing import Any
 
 # PyPI imports
 import pytest
 import dlt
+
+# For responses fixture
+import pytest_responses
 
 MOCK_FOLDER = "tests/mock_data"
 
@@ -16,7 +20,26 @@ os.environ["PROVIDERS__ENABLE_GOOGLE_SECRETS"] = "false"
 os.environ["DLT_TELEMETRY_DISABLED"] = "1"
 
 
-def sample_data(file_name: str, fallback: str = None) -> dict:
+def sample_resource(
+    file_name: str,
+    fallback: str = None,
+    data_selector: str = None,
+    resource_configs: dict = {},
+) -> Any:
+    @dlt.resource(**resource_configs)
+    def sample_resource():
+        source = sample_data(file_name=file_name, fallback=fallback)
+        if data_selector:
+            source = source[data_selector]
+        return source
+
+    return sample_resource
+
+
+def sample_data(
+    file_name: str,
+    fallback: str = None,
+) -> dict:
     file = os.path.join(MOCK_FOLDER, file_name)
     if not os.path.exists(file) and fallback is not None:
         file = os.path.join(MOCK_FOLDER, fallback)
