@@ -22,19 +22,42 @@ install: ## Install Python dependencies using pipenv
 	pipenv install --dev
 
 ## Testing
-.PHONY: test
-test: ## Run tests with coverage
-	$(PIPENV) pytest tests \
+.PHONY: test-e2e
+test-e2e: ## Run tests with coverage
+	$(PIPENV) pytest tests/dlt_e2e \
+	    -p no:pytest-responses \
 		--cov=pipelines \
-		--cov-report=html \
-		--cov-report=xml \
-		--cov-report=term-missing \
-		--log-cli-level=INFO
+		--cov-config=.coveragerc \
+		--cov-append \
+		--cov-report= \
+		--log-cli-level=INFO \
+		-v
+	@mv .coverage .coverage.e2e
+
+.PHONY: test-local
+test-local: ## Run offline local tests only
+	$(PIPENV) pytest tests -p pytest-responses \
+		-m local \
+		--cov=pipelines \
+		--cov-config=.coveragerc \
+		--cov-append \
+		--cov-report= \
+		--log-cli-level=INFO \
+		-v
+	@mv .coverage .coverage.local
+
+.PHONY: test-all
+test-all: test-local test-e2e test-coverage
 
 .PHONY: test-coverage
 test-coverage: ## Generate coverage reports only
+	$(PIPENV) coverage combine .coverage.local .coverage.e2e
+	$(PIPENV) coverage report --show-missing
 	$(PIPENV) coverage html
-	$(PIPENV) coverage xml
+
+.PHONY: test-all
+test-all:
+	test-local test-e2e test-coverage
 
 .PHONY: dlt-clean
 dlt-clean:

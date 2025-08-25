@@ -8,19 +8,17 @@ from urllib.parse import parse_qs, urlparse
 import pytest
 from pytest import MonkeyPatch
 import dlt
-import pytest_responses
-from responses import RequestsMock
 
 # local imports
 from pipelines.fitbit import fitbit_source
-from tests.dlt_unit.conftest import sample_data, sample_response
+from tests.dlt_unit.conftest import sample_data, sample_response, sample_resource
 
 
 pytestmark = pytest.mark.local
 
 
 @pytest.fixture
-def mock_fitbit_apis(monkeypatch: MonkeyPatch, responses: RequestsMock) -> Callable:
+def mock_fitbit_apis(monkeypatch: MonkeyPatch, responses) -> Callable:
 
     BASE_URL = "https://api.fitbit.com"
 
@@ -77,8 +75,8 @@ def mock_fitbit_apis(monkeypatch: MonkeyPatch, responses: RequestsMock) -> Calla
 @pytest.mark.parametrize(
     ("resource", "expected_tables", "configs"),
     (
-        ("sleep", 1, {}),
-        ("activities", 1, {}),
+        ("sleep", 1, {"max_table_nesting": 1}),
+        ("activities", 1, {"max_table_nesting": 1}),
     ),
 )
 class TestFitbitPhases:
@@ -116,14 +114,12 @@ class TestFitbitPhases:
         # GIVEN
         expected_rows = 3
         file_name = f"fitbit_{resource}_run1-page1.json"
-        source = sample_data(file_name)
-        # Extract the resource data from the API response format
-        if resource in source:
-            source = source[resource]
-        else:
-            source = [source]
-            expected_rows = 1
-        duckdb_pipeline.extract(source, table_name=resource, **configs)
+        source = sample_resource(
+            file_name,
+            resource_configs=configs,
+            data_selector=resource,
+        )
+        duckdb_pipeline.extract(source, table_name=resource)
 
         # WHEN
         info = duckdb_pipeline.normalize()
@@ -147,12 +143,12 @@ class TestFitbitPhases:
         # GIVEN
         # Files to load for sample test
         file_name = f"fitbit_{resource}_run1-page1.json"
-        source = sample_data(file_name)
-        if resource in source:
-            source = source[resource]
-        else:
-            source = [source]
-        duckdb_pipeline.extract(source, table_name=f"load_{resource}", **configs)
+        source = sample_resource(
+            file_name,
+            resource_configs=configs,
+            data_selector=resource,
+        )
+        duckdb_pipeline.extract(source, table_name=f"load_{resource}")
         duckdb_pipeline.normalize()
 
         # WHEN
