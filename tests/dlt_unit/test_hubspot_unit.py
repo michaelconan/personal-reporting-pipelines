@@ -8,19 +8,17 @@ from urllib.parse import parse_qs, urlparse
 import pytest
 from pytest import MonkeyPatch
 import dlt
-import pytest_responses
-from responses import RequestsMock
 
 # local imports
 from pipelines.hubspot import hubspot_source, iso_to_unix
-from tests.dlt_unit.conftest import sample_data, sample_response
+from tests.dlt_unit.conftest import sample_data, sample_response, sample_resource
 
 
 pytestmark = pytest.mark.local
 
 
 @pytest.fixture
-def mock_hs_apis(monkeypatch: MonkeyPatch, responses: RequestsMock) -> Callable:
+def mock_hs_apis(monkeypatch: MonkeyPatch, responses) -> Callable:
 
     BASE_URL = "https://api.hubapi.com"
 
@@ -98,15 +96,14 @@ def mock_hs_apis(monkeypatch: MonkeyPatch, responses: RequestsMock) -> Callable:
 @pytest.mark.parametrize(
     ("resource", "expected_tables", "configs"),
     (
-        ("contacts", 2, {}),
-        ("companies", 2, {}),
-        ("engagements", 4, {}),
+        ("contacts", 1, {}),
+        ("companies", 1, {}),
+        ("engagements", 1, {"max_table_nesting": 1}),
         (
             "schemas_contacts",
-            5,
+            1,
             {
-                # TODO: Figure out how to test this
-                # "max_table_nesting": 1,
+                "max_table_nesting": 1,
                 "columns": {
                     "searchable_properties": {"data_type": "json"},
                     "secondary_display_properties": {"data_type": "json"},
@@ -123,7 +120,7 @@ class TestHubspotPhases:
         duckdb_pipeline: dlt.Pipeline,
         resource: str,
         expected_tables: int,
-        configs: dict | None,
+        configs: dict,
     ):
 
         # GIVEN
@@ -142,20 +139,21 @@ class TestHubspotPhases:
         duckdb_pipeline: dlt.Pipeline,
         resource: str,
         expected_tables: int,
-        configs: dict | None,
+        configs: dict,
     ):
 
         # GIVEN
-        expected_rows = 3
+        # Includes nested table rows for schemas
+        expected_rows = 17 if "schemas" in resource else 3
         file_name = f"hubspot_{resource}_run1-page1.json"
         file_name2 = f"hubspot_{resource}.json"
-        source = sample_data(file_name, fallback=file_name2)
-        if "results" in source:
-            source = source["results"]
-        else:
-            source = [source]
-            expected_rows = 1
-        duckdb_pipeline.extract(source, table_name=resource, **configs)
+        source = sample_resource(
+            file_name,
+            fallback=file_name2,
+            data_selector=None if "schemas" in resource else "results",
+            resource_configs=configs,
+        )
+        duckdb_pipeline.extract(source, table_name=resource)
 
         # WHEN
         info = duckdb_pipeline.normalize()
@@ -174,18 +172,21 @@ class TestHubspotPhases:
         duckdb_pipeline: dlt.Pipeline,
         resource: str,
         expected_tables: int,
-        configs: dict | None,
+        configs: dict,
     ):
         # GIVEN
         # Files to load for sample test
         file_name = f"hubspot_{resource}_run1-page1.json"
         file_name2 = f"hubspot_{resource}.json"
-        source = sample_data(file_name, fallback=file_name2)
-        if "results" in source:
-            source = source["results"]
-        else:
-            source = [source]
-        duckdb_pipeline.extract(source, table_name=resource, **configs)
+        source = sample_resource(
+            file_name,
+            fallback=file_name2,
+            resource_configs=configs,
+        )
+        duckdb_pipeline.extract(
+            source,
+            table_name=resource,
+        )
         duckdb_pipeline.normalize()
 
         # WHEN
@@ -257,6 +258,7 @@ def test_hubspot_pipeline(mock_hs_apis, duckdb_pipeline):
     Test that the HubSpot pipeline runs and loads data correctly.
     """
     # GIVEN
+    mock_hs_apis()
 
     # WHEN
     # Run the pipeline

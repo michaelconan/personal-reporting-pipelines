@@ -145,6 +145,7 @@ def fitbit_source(
                         "cursor_path": "lastModified",
                         "initial_value": initial_date,
                         "end_value": end_date,
+                        "convert": lambda d: d[:10],
                     },
                 },
             },

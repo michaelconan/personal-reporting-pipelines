@@ -7,6 +7,14 @@
             "id": "105",
             "toObjectTypeId": "0-1",
             "updatedAt": "2025-08-16T22:17:41.494Z"
+        },
+        {
+            "createdAt": "2025-08-16T22:17:41.494Z",
+            "fromObjectTypeId": "2-123456",
+            "name": "my_object_to_company",
+            "id": "106",
+            "toObjectTypeId": "0-1",
+            "updatedAt": "2025-08-16T22:17:41.494Z"
         }
     ],
     "secondaryDisplayProperties": [
@@ -66,6 +74,47 @@
             "groupName": "my_object_information",
             "referencedObjectType": "",
             "name": "my_object_property",
+            "calculationFormula": "",
+            "fieldType": "select",
+            "updatedUserId": "string"
+        },
+        {
+            "hidden": false,
+            "displayOrder": 3,
+            "description": "",
+            "showCurrencySymbol": false,
+            "type": "enumeration",
+            "hubspotDefined": false,
+            "createdAt": "2025-08-16T22:17:41.494Z",
+            "archived": false,
+            "options": [
+                {
+                    "hidden": false,
+                    "displayOrder": 1,
+                    "description": "Choice number one",
+                    "label": "Option A",
+                    "value": "A"
+                }
+            ],
+            "hasUniqueValue": false,
+            "calculated": false,
+            "externalOptions": false,
+            "updatedAt": "2025-08-16T22:17:41.494Z",
+            "createdUserId": "",
+            "modificationMetadata": {
+                "readOnlyOptions": true,
+                "readOnlyValue": true,
+                "readOnlyDefinition": true,
+                "archivable": true
+            },
+            "sensitiveDataCategories": "",
+            "label": "My object property",
+            "formField": false,
+            "dataSensitivity": "",
+            "archivedAt": "2025-08-16T22:17:41.494Z",
+            "groupName": "my_object_information",
+            "referencedObjectType": "",
+            "name": "my_object_property2",
             "calculationFormula": "",
             "fieldType": "select",
             "updatedUserId": "string"

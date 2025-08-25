@@ -45,14 +45,16 @@ jobs:
           EOF
 
       - name: Run tests
+        id: run_tests
         env:
           RUNTIME__LOG_LEVEL: "INFO"
         run: |
-          make test
-          
-      - name: Generate coverage report
+          make test-all
+
+      - name: coverage
+        if: ${{ steps.run_tests.conclusion == 'success' || steps.run_tests.conclusion == 'failure' }}
         run: |
-          make test-coverage
+          make coverage
 
       - name: Remove keyfile
         if: always()
@@ -60,11 +62,11 @@ jobs:
           rm $GOOGLE_APPLICATION_CREDENTIALS
           
       - name: Upload test coverage
+        if: ${{ steps.run_tests.conclusion == 'success' || steps.run_tests.conclusion == 'failure' }}
         uses: actions/upload-artifact@v4
         with:
           name: coverage-reports
           path: |
             htmlcov/
-            coverage.xml
             .coverage
           retention-days: 30
