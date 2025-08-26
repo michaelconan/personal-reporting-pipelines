@@ -16,6 +16,7 @@ on:
 
 jobs:
   test-pipelines:
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
       - name: Set environment variables

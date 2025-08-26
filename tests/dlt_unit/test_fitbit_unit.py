@@ -1,5 +1,4 @@
 # base imports
-import re
 import json
 from typing import Callable
 from urllib.parse import parse_qs, urlparse
@@ -11,14 +10,14 @@ import dlt
 
 # local imports
 from pipelines.fitbit import fitbit_source
-from tests.dlt_unit.conftest import sample_data, sample_response, sample_resource
+from tests.dlt_unit.conftest import sample_response, sample_resource
 
 
 pytestmark = pytest.mark.local
 
 
 @pytest.fixture
-def mock_fitbit_apis(monkeypatch: MonkeyPatch, responses) -> Callable:
+def mock_fitbit_apis(monkeypatch: MonkeyPatch, mock_responses) -> Callable:
 
     BASE_URL = "https://api.fitbit.com"
 
@@ -55,15 +54,15 @@ def mock_fitbit_apis(monkeypatch: MonkeyPatch, responses) -> Callable:
         """
         # Mock the API responses
         if not endpoints or "sleep" in endpoints:
-            responses.add_callback(
-                responses.GET,
+            mock_responses.add_callback(
+                mock_responses.GET,
                 BASE_URL + "/1.2/user/-/sleep/list.json",
                 callback=lambda r: offset_callback(r, "sleep"),
                 content_type="application/json",
             )
         if not endpoints or "activities" in endpoints:
-            responses.add_callback(
-                responses.GET,
+            mock_responses.add_callback(
+                mock_responses.GET,
                 BASE_URL + "/1/user/-/activities/list.json",
                 callback=lambda r: offset_callback(r, "activities"),
                 content_type="application/json",

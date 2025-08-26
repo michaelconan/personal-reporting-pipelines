@@ -25,29 +25,23 @@ install: ## Install Python dependencies using pipenv
 .PHONY: test-e2e
 test-e2e: ## Run tests with coverage
 	$(PIPENV) pytest tests/dlt_e2e \
-	    -p no:pytest-responses \
 		--cov=pipelines \
-		--cov-config=.coveragerc \
 		--cov-append \
 		--cov-report= \
-		--log-cli-level=INFO \
-		-v
+		-v -s
 	@mv .coverage .coverage.e2e
 
 .PHONY: test-local
 test-local: ## Run offline local tests only
-	$(PIPENV) pytest tests -p pytest-responses \
-		-m local \
+	$(PIPENV) pytest tests/dlt_unit \
 		--cov=pipelines \
-		--cov-config=.coveragerc \
 		--cov-append \
 		--cov-report= \
-		--log-cli-level=INFO \
-		-v
+		-v -s
 	@mv .coverage .coverage.local
 
 .PHONY: test-all
-test-all: test-local test-e2e test-coverage
+test-all: test-local test-e2e test-coverage ## Run all tests with coverage
 
 .PHONY: test-coverage
 test-coverage: ## Generate coverage reports only
@@ -55,11 +49,22 @@ test-coverage: ## Generate coverage reports only
 	$(PIPENV) coverage report --show-missing
 	$(PIPENV) coverage html
 
-.PHONY: test-all
-test-all:
-	test-local test-e2e test-coverage
+.PHONY: clean
+clean: ## Remove Python cache files and temporary artifacts
+	@echo "Cleaning up temporary files..."
+	@find . -type f -name "*.pyc" -delete
+	@find . -type d -name "__pycache__" -exec rm -rf {} +
+	@find . -type d -name "*.egg-info" -exec rm -rf {} +
+	@find . -type f -name "*.pyo" -delete
+	@find . -type f -name ".DS_Store" -delete
+	@rm -rf .pytest_cache
+	@rm -rf .coverage.*
+	@rm -rf htmlcov
+	@rm -rf build
+	@rm -rf dist
+	@echo "Cleanup complete!"
 
 .PHONY: dlt-clean
-dlt-clean:
+dlt-clean: ## Clean DLT-specific files and data
 	@rm -rf ~/.dlt
 	@rm -f *.duckdb
