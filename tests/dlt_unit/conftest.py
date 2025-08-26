@@ -7,8 +7,6 @@ from typing import Any
 import pytest
 import dlt
 
-# For responses fixture
-import pytest_responses
 
 MOCK_FOLDER = "tests/mock_data"
 
@@ -18,6 +16,14 @@ MOCK_FOLDER = "tests/mock_data"
 # Only applies to unit tests - E2E tests should not be affected
 os.environ["PROVIDERS__ENABLE_GOOGLE_SECRETS"] = "false"
 os.environ["DLT_TELEMETRY_DISABLED"] = "1"
+
+
+@pytest.fixture
+def mock_responses():
+    import responses
+
+    with responses.RequestsMock() as rsps:
+        yield rsps
 
 
 def sample_resource(

@@ -10,14 +10,14 @@ import dlt
 
 # local imports
 from pipelines.notion import notion_source
-from tests.dlt_unit.conftest import sample_data, sample_response, sample_resource
+from tests.dlt_unit.conftest import sample_response, sample_resource
 
 
 pytestmark = pytest.mark.local
 
 
 @pytest.fixture
-def mock_notion_apis(monkeypatch: MonkeyPatch, responses) -> Callable:
+def mock_notion_apis(monkeypatch: MonkeyPatch, mock_responses) -> Callable:
 
     BASE_URL = "https://api.notion.com/v1"
 
@@ -66,15 +66,15 @@ def mock_notion_apis(monkeypatch: MonkeyPatch, responses) -> Callable:
         """
         # Mock the API responses
         if not endpoints or "databases" in endpoints:
-            responses.add_callback(
-                responses.POST,
+            mock_responses.add_callback(
+                mock_responses.POST,
                 BASE_URL + "/search",
                 callback=databases_callback,
                 content_type="application/json",
             )
         if not endpoints or "database_rows" in endpoints:
-            responses.add_callback(
-                responses.POST,
+            mock_responses.add_callback(
+                mock_responses.POST,
                 re.compile(BASE_URL + r"/databases/([a-f0-9\-]+)/query"),
                 callback=cursor_callback,
                 content_type="application/json",
