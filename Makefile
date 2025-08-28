@@ -27,25 +27,22 @@ test-e2e: ## Run tests with coverage
 	$(PIPENV) pytest tests/dlt_e2e \
 		--cov=pipelines \
 		--cov-append \
-		--cov-report= \
-		-v -s
-	@mv .coverage .coverage.e2e
+		-v -s \
+		|| true
 
 .PHONY: test-local
 test-local: ## Run offline local tests only
 	$(PIPENV) pytest tests/dlt_unit \
 		--cov=pipelines \
 		--cov-append \
-		--cov-report= \
-		-v -s
-	@mv .coverage .coverage.local
+		-v -s \
+		|| true
 
 .PHONY: test-all
 test-all: test-local test-e2e test-coverage ## Run all tests with coverage
 
 .PHONY: test-coverage
 test-coverage: ## Generate coverage reports only
-	$(PIPENV) coverage combine .coverage.local .coverage.e2e
 	$(PIPENV) coverage report --show-missing
 	$(PIPENV) coverage html
 

@@ -1,3 +1,9 @@
+"""Pipeline configuration module.
+
+This module contains global configuration settings for all data pipelines,
+including schema definitions, environment variables, and base constants.
+"""
+
 import os
 
 # IS_TEST = os.getenv("TEST") or os.getenv("CI")
