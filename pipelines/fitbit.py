@@ -15,10 +15,8 @@ API Resources:
 
 # Base
 from logging import getLogger, Logger
-from typing import Optional
 
 # PyPI
-import pendulum
 import requests
 from google.cloud import secretmanager_v1
 import google.auth
@@ -29,6 +27,7 @@ from dlt.sources.rest_api import rest_api_source
 from dlt.sources.helpers.rest_client.paginators import (
     OffsetPaginator,
 )
+from dlt.common.pipeline import LoadInfo
 
 # Common custom tasks
 from pipelines import RAW_SCHEMA, BASE_DATE
@@ -43,7 +42,18 @@ logger: Logger = getLogger(__name__)
 
 
 def get_fitbit_token() -> str:
+    """Get a fresh Fitbit API access token using the stored refresh token.
 
+    This function requests a new access token from Fitbit's OAuth2 endpoint
+    using the refresh token stored in DLT secrets. It also updates the
+    refresh token in Google Secret Manager for future use.
+
+    Returns:
+        str: The new access token for Fitbit API requests.
+
+    Raises:
+        requests.HTTPError: If the token refresh request fails.
+    """
     # Request refreshed tokens
     resp = requests.post(
         "https://api.fitbit.com/oauth2/token",
@@ -80,10 +90,23 @@ def get_fitbit_token() -> str:
 def fitbit_source(
     api_key: str,
     initial_date: str = BASE_DATE,
-    session: Optional[requests.Session] = None,
+    session: requests.Session | None = None,
     end_date: str | None = None,
-):
+) -> dlt.sources.rest_api.rest_api_source:
+    """Create a DLT source for Fitbit API data.
 
+    This function configures and returns a DLT source for extracting sleep and
+    activity data from the Fitbit Web API.
+
+    Args:
+        api_key: Fitbit API access token for authentication.
+        initial_date: Start date for data extraction in YYYY-MM-DD format.
+        session: Optional requests session for HTTP calls.
+        end_date: Optional end date for data extraction in YYYY-MM-DD format.
+
+    Returns:
+        dlt source configured for Fitbit data extraction.
+    """
     api_config = {
         "client": {
             "base_url": "https://api.fitbit.com/",
@@ -158,17 +181,20 @@ def fitbit_source(
 
 
 def refresh_fitbit(
-    is_incremental: Optional[bool] = None,
-    pipeline: Optional[dlt.Pipeline] = None,
-    initial_date: Optional[str] = BASE_DATE,
-    end_date: Optional[str] = None,
-):
+    is_incremental: bool | None = None,
+    pipeline: dlt.Pipeline | None = None,
+    initial_date: str | None = BASE_DATE,
+    end_date: str | None = None,
+) -> LoadInfo:
     """
     Refresh Fitbit health data pipeline.
 
     Args:
         is_incremental: Override incremental mode. If None, uses environment-based detection.
         pipeline: dlt pipeline object. If None, a new one is created.
+
+    Returns:
+        LoadInfo: Pipeline run information and status.
     """
 
     # Determine refresh mode if not explicitly provided
