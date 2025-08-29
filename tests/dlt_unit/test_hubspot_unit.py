@@ -18,7 +18,7 @@ pytestmark = pytest.mark.local
 
 
 @pytest.fixture
-def mock_hs_apis(monkeypatch: MonkeyPatch, responses) -> Callable:
+def mock_hs_apis(monkeypatch: MonkeyPatch, mock_responses) -> Callable:
 
     BASE_URL = "https://api.hubapi.com"
 
@@ -62,29 +62,29 @@ def mock_hs_apis(monkeypatch: MonkeyPatch, responses) -> Callable:
         """
         # Mock the API responses
         if not endpoints or "engagements" in endpoints:
-            responses.add_callback(
-                responses.GET,
+            mock_responses.add_callback(
+                mock_responses.GET,
                 BASE_URL + "/engagements/v1/engagements/paged",
                 callback=engagement_callback,
                 content_type="application/json",
             )
         if not endpoints or "contacts" in endpoints:
-            responses.add_callback(
-                responses.POST,
+            mock_responses.add_callback(
+                mock_responses.POST,
                 BASE_URL + "/crm/v3/objects/contacts/search",
                 callback=lambda r: search_callback(r, "contacts"),
                 content_type="application/json",
             )
         if not endpoints or "companies" in endpoints:
-            responses.add_callback(
-                responses.POST,
+            mock_responses.add_callback(
+                mock_responses.POST,
                 BASE_URL + "/crm/v3/objects/companies/search",
                 callback=lambda r: search_callback(r, "companies"),
                 content_type="application/json",
             )
         if not endpoints or "schemas_contacts" in endpoints:
-            responses.add(
-                responses.GET,
+            mock_responses.add(
+                mock_responses.GET,
                 re.compile(BASE_URL + r"/crm-object-schemas/v3/schemas/\w+"),
                 json=sample_data("hubspot_schemas_contacts.json"),
                 status=200,

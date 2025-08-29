@@ -16,6 +16,7 @@ on:
 
 jobs:
   test-pipelines:
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
       - name: Set environment variables
@@ -51,22 +52,12 @@ jobs:
         run: |
           make test-all
 
-      - name: coverage
-        if: ${{ steps.run_tests.conclusion == 'success' || steps.run_tests.conclusion == 'failure' }}
-        run: |
-          make coverage
-
       - name: Remove keyfile
         if: always()
         run: |
           rm $GOOGLE_APPLICATION_CREDENTIALS
           
-      - name: Upload test coverage
-        if: ${{ steps.run_tests.conclusion == 'success' || steps.run_tests.conclusion == 'failure' }}
-        uses: actions/upload-artifact@v4
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
         with:
-          name: coverage-reports
-          path: |
-            htmlcov/
-            .coverage
-          retention-days: 30
+          token: ${{ secrets.CODECOV_TOKEN }}

@@ -14,10 +14,11 @@ psutil = "*"
 [dev-packages]
 pytest-cov = "*"
 pytest-mock = "*"
-pytest-responses = "*"
 pre-commit = "*"
+responses = "*"
 sqlfluff = "*"
 sqlfluff-templater-dbt = "*"
+black = "*"
 
 [requires]
 python_version = "3.12"
