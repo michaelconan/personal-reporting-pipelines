@@ -12,6 +12,7 @@ logs/*
 
 # Data files
 *.csv
+!dbt/seeds/*.csv
 *.duckdb*
 
 # Secrets and variables
