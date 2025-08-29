@@ -1,29 +1,28 @@
 with monthly_habit as (
 
     select
-        database_id,
+        parent__database_id as database_id,
         id,
-        `Date` as `date`,
-        `Name` as `name`,
-        budget,
-        serve,
-        travel,
-        blog,
+        properties__date__date as date,
+        properties__name__title as name,
+        properties__budget__checkbox as budget,
+        properties__serve__checkbox as serve,
+        properties__travel__checkbox as travel,
+        properties__blog__checkbox as blog,
         created_time,
         last_edited_time,
         row_number() over (
             partition by id
             order by last_edited_time desc
         ) as row_num
-    from {{ source('notion', 'monthly_habit') }}
+    from {{ source('notion', 'database_monthly_habits') }}
 
-),
-
+)
 select
     database_id,
     id,
-    `date`,
-    `name`,
+    date,
+    name,
     budget,
     serve,
     travel,
@@ -32,5 +31,5 @@ select
     last_edited_time
 from
     monthly_habit
-where 
+where
     row_num = 1

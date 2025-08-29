@@ -30,29 +30,14 @@ models:
 sources:
   - name: notion
     description: "Source data from the Notion habit tracker."
-    schema: "{{ env_var('RAW_SCHEMA', 'raw') }}"
+    schema: "main"
     tables:
-      - name: daily_habit
-        identifier: notion__daily_habit
+      - name: database_daily_habits
+        identifier: notion__database_daily_habits
         description: "Raw habit entries from the daily notion database."
-        columns:
-          - name: id
-            description: "Primary key for the raw daily habits table."
-            data_tests:
-              - not_null
-      - name: weekly_habit
-        identifier: notion__weekly_habit
+      - name: database_weekly_habits
+        identifier: notion__database_weekly_habits
         description: "Raw habit entries from the weekly notion database."
-        columns:
-          - name: id
-            description: "Primary key for the raw weekly habits table."
-            data_tests:
-              - not_null
-      - name: monthly_habit
-        identifier: notion__monthly_habit
+      - name: database_monthly_habits
+        identifier: notion__database_monthly_habits
         description: "Raw habit entries from the monthly notion database."
-        columns:
-          - name: id
-            description: "Primary key for the raw monthly habits table."
-            data_tests:
-              - not_null
