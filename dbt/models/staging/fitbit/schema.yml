@@ -4,7 +4,7 @@ models:
   - name: stg_fitbit__sleep
     description: "Staging model for fitbit sleep data."
     columns:
-      - name: logId
+      - name: log_id
         description: "The primary key for this table"
         data_tests:
           - not_null
@@ -13,13 +13,13 @@ models:
 sources:
   - name: fitbit
     description: "Source data from the fitbit activity tracker."
-    schema: "{{ env_var('RAW_SCHEMA', 'raw') }}"
+    schema: "main"
     tables:
       - name: sleep
         identifier: fitbit__sleep
         description: "Sleep data recorded in fitbit, often from Garmin."
         columns:
-          - name: logId
+          - name: log_id
             description: "Primary key for the raw sleep table."
             data_tests:
               - not_null

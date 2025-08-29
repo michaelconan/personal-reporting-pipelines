@@ -3,24 +3,25 @@ with contacts as (
 
     select
         id,
-        associatedcompanyid as company_id,
-        email,
-        firstname as first_name,
-        lastname as last_name,
-        createdat as created_at,
-        updatedat as updated_at,
+        properties__associatedcompanyid as company_id,
+        properties__email as email,
+        properties__firstname as first_name,
+        properties__lastname as last_name,
+        properties__createdate as created_at,
+        properties__lastmodifieddate as updated_at,
         row_number() over (
             partition by id
-            order by updatedat desc
+            order by properties__lastmodifieddate desc
         ) as row_num
     from
-        {{ source('hubspot', 'contact') }}
+        {{ source('hubspot', 'contacts') }}
 
 )
 
 select
     id,
     company_id,
+    email,
     first_name,
     last_name,
     created_at,

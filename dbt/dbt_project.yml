@@ -33,6 +33,10 @@ models:
     intermediate:
       +materialized: ephemeral
 
+seeds:
+  michael:
+    +tags: ["local"]
+
 vars:
   'dbt_date:time_zone': 'UTC'
   # 7 hours (in milliseconds)
