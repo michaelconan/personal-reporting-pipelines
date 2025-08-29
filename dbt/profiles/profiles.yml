@@ -4,3 +4,4 @@ michael:
     dev:
       type: duckdb
       path: 'dbt.duckdb'
+      schema: raw

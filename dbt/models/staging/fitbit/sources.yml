@@ -1,0 +1,34 @@
+version: 2
+
+sources:
+  - name: fitbit
+    description: "Source data from the fitbit activity tracker."
+    schema: "{{ env_var('RAW_SCHEMA', 'raw') }}"
+    tables:
+      - name: sleep
+        identifier: fitbit__sleep
+        description: "Sleep data recorded in fitbit, often from Garmin."
+        columns:
+          - name: log_id
+            description: "Primary key for the raw sleep table."
+            data_type: integer
+            data_tests:
+              - not_null
+          - name: date_of_sleep
+            description: "The date of the sleep log."
+            data_type: date
+          - name: duration
+            description: "The duration of the sleep in milliseconds."
+            data_type: integer
+          - name: start_time
+            description: "The start time of the sleep."
+            data_type: timestamp
+          - name: end_time
+            description: "The end time of the sleep."
+            data_type: timestamp
+          - name: type
+            description: "The type of the sleep log."
+            data_type: varchar
+          - name: log_type
+            description: "The type of the log."
+            data_type: varchar
