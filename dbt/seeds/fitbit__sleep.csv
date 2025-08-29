@@ -1,0 +1,2 @@
+log_id,date_of_sleep,duration,start_time,end_time,type,log_type
+1,"2023-01-01",28000000,"2023-01-01T22:00:00Z","2023-01-02T06:00:00Z","classic","sleep"

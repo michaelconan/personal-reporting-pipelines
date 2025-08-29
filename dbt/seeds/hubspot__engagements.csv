@@ -1,0 +1,2 @@
+engagement__id,engagement__type,engagement__timestamp,engagement__body_preview,associations__company_ids,associations__contact_ids,engagement__created_at,engagement__last_updated
+1,"EMAIL","2023-01-01T00:00:00Z","This is a test email.","[\"1\"]","[\"1\"]","2023-01-01T00:00:00Z","2023-01-01T00:00:00Z"

@@ -1,0 +1,37 @@
+version: 2
+
+sources:
+  - name: notion
+    description: "Source data from the Notion habit tracker."
+    schema: "{{ env_var('RAW_SCHEMA', 'raw') }}"
+    tables:
+      - name: database_daily_habits
+        identifier: notion__database_daily_habits
+        description: "Raw habit entries from the daily notion database."
+        columns:
+          - name: id
+            description: "The unique identifier for a page."
+            data_type: varchar
+            data_tests:
+              - unique
+              - not_null
+      - name: database_weekly_habits
+        identifier: notion__database_weekly_habits
+        description: "Raw habit entries from the weekly notion database."
+        columns:
+          - name: id
+            description: "The unique identifier for a page."
+            data_type: varchar
+            data_tests:
+              - unique
+              - not_null
+      - name: database_monthly_habits
+        identifier: notion__database_monthly_habits
+        description: "Raw habit entries from the monthly notion database."
+        columns:
+          - name: id
+            description: "The unique identifier for a page."
+            data_type: varchar
+            data_tests:
+              - unique
+              - not_null

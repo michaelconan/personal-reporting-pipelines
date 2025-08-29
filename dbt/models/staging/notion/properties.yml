@@ -1,0 +1,122 @@
+version: 2
+
+models:
+  - name: stg_notion__daily_habits
+    description: "Unique daily habits from the Notion habit tracker."
+    columns:
+      - name: id
+        description: "The primary key for this table"
+        data_type: varchar
+        data_tests:
+          - not_null
+          - unique
+      - name: database_id
+        description: "The ID of the parent database."
+        data_type: varchar
+      - name: date
+        description: "The date of the habit entry."
+        data_type: date
+      - name: name
+        description: "The name of the habit entry."
+        data_type: varchar
+      - name: devotional
+        description: "Whether the devotional habit was completed."
+        data_type: boolean
+      - name: journal
+        description: "Whether the journal habit was completed."
+        data_type: boolean
+      - name: prayer
+        description: "Whether the prayer habit was completed."
+        data_type: boolean
+      - name: read_bible
+        description: "Whether the read bible habit was completed."
+        data_type: boolean
+      - name: workout
+        description: "Whether the workout habit was completed."
+        data_type: boolean
+      - name: language
+        description: "Whether the language habit was completed."
+        data_type: boolean
+      - name: created_time
+        description: "The date the page was created."
+        data_type: timestamp
+      - name: last_edited_time
+        description: "The date the page was last edited."
+        data_type: timestamp
+
+  - name: stg_notion__weekly_habits
+    description: "Unique weekly habits from the Notion habit tracker."
+    columns:
+      - name: id
+        description: "The primary key for this table"
+        data_type: varchar
+        data_tests:
+          - not_null
+          - unique
+      - name: database_id
+        description: "The ID of the parent database."
+        data_type: varchar
+      - name: date
+        description: "The date of the habit entry."
+        data_type: date
+      - name: name
+        description: "The name of the habit entry."
+        data_type: varchar
+      - name: fast
+        description: "Whether the fast habit was completed."
+        data_type: boolean
+      - name: prayer_minutes
+        description: "The number of minutes spent in prayer."
+        data_type: varchar
+      - name: screen_minutes
+        description: "The number of minutes spent on screen."
+        data_type: integer
+      - name: church
+        description: "Whether the church habit was completed."
+        data_type: boolean
+      - name: community
+        description: "Whether the community habit was completed."
+        data_type: boolean
+      - name: created_time
+        description: "The date the page was created."
+        data_type: timestamp
+      - name: last_edited_time
+        description: "The date the page was last edited."
+        data_type: timestamp
+
+  - name: stg_notion__monthly_habits
+    description: "Unique monthly habits from the Notion habit tracker."
+    columns:
+      - name: id
+        description: "The primary key for this table"
+        data_type: varchar
+        data_tests:
+          - not_null
+          - unique
+      - name: database_id
+        description: "The ID of the parent database."
+        data_type: varchar
+      - name: date
+        description: "The date of the habit entry."
+        data_type: date
+      - name: name
+        description: "The name of the habit entry."
+        data_type: varchar
+      - name: budget
+        description: "Whether the budget habit was completed."
+        data_type: boolean
+      - name: serve
+        description: "Whether the serve habit was completed."
+        data_type: boolean
+      - name: travel
+        description: "Whether the travel habit was completed."
+        data_type: boolean
+      - name: blog
+        description: "Whether the blog habit was completed."
+        data_type: boolean
+      - name: created_time
+        description: "The date the page was created."
+        data_type: timestamp
+      - name: last_edited_time
+        description: "The date the page was last edited."
+        data_type: timestamp

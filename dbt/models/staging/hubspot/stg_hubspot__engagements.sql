@@ -3,12 +3,12 @@ with engagements as (
 
     select
         id,
-        `type`,
-        bodypreview as body_preview,
-        `type` in ('MEETING', 'CALL') as is_synchronous,
-        timestamp_millis(`timestamp`) as `timestamp`,
-        timestamp_millis(createdat) as created_at,
-        timestamp_millis(lastupdated) as updated_at
+        engagement_type,
+        body_preview,
+        engagement_type in ('MEETING', 'CALL') as is_synchronous,
+        engagement_timestamp,
+        created_at,
+        last_updated as updated_at
     from
         {{ ref('base_hubspot__engagements') }}
 

@@ -1,40 +1,39 @@
 with daily_habit as (
 
     select
-        database_id,
+        parent__database_id as database_id,
         id,
-        `Date` as `date`,
-        `Name` as `name`,
-        devotional,
-        journal,
-        prayer,
-        `Read Bible` as read_bible,
-        workout,
-        `Language` as `language`,
+        properties__date__date as date,
+        properties__name__title as name,
+        properties__devotional__checkbox as devotional,
+        properties__journal__checkbox as journal,
+        properties__prayer__checkbox as prayer,
+        properties__read_bible__checkbox as read_bible,
+        properties__workout__checkbox as workout,
+        properties__language__checkbox as language,
         created_time,
         last_edited_time,
         row_number() over (
             partition by id
             order by last_edited_time desc
         ) as row_num
-    from {{ source('notion', 'daily_habit') }}
+    from {{ source('notion', 'database_daily_habits') }}
 
-),
-
+)
 select
     database_id,
     id,
-    `date`,
-    `name`,
+    date,
+    name,
     devotional,
     journal,
     prayer,
     read_bible,
     workout,
-    `language`,
+    language,
     created_time,
     last_edited_time
 from
     daily_habit
-where 
+where
     row_num = 1

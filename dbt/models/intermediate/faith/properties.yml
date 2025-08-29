@@ -1,0 +1,32 @@
+version: 2
+
+models:
+  - name: int_habits_unpivoted
+    description: "Combined list of daily, weekly, and monthly habits from the Notion habit tracker."
+    columns:
+      - name: id
+        description: "The primary key for this table"
+        data_type: varchar
+        data_tests:
+          - not_null
+      - name: database_id
+        description: "The ID of the parent database."
+        data_type: varchar
+      - name: date
+        description: "The date of the habit entry."
+        data_type: date
+      - name: name
+        description: "The name of the habit entry."
+        data_type: varchar
+      - name: habit
+        description: "The name of the habit."
+        data_type: varchar
+      - name: is_complete
+        description: "Whether the habit was completed."
+        data_type: boolean
+      - name: created_time
+        description: "The date the page was created."
+        data_type: timestamp
+      - name: last_edited_time
+        description: "The date the page was last edited."
+        data_type: timestamp

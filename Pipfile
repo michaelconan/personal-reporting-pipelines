@@ -8,8 +8,8 @@ dlt = {extras = ["bigquery", "parquet", "duckdb"], version = ">=1.15"}
 google-cloud-bigquery-storage = "*"
 google-cloud-secret-manager = "*"
 google-api-python-client = "*"
-dbt-core = "*"
 psutil = "*"
+dbt-duckdb = "*"
 
 [dev-packages]
 pytest-cov = "*"
@@ -19,6 +19,7 @@ responses = "*"
 sqlfluff = "*"
 sqlfluff-templater-dbt = "*"
 black = "*"
+dbt-bigquery = "*"
 
 [requires]
 python_version = "3.12"
