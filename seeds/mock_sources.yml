@@ -1,0 +1,231 @@
+version: 2
+
+seeds:
+  - name: hubspot__companies
+    description: "Mock company data from HubSpot."
+    columns:
+      - name: id
+        description: "The unique identifier for a company."
+        data_type: integer
+        tests:
+          - unique
+          - not_null
+      - name: properties__name
+        description: "The name of the company."
+        data_type: varchar
+      - name: properties__createdate
+        description: "The date the company was created."
+        data_type: timestamp
+      - name: properties__hs_lastmodifieddate
+        description: "The date the company was last modified."
+        data_type: timestamp
+      - name: properties__hs_ideal_customer_profile
+        description: "The ideal customer profile tier for the company."
+        data_type: varchar
+
+  - name: hubspot__contacts
+    description: "Mock contact data from HubSpot."
+    columns:
+      - name: id
+        description: "The unique identifier for a contact."
+        data_type: integer
+        tests:
+          - unique
+          - not_null
+      - name: properties__associatedcompanyid
+        description: "The ID of the company associated with the contact."
+        data_type: integer
+      - name: properties__email
+        description: "The email address of the contact."
+        data_type: varchar
+      - name: properties__firstname
+        description: "The first name of the contact."
+        data_type: varchar
+      - name: properties__lastname
+        description: "The last name of the contact."
+        data_type: varchar
+      - name: properties__createdate
+        description: "The date the contact was created."
+        data_type: timestamp
+      - name: properties__lastmodifieddate
+        description: "The date the contact was last modified."
+        data_type: timestamp
+
+  - name: hubspot__engagements
+    description: "Mock engagement data from HubSpot."
+    columns:
+      - name: engagement__id
+        description: "The unique identifier for an engagement."
+        data_type: integer
+        tests:
+          - unique
+          - not_null
+      - name: engagement__type
+        description: "The type of the engagement."
+        data_type: varchar
+      - name: engagement__timestamp
+        description: "The timestamp of the engagement."
+        data_type: timestamp
+      - name: engagement__body_preview
+        description: "A preview of the engagement body."
+        data_type: varchar
+      - name: associations__company_ids
+        description: "The IDs of the companies associated with the engagement."
+        data_type: varchar
+      - name: associations__contact_ids
+        description: "The IDs of the contacts associated with the engagement."
+        data_type: varchar
+      - name: engagement__created_at
+        description: "The date the engagement was created."
+        data_type: timestamp
+      - name: engagement__last_updated
+        description: "The date the engagement was last updated."
+        data_type: timestamp
+
+  - name: fitbit__sleep
+    description: "Mock sleep data from Fitbit."
+    columns:
+      - name: log_id
+        description: "The unique identifier for a sleep log."
+        data_type: integer
+        tests:
+          - unique
+          - not_null
+      - name: date_of_sleep
+        description: "The date of the sleep log."
+        data_type: date
+      - name: duration
+        description: "The duration of the sleep in milliseconds."
+        data_type: integer
+      - name: start_time
+        description: "The start time of the sleep."
+        data_type: timestamp
+      - name: end_time
+        description: "The end time of the sleep."
+        data_type: timestamp
+      - name: type
+        description: "The type of the sleep log."
+        data_type: varchar
+      - name: log_type
+        description: "The type of the log."
+        data_type: varchar
+
+  - name: notion__database_daily_habits
+    description: "Mock daily habits data from Notion."
+    columns:
+      - name: parent__database_id
+        description: "The ID of the parent database."
+        data_type: varchar
+      - name: id
+        description: "The unique identifier for a page."
+        data_type: varchar
+        tests:
+          - unique
+          - not_null
+      - name: properties__date__date
+        description: "The date of the habit entry."
+        data_type: date
+      - name: properties__name__title
+        description: "The name of the habit entry."
+        data_type: varchar
+      - name: properties__devotional__checkbox
+        description: "Whether the devotional habit was completed."
+        data_type: boolean
+      - name: properties__journal__checkbox
+        description: "Whether the journal habit was completed."
+        data_type: boolean
+      - name: properties__prayer__checkbox
+        description: "Whether the prayer habit was completed."
+        data_type: boolean
+      - name: properties__read_bible__checkbox
+        description: "Whether the read bible habit was completed."
+        data_type: boolean
+      - name: properties__workout__checkbox
+        description: "Whether the workout habit was completed."
+        data_type: boolean
+      - name: properties__language__checkbox
+        description: "Whether the language habit was completed."
+        data_type: boolean
+      - name: created_time
+        description: "The date the page was created."
+        data_type: timestamp
+      - name: last_edited_time
+        description: "The date the page was last edited."
+        data_type: timestamp
+
+  - name: notion__database_monthly_habits
+    description: "Mock monthly habits data from Notion."
+    columns:
+      - name: parent__database_id
+        description: "The ID of the parent database."
+        data_type: varchar
+      - name: id
+        description: "The unique identifier for a page."
+        data_type: varchar
+        tests:
+          - unique
+          - not_null
+      - name: properties__date__date
+        description: "The date of the habit entry."
+        data_type: date
+      - name: properties__name__title
+        description: "The name of the habit entry."
+        data_type: varchar
+      - name: properties__budget__checkbox
+        description: "Whether the budget habit was completed."
+        data_type: boolean
+      - name: properties__serve__checkbox
+        description: "Whether the serve habit was completed."
+        data_type: boolean
+      - name: properties__travel__checkbox
+        description: "Whether the travel habit was completed."
+        data_type: boolean
+      - name: properties__blog__checkbox
+        description: "Whether the blog habit was completed."
+        data_type: boolean
+      - name: created_time
+        description: "The date the page was created."
+        data_type: timestamp
+      - name: last_edited_time
+        description: "The date the page was last edited."
+        data_type: timestamp
+
+  - name: notion__database_weekly_habits
+    description: "Mock weekly habits data from Notion."
+    columns:
+      - name: parent__database_id
+        description: "The ID of the parent database."
+        data_type: varchar
+      - name: id
+        description: "The unique identifier for a page."
+        data_type: varchar
+        tests:
+          - unique
+          - not_null
+      - name: properties__date__date
+        description: "The date of the habit entry."
+        data_type: date
+      - name: properties__name__title
+        description: "The name of the habit entry."
+        data_type: varchar
+      - name: properties__fast__checkbox
+        description: "Whether the fast habit was completed."
+        data_type: boolean
+      - name: properties__prayer_minutes__formula
+        description: "The number of minutes spent in prayer."
+        data_type: varchar
+      - name: properties__screen_minutes__number
+        description: "The number of minutes spent on screen."
+        data_type: integer
+      - name: properties__church__checkbox
+        description: "Whether the church habit was completed."
+        data_type: boolean
+      - name: properties__community__checkbox
+        description: "Whether the community habit was completed."
+        data_type: boolean
+      - name: created_time
+        description: "The date the page was created."
+        data_type: timestamp
+      - name: last_edited_time
+        description: "The date the page was last edited."
+        data_type: timestamp

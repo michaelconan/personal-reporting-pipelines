@@ -3,10 +3,10 @@ with engagements as (
 
     select
         id,
-        "type",
+        engagement_type,
         body_preview,
-        "type" in ('MEETING', 'CALL') as is_synchronous,
-        "timestamp",
+        engagement_type in ('MEETING', 'CALL') as is_synchronous,
+        engagement_timestamp,
         created_at,
         last_updated as updated_at
     from
