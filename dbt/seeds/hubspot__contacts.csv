@@ -1,0 +1,2 @@
+id,properties__associatedcompanyid,properties__email,properties__firstname,properties__lastname,properties__createdate,properties__lastmodifieddate
+1,1,"test@example.com","John","Doe","2023-01-01T00:00:00Z","2023-01-02T00:00:00Z"
