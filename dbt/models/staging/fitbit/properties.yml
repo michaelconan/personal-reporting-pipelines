@@ -1,0 +1,33 @@
+version: 2
+
+models:
+  - name: stg_fitbit__sleep
+    description: "Staging model for fitbit sleep data."
+    columns:
+      - name: log_id
+        description: "The primary key for this table"
+        data_type: integer
+        data_tests:
+          - not_null
+          - unique
+      - name: date_of_sleep
+        description: "The date of the sleep log."
+        data_type: date
+      - name: duration
+        description: "The duration of the sleep in milliseconds."
+        data_type: integer
+      - name: start_time
+        description: "The start time of the sleep."
+        data_type: timestamp
+      - name: end_time
+        description: "The end time of the sleep."
+        data_type: timestamp
+      - name: type
+        description: "The type of the sleep log."
+        data_type: varchar
+      - name: log_type
+        description: "The type of the log."
+        data_type: varchar
+      - name: sleep_goal_met
+        description: "Whether the sleep goal was met."
+        data_type: boolean

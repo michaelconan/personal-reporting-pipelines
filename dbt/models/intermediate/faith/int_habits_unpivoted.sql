@@ -3,8 +3,8 @@ with daily_habit_unpivoted as (
     select
         database_id,
         id,
-        `date`,
-        `name`,
+        "date",
+        "name",
         habit,
         is_complete,
         created_time,
@@ -12,7 +12,7 @@ with daily_habit_unpivoted as (
     from {{ ref('stg_notion__daily_habits') }}
     unpivot (
         is_complete for habit in (
-            devotional, journal, prayer, `Read Bible`, workout, `Language`
+            devotional, journal, prayer, read_bible, workout, language
         )
     )
 
@@ -23,8 +23,8 @@ weekly_habit_unpivoted as (
     select
         database_id,
         id,
-        `date`,
-        `name`,
+        "date",
+        "name",
         habit,
         is_complete,
         created_time,
@@ -32,7 +32,7 @@ weekly_habit_unpivoted as (
     from {{ ref('stg_notion__weekly_habits') }}
     unpivot (
         is_complete for habit in (
-            community, `Fast`, church
+            community, fast, church
         )
     )
 
@@ -43,8 +43,8 @@ monthly_habit_unpivoted as (
     select
         database_id,
         id,
-        `date`,
-        `name`,
+        "date",
+        "name",
         habit,
         is_complete,
         created_time,

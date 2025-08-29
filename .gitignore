@@ -14,6 +14,7 @@ logs/*
 *.csv
 !dbt/seeds/*.csv
 *.duckdb*
+dbt/profiles/.user.yml
 
 # Secrets and variables
 .env
