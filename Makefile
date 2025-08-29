@@ -3,6 +3,10 @@
 
 # Python environment
 PIPENV = pipenv run
+PYTEST = $(PIPENV) pytest \
+	--cov=pipelines \
+	--cov-append \
+	-v -s
 
 # Default target
 .DEFAULT_GOAL := help
@@ -27,6 +31,8 @@ test-e2e: ## Run tests with coverage
 	$(PIPENV) pytest tests/dlt_e2e \
 		--cov=pipelines \
 		--cov-append \
+		--cov-branch \
+		--cov-report=xml \
 		-v -s \
 		|| true
 
@@ -35,11 +41,13 @@ test-local: ## Run offline local tests only
 	$(PIPENV) pytest tests/dlt_unit \
 		--cov=pipelines \
 		--cov-append \
+		--cov-branch \
+		--cov-report=xml \
 		-v -s \
 		|| true
 
 .PHONY: test-all
-test-all: test-local test-e2e test-coverage ## Run all tests with coverage
+test-all: test-local test-e2e ## Run all tests with coverage
 
 .PHONY: test-coverage
 test-coverage: ## Generate coverage reports only
