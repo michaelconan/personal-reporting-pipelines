@@ -33,6 +33,7 @@ test-e2e: ## Run tests with coverage
 		--cov-append \
 		--cov-branch \
 		--cov-report=xml \
+		--junitxml=test-results-e2e.xml \
 		-v -s \
 		|| true
 
@@ -43,6 +44,7 @@ test-local: ## Run offline local tests only
 		--cov-append \
 		--cov-branch \
 		--cov-report=xml \
+		--junitxml=test-results-local.xml \
 		-v -s \
 		|| true
 
@@ -67,6 +69,7 @@ clean: ## Remove Python cache files and temporary artifacts
 	@rm -rf htmlcov
 	@rm -rf build
 	@rm -rf dist
+	@rm -f test-results-*.xml
 	@echo "Cleanup complete!"
 
 .PHONY: dlt-clean
