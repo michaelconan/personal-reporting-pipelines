@@ -13,7 +13,7 @@ API Resources:
 
 # Base
 from logging import getLogger, Logger
-from typing import Optional
+from typing import Generator
 
 # PyPI
 import pendulum
@@ -26,6 +26,8 @@ from dlt.sources.helpers.rest_client.paginators import (
     JSONResponseCursorPaginator,
     OffsetPaginator,
 )
+from dlt.sources import DltResource
+from dlt.common.pipeline import LoadInfo
 
 # Common custom tasks
 from pipelines import RAW_SCHEMA, BASE_DATE
@@ -42,12 +44,26 @@ logger: Logger = getLogger(__name__)
 def iso_to_unix(iso_date: str) -> int:
     """
     Convert ISO date string to Unix timestamp in milliseconds.
+
+    Args:
+        iso_date: ISO format date string (e.g., '2023-01-15T10:30:00').
+
+    Returns:
+        int: Unix timestamp in milliseconds.
     """
     dt = pendulum.parse(iso_date)
     return int(dt.timestamp() * 1000)
 
 
 def map_engagement(item: dict) -> dict:
+    """Transform engagement data by converting timestamps to ISO format.
+
+    Args:
+        item: Raw engagement item from HubSpot API.
+
+    Returns:
+        dict: Transformed engagement item with ISO formatted timestamps.
+    """
     item["engagement"]["lastUpdated"] = pendulum.from_timestamp(
         item["engagement"]["lastUpdated"] / 1000,
         tz="UTC",
@@ -57,10 +73,23 @@ def map_engagement(item: dict) -> dict:
 
 @dlt.source
 def hubspot_source(
-    session: Optional[requests.Session] = None,
+    session: requests.Session | None = None,
     initial_date: str = BASE_DATE,
-    end_date: Optional[str] = None,
-):
+    end_date: str | None = None,
+) -> Generator[DltResource, None, None]:
+    """Create a DLT source for HubSpot CRM data.
+
+    This function configures and returns a DLT source for extracting contacts,
+    companies, engagements, and schema data from the HubSpot CRM API.
+
+    Args:
+        session: Optional requests session for HTTP calls.
+        initial_date: Start date for data extraction in YYYY-MM-DD format.
+        end_date: Optional end date for data extraction in YYYY-MM-DD format.
+
+    Yields:
+        DLT resources configured for HubSpot data extraction.
+    """
     api_key = dlt.secrets["sources.hubspot.api_key"]
 
     CRM_OBJECTS = {
@@ -225,17 +254,20 @@ def hubspot_source(
 
 
 def refresh_hubspot(
-    is_incremental: Optional[bool] = None,
-    pipeline: Optional[dlt.Pipeline] = None,
+    is_incremental: bool | None = None,
+    pipeline: dlt.Pipeline | None = None,
     initial_date: str = BASE_DATE,
-    end_date: Optional[str] = None,
-):
+    end_date: str | None = None,
+) -> LoadInfo:
     """
     Refresh HubSpot CRM data pipeline.
 
     Args:
         is_incremental: Override incremental mode. If None, uses environment-based detection.
         pipeline: dlt pipeline object. If None, a new one is created.
+
+    Returns:
+        LoadInfo: Pipeline run information and status.
     """
 
     # Determine refresh mode if not explicitly provided

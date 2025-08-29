@@ -9,13 +9,17 @@ API Resources:
 - `Query Database <https://developers.notion.com/reference/post-database-query>`_
 """
 
+# Baes imports
 from logging import getLogger, Logger
-from typing import Optional
+from typing import Generator
 
+# PyPI imports
 import dlt
 import requests
 from dlt.sources.rest_api import rest_api_resources
 from dlt.sources.helpers.rest_client.paginators import JSONResponseCursorPaginator
+from dlt.sources import DltResource
+from dlt.common.pipeline import LoadInfo
 
 # Common custom tasks
 from pipelines import RAW_SCHEMA, BASE_DATE
@@ -53,7 +57,15 @@ DATABASE_MAP = {
 logger: Logger = getLogger(__name__)
 
 
-def name_db_table(row: dict):
+def name_db_table(row: dict) -> str:
+    """Generate a table name for Notion database rows based on database ID.
+
+    Args:
+        row: A database row containing parent database information.
+
+    Returns:
+        str: Formatted table name using the database mapping or ID.
+    """
     db_id = row["parent"]["database_id"]
     suffix = DATABASE_MAP.get(db_id, db_id)
     return f"notion__database_{suffix}"
@@ -62,10 +74,24 @@ def name_db_table(row: dict):
 @dlt.source
 def notion_source(
     db_name: str,
-    initial_date: Optional[str] = BASE_DATE,
-    end_date: Optional[str] = None,
-    session: Optional[requests.Session] = None,
-):
+    initial_date: str | None = BASE_DATE,
+    end_date: str | None = None,
+    session: requests.Session | None = None,
+) -> Generator[DltResource, None, None]:
+    """Create a DLT source for Notion database data.
+
+    This function configures and returns a DLT source for extracting database
+    metadata and row data from the Notion API.
+
+    Args:
+        db_name: Name of the database to search for and extract data from.
+        initial_date: Start date for data extraction in YYYY-MM-DD format.
+        end_date: Optional end date for data extraction in YYYY-MM-DD format.
+        session: Optional requests session for HTTP calls.
+
+    Yields:
+        DLT resources configured for Notion data extraction.
+    """
     api_key = dlt.secrets["sources.notion.api_key"]
 
     api_config = {
@@ -168,17 +194,20 @@ def notion_source(
 
 
 def refresh_notion(
-    is_incremental: Optional[bool] = None,
-    pipeline: Optional[dlt.Pipeline] = None,
-    initial_date: Optional[str] = BASE_DATE,
-    end_date: Optional[str] = None,
-):
+    is_incremental: bool | None = None,
+    pipeline: dlt.Pipeline | None = None,
+    initial_date: str | None = BASE_DATE,
+    end_date: str | None = None,
+) -> LoadInfo:
     """
     Refresh Notion habits data pipeline.
 
     Args:
         is_incremental: Override incremental mode. If None, uses environment-based detection.
         pipeline: dlt pipeline object. If None, a new one is created.
+
+    Returns:
+        LoadInfo: Pipeline run information and status.
     """
 
     # Determine refresh mode if not explicitly provided

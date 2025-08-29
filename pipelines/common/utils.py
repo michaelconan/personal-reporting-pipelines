@@ -4,7 +4,7 @@ Common utilities for pipeline operations.
 
 # Base imports
 import os
-from typing import Any, Optional
+from typing import Any
 from logging import getLogger
 
 # PyPI imports
@@ -96,7 +96,7 @@ def get_refresh_mode(default_incremental: bool = True) -> bool:
     return default_incremental
 
 
-def get_write_disposition(is_incremental: bool) -> Optional[str]:
+def get_write_disposition(is_incremental: bool) -> str | None:
     """
     Get the appropriate write disposition for dlt pipeline.
 
@@ -104,7 +104,7 @@ def get_write_disposition(is_incremental: bool) -> Optional[str]:
         is_incremental: Whether this is an incremental load
 
     Returns:
-        str: Write disposition string or None for incremental
+        str | None: Write disposition string or None for incremental
     """
     return None if is_incremental else "replace"
 
