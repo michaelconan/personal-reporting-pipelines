@@ -4,8 +4,11 @@ seeds:
   - name: habit_categories
     config:
       quote_columns: false
-      column_types:
-        habit: str
-        frequency: str
-        category: str
       delimiter: ","
+    columns:
+      - name: habit
+        data_type: varchar
+      - name: frequency
+        data_type: varchar
+      - name: category
+        data_type: varchar

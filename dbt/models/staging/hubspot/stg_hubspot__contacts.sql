@@ -14,7 +14,11 @@ with contacts as (
             order by properties__lastmodifieddate desc
         ) as row_num
     from
-        {{ source('hubspot', 'contacts') }}
+        {% if target.name == 'dev' %}
+            {{ ref('hubspot__contacts') }}
+        {% else %}
+            {{ source('hubspot', 'contacts') }}
+        {% endif %}
 
 )
 

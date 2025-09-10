@@ -20,6 +20,7 @@ sqlfluff = "*"
 sqlfluff-templater-dbt = "*"
 black = "*"
 dbt-bigquery = "*"
+marimo = "*"
 
 [requires]
 python_version = "3.12"

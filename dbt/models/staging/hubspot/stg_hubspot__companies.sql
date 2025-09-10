@@ -12,7 +12,12 @@ with companies as (
             partition by id
             order by properties__hs_lastmodifieddate desc
         ) as row_num
-    from {{ source('hubspot', 'companies') }}
+        from
+        {% if target.name == 'dev' %}
+            {{ ref('hubspot__companies') }}
+        {% else %}
+            {{ source('hubspot', 'companies') }}
+        {% endif %}
 
 )
 

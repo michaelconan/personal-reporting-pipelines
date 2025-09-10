@@ -15,7 +15,11 @@ with sleep as (
             order by date_of_sleep desc
         ) as row_num
     from
-        {{ source('fitbit', 'sleep') }}
+        {% if target.name == 'dev' %}
+            {{ ref('fitbit__sleep') }}
+        {% else %}
+            {{ source('fitbit', 'sleep') }}
+        {% endif %}
 
 )
 
