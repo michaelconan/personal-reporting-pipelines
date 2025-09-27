@@ -1,3 +1,4 @@
+-- TODO: use dbt_utils macro to remove duplicates by id sorting by latest date rather than custom logic
 with weekly_habit as (
 
     select

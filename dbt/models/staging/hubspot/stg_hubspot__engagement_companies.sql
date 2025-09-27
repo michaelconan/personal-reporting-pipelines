@@ -1,5 +1,6 @@
 -- junction table between engagements and companies
 select
+    {{ dbt_utils.generate_surrogate_key(['id', 'company_id']) }} as row_id,
     id as engagement_id,
     company_id
 from

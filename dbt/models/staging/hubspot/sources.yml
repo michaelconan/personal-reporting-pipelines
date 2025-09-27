@@ -17,18 +17,25 @@ sources:
           - name: properties__name
             description: "The name of the company."
             data_type: varchar
+            data_tests:
+              - not_null
           - name: properties__createdate
             description: "The date the company was created."
             data_type: timestamp
+            data_tests:
+              - not_null
           - name: properties__hs_lastmodifieddate
             description: "The date the company was last modified."
             data_type: timestamp
+            data_tests:
+              - not_null
           - name: properties__hs_ideal_customer_profile
             description: "The ideal customer profile tier for a company."
             data_type: varchar
             data_tests:
               - accepted_values:
-                  values: ["tier_1", "tier_2", "tier_3"]
+                  arguments:
+                    values: ["tier_1", "tier_2", "tier_3"]
 
       - name: contacts
         identifier: hubspot__contacts
@@ -44,23 +51,33 @@ sources:
             data_type: integer
             data_tests:
               - relationships:
-                  to: source('hubspot', 'companies')
-                  field: id
+                  arguments:
+                    to: source('hubspot', 'companies')
+                    field: id
           - name: properties__email
             description: "The email address of the contact."
             data_type: varchar
+            # TODO: Add data_test email format validation for non-null rows
           - name: properties__firstname
             description: "The first name of the contact."
             data_type: varchar
+            data_tests:
+              - not_null
           - name: properties__lastname
             description: "The last name of the contact."
             data_type: varchar
+            data_tests:
+              - not_null
           - name: properties__createdate
             description: "The date the contact was created."
             data_type: timestamp
+            data_tests:
+              - not_null
           - name: properties__lastmodifieddate
             description: "The date the contact was last modified."
             data_type: timestamp
+            data_tests:
+              - not_null
 
       - name: engagements
         identifier: hubspot__engagements
@@ -76,21 +93,24 @@ sources:
             data_type: varchar
             data_tests:
               - accepted_values:
-                  values: ["CALL", "WHATS_APP", "MEETING", "SMS", "EMAIL", "LINKEDIN_MESSAGE"]
+                  arguments:
+                    values: ["CALL", "WHATS_APP", "MEETING", "SMS", "EMAIL", "LINKEDIN_MESSAGE", "NOTE", "TASK"]
           - name: engagement__timestamp
             description: "The timestamp of the engagement."
             data_type: timestamp
             data_tests:
               - dbt_expectations.expect_column_values_to_be_between:
-                  min_value: "timestamp '2023-01-01'"
-                  max_value: "timestamp '2030-01-01'"
+                  arguments:
+                    min_value: "timestamp '2023-01-01'"
+                    max_value: "timestamp '2030-01-01'"
           - name: associations__contact_ids
             description: "The IDs of the contact associated with an engagement."
             data_type: varchar
             data_tests:
               - expect_column_array_length_to_be_between:
-                  min_value: 0
-                  max_value: 10
+                  arguments:
+                    min_value: 0
+                    max_value: 10
                   config:
                     enabled: "{{ target.type != 'duckdb' }}"
           - name: associations__company_ids
@@ -98,7 +118,8 @@ sources:
             data_type: varchar
             data_tests:
               - expect_column_array_length_to_be_between:
-                  min_value: 0
-                  max_value: 10
+                  arguments:
+                    min_value: 0
+                    max_value: 10
                   config:
                     enabled: "{{ target.type != 'duckdb' }}"
