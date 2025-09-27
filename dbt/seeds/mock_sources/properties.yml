@@ -1,0 +1,137 @@
+version: 2
+
+seeds:
+  - name: fitbit__sleep
+    columns:
+      - name: log_id
+        data_type: integer
+      - name: date_of_sleep
+        data_type: date
+      - name: duration
+        data_type: integer
+      - name: start_time
+        data_type: timestamp
+      - name: end_time
+        data_type: timestamp
+      - name: type
+        data_type: varchar
+      - name: log_type
+        data_type: varchar
+  - name: hubspot__companies
+    columns:
+      - name: id
+        data_type: integer
+      - name: properties__name
+        data_type: varchar
+      - name: properties__createdate
+        data_type: timestamp
+      - name: properties__hs_lastmodifieddate
+        data_type: timestamp
+      - name: properties__hs_ideal_customer_profile
+        data_type: varchar
+  - name: hubspot__contacts
+    columns:
+      - name: id
+        data_type: integer
+      - name: properties__associatedcompanyid
+        data_type: integer
+      - name: properties__email
+        data_type: varchar
+      - name: properties__firstname
+        data_type: varchar
+      - name: properties__lastname
+        data_type: varchar
+      - name: properties__createdate
+        data_type: timestamp
+      - name: properties__lastmodifieddate
+        data_type: timestamp
+  - name: hubspot__engagements
+    columns:
+      - name: engagement__id
+        data_type: integer
+      - name: engagement__type
+        data_type: varchar
+      - name: engagement__timestamp
+        data_type: timestamp
+      - name: engagement__body_preview
+        data_type: varchar
+      - name: associations__company_ids
+        data_type: varchar
+      - name: associations__contact_ids
+        data_type: varchar
+      - name: engagement__created_at
+        data_type: timestamp
+      - name: engagement__last_updated
+        data_type: timestamp
+  - name: notion__database_daily_habits
+    columns:
+      - name: parent__database_id
+        data_type: varchar
+      - name: id
+        data_type: varchar
+      - name: properties__date__date
+        data_type: date
+      - name: properties__name__title
+        data_type: varchar
+      - name: properties__devotional__checkbox
+        data_type: boolean
+      - name: properties__journal__checkbox
+        data_type: boolean
+      - name: properties__prayer__checkbox
+        data_type: boolean
+      - name: properties__read_bible__checkbox
+        data_type: boolean
+      - name: properties__workout__checkbox
+        data_type: boolean
+      - name: properties__language__checkbox
+        data_type: boolean
+      - name: created_time
+        data_type: timestamp
+      - name: last_edited_time
+        data_type: timestamp
+  - name: notion__database_weekly_habits
+    columns:
+      - name: parent__database_id
+        data_type: varchar
+      - name: id
+        data_type: varchar
+      - name: properties__date__date
+        data_type: date
+      - name: properties__name__title
+        data_type: varchar
+      - name: properties__fast__checkbox
+        data_type: boolean
+      - name: properties__prayer_minutes__formula
+        data_type: varchar
+      - name: properties__screen_minutes__number
+        data_type: numeric
+      - name: properties__church__checkbox
+        data_type: boolean
+      - name: properties__community__checkbox
+        data_type: boolean
+      - name: created_time
+        data_type: timestamp
+      - name: last_edited_time
+        data_type: timestamp
+  - name: notion__database_monthly_habits
+    columns:
+      - name: parent__database_id
+        data_type: varchar
+      - name: id
+        data_type: varchar
+      - name: properties__date__date
+        data_type: date
+      - name: properties__name__title
+        data_type: varchar
+      - name: properties__budget__checkbox
+        data_type: boolean
+      - name: properties__serve__checkbox
+        data_type: boolean
+      - name: properties__travel__checkbox
+        data_type: boolean
+      - name: properties__blog__checkbox
+        data_type: boolean
+      - name: created_time
+        data_type: timestamp
+      - name: last_edited_time
+        data_type: timestamp

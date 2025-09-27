@@ -26,16 +26,14 @@ clean-targets:         # directories to be removed by `dbt clean`
 # Configuring models
 # Full documentation: https://docs.getdbt.com/docs/configuring-models
 models:
-  michael:
-    staging:
-      # Config indicated by + and applies to all files under models/staging/
-      +materialized: view
-    intermediate:
-      +materialized: ephemeral
+  staging:
+    +materialized: view
+    
 
 seeds:
-  michael:
+  mock_sources:
     +tags: ["local"]
+    +enabled: "{{ target.name == 'dev' }}"
 
 vars:
   'dbt_date:time_zone': 'UTC'

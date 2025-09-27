@@ -16,7 +16,11 @@ with engagements as (
             order by engagement__last_updated desc
         ) as row_num
     from
-        {{ source('hubspot', 'engagements') }}
+        {% if target.name == 'dev' %}
+            {{ ref('hubspot__engagements') }}
+        {% else %}
+            {{ source('hubspot', 'engagements') }}
+        {% endif %}
 
 )
 

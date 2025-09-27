@@ -16,7 +16,12 @@ with weekly_habit as (
             partition by id
             order by last_edited_time desc
         ) as row_num
-    from {{ source('notion', 'database_weekly_habits') }}
+        from
+        {% if target.name == 'dev' %}
+            {{ ref('notion__database_weekly_habits') }}
+        {% else %}
+            {{ source('notion', 'database_weekly_habits') }}
+        {% endif %}
 
 )
 select
