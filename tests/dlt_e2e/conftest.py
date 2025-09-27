@@ -56,3 +56,5 @@ def bigquery_pipeline() -> dlt.Pipeline:
     yield pipeline
     # Cleanup
     pipeline.drop()
+    with pipeline.sql_client() as client:
+        client.execute_sql(f"DROP SCHEMA IF EXISTS {pipeline.dataset_name} CASCADE;")

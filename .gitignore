@@ -3,6 +3,7 @@ __pycache__
 .pytest_cache
 .coverage
 .coverage.*
+test-results-*.xml
 htmlcov
 
 # Logs
@@ -11,10 +12,8 @@ logs/*
 !logs/.gitkeep
 
 # Data files
-*.csv
-!dbt/seeds/*.csv
 *.duckdb*
-dbt/profiles/.user.yml
+dbt/.user.yml
 
 # Secrets and variables
 .env

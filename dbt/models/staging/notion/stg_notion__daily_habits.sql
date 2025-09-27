@@ -17,7 +17,12 @@ with daily_habit as (
             partition by id
             order by last_edited_time desc
         ) as row_num
-    from {{ source('notion', 'database_daily_habits') }}
+        from
+        {% if target.name == 'dev' %}
+            {{ ref('notion__database_daily_habits') }}
+        {% else %}
+            {{ source('notion', 'database_daily_habits') }}
+        {% endif %}
 
 )
 select
