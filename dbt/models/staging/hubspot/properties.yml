@@ -13,20 +13,27 @@ models:
       - name: name
         description: "The name of the company."
         data_type: varchar
+        data_tests:
+          - not_null
       - name: tier
         description: "The ideal customer profile tier for a company."
         data_type: integer
         data_tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 1
-              max_value: 3
-              row_condition: "tier is not null"
+              arguments:
+                min_value: 1
+                max_value: 3
+                row_condition: "tier is not null"
       - name: created_at
         description: "The date the company was created."
         data_type: timestamp
+        data_tests:
+          - not_null
       - name: updated_at
         description: "The date the company was last modified."
         data_type: timestamp
+        data_tests:
+          - not_null
 
   - name: stg_hubspot__contacts
     description: "Contacts from HubSpot CRM with company mapping."
@@ -42,23 +49,32 @@ models:
         data_type: integer
         data_tests:
           - relationships:
-              to: ref('stg_hubspot__companies')
-              field: id
+              arguments:
+                to: ref('stg_hubspot__companies')
+                field: id
       - name: email
         description: "The email address of the contact."
         data_type: varchar
       - name: first_name
         description: "The first name of the contact."
         data_type: varchar
+        data_tests:
+          - not_null
       - name: last_name
         description: "The last name of the contact."
         data_type: varchar
+        data_tests:
+          - not_null
       - name: created_at
         description: "The date the contact was created."
         data_type: timestamp
+        data_tests:
+          - not_null
       - name: updated_at
         description: "The date the contact was last modified."
         data_type: timestamp
+        data_tests:
+          - not_null
 
   - name: stg_hubspot__engagements
     description: "Engagements from HubSpot CRM with contact and company mapping."
@@ -72,54 +88,82 @@ models:
       - name: engagement_type
         description: "The type of the engagement."
         data_type: varchar
+        data_tests:
+          - not_null
       - name: body_preview
         description: "A preview of the engagement body."
         data_type: varchar
+        data_tests:
+          - not_null
       - name: is_synchronous
         description: "Whether the engagement is synchronous."
         data_type: boolean
+        data_tests:
+          - not_null
       - name: engagement_timestamp
         description: "The timestamp of the engagement."
         data_type: timestamp
+        data_tests:
+          - not_null
       - name: created_at
         description: "The date the engagement was created."
         data_type: timestamp
+        data_tests:
+          - not_null
       - name: updated_at
         description: "The date the engagement was last updated."
         data_type: timestamp
+        data_tests:
+          - not_null
 
   - name: stg_hubspot__engagement_contacts
     description: "Junction table between engagements and contacts, created from companyIds."
     columns:
+      - name: row_id
+        description: "Surrogate key for engagement-contact combination"
+        data_type: varchar
+        data_tests:
+          - unique
+          - not_null
       - name: engagement_id
         description: "The ID of the engagement"
         data_type: integer
         data_tests:
           - relationships:
-              to: ref('stg_hubspot__engagements')
-              field: id
+              arguments:
+                to: ref('stg_hubspot__engagements')
+                field: id
       - name: contact_id
         description: "The ID of the contact associated with the engagement"
         data_type: integer
         data_tests:
           - relationships:
-              to: ref('stg_hubspot__contacts')
-              field: id
+              arguments:
+                to: ref('stg_hubspot__contacts')
+                field: id
 
   - name: stg_hubspot__engagement_companies
     description: "Junction table between engagements and companies, created from companyIds."
     columns:
+      - name: row_id
+        description: "Surrogate key for engagement-company combination"
+        data_type: varchar
+        data_tests:
+          - unique
+          - not_null
       - name: engagement_id
         description: "The ID of the engagement"
         data_type: integer
         data_tests:
           - relationships:
-              to: ref('stg_hubspot__engagements')
-              field: id
+              arguments:
+                to: ref('stg_hubspot__engagements')
+                field: id
       - name: company_id
         description: "The ID of the company associated with the engagement"
         data_type: integer
         data_tests:
           - relationships:
-              to: ref('stg_hubspot__companies')
-              field: id
+              arguments:
+                to: ref('stg_hubspot__companies')
+                field: id
