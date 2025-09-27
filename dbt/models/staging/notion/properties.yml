@@ -13,36 +13,61 @@ models:
       - name: database_id
         description: "The ID of the parent database."
         data_type: varchar
+        data_tests:
+          - not_null
       - name: date
         description: "The date of the habit entry."
         data_type: date
+        data_tests:
+          - not_null
       - name: name
         description: "The name of the habit entry."
         data_type: varchar
+        data_tests:
+          - not_null
+          # TODO: Add check timestamp after 2022
       - name: devotional
         description: "Whether the devotional habit was completed."
         data_type: boolean
+        data_tests:
+          - not_null
       - name: journal
         description: "Whether the journal habit was completed."
         data_type: boolean
+        data_tests:
+          - not_null
       - name: prayer
         description: "Whether the prayer habit was completed."
         data_type: boolean
+        data_tests:
+          - not_null
       - name: read_bible
         description: "Whether the read bible habit was completed."
         data_type: boolean
+        data_tests:
+          - not_null
       - name: workout
         description: "Whether the workout habit was completed."
         data_type: boolean
+        data_tests:
+          - not_null
       - name: language
         description: "Whether the language habit was completed."
         data_type: boolean
+        data_tests:
+          - not_null
       - name: created_time
         description: "The date the page was created."
         data_type: timestamp
+        data_tests:
+          - not_null
+          # TODO: Add check timestamp after 2022
       - name: last_edited_time
         description: "The date the page was last edited."
         data_type: timestamp
+        data_tests:
+          - not_null
+          # TODO: Add check timestamp after 2022
 
   - name: stg_notion__weekly_habits
     description: "Unique weekly habits from the Notion habit tracker."
@@ -56,33 +81,64 @@ models:
       - name: database_id
         description: "The ID of the parent database."
         data_type: varchar
+        data_tests:
+          - not_null
       - name: date
         description: "The date of the habit entry."
         data_type: date
+        data_tests:
+          - not_null
+          # TODO: Add check timestamp after 2022
       - name: name
         description: "The name of the habit entry."
         data_type: varchar
+        data_tests:
+          - not_null
       - name: fast
         description: "Whether the fast habit was completed."
         data_type: boolean
+        data_tests:
+          - not_null
       - name: prayer_minutes
         description: "The number of minutes spent in prayer."
         data_type: varchar
+        data_tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+                max_value: 30
       - name: screen_minutes
         description: "The number of minutes spent on screen."
         data_type: integer
+        data_tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 500
+                max_value: 1500
       - name: church
         description: "Whether the church habit was completed."
         data_type: boolean
+        data_tests:
+          - not_null
       - name: community
         description: "Whether the community habit was completed."
         data_type: boolean
+        data_tests:
+          - not_null
       - name: created_time
         description: "The date the page was created."
         data_type: timestamp
+        data_tests:
+          - not_null
+          # TODO: Add check timestamp after 2022
       - name: last_edited_time
         description: "The date the page was last edited."
         data_type: timestamp
+        data_tests:
+          - not_null
+          # TODO: Add check timestamp after 2022
 
   - name: stg_notion__monthly_habits
     description: "Unique monthly habits from the Notion habit tracker."
@@ -96,27 +152,48 @@ models:
       - name: database_id
         description: "The ID of the parent database."
         data_type: varchar
+        data_tests:
+          - not_null
       - name: date
         description: "The date of the habit entry."
         data_type: date
+        data_tests:
+          - not_null
+          # TODO: Add check timestamp after 2022
       - name: name
         description: "The name of the habit entry."
         data_type: varchar
+        data_tests:
+          - not_null
       - name: budget
         description: "Whether the budget habit was completed."
         data_type: boolean
+        data_tests:
+          - not_null
       - name: serve
         description: "Whether the serve habit was completed."
         data_type: boolean
+        data_tests:
+          - not_null
       - name: travel
         description: "Whether the travel habit was completed."
         data_type: boolean
+        data_tests:
+          - not_null
       - name: blog
         description: "Whether the blog habit was completed."
         data_type: boolean
+        data_tests:
+          - not_null
       - name: created_time
         description: "The date the page was created."
         data_type: timestamp
+        data_tests:
+          - not_null
+          # TODO: Add check timestamp after 2022
       - name: last_edited_time
         description: "The date the page was last edited."
         data_type: timestamp
+        data_tests:
+          - not_null
+          # TODO: Add check timestamp after 2022

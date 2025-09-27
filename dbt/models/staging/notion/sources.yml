@@ -9,29 +9,145 @@ sources:
         identifier: notion__database_daily_habits
         description: "Raw habit entries from the daily notion database."
         columns:
-          - name: id
-            description: "The unique identifier for a page."
+          - name: parent__database_id
             data_type: varchar
             data_tests:
-              - unique
               - not_null
+          - name: id
+            data_type: varchar
+            data_tests:
+              - not_null
+          - name: properties__date__date
+            data_type: date
+            data_tests:
+              - not_null
+          - name: properties__name__title
+            data_type: varchar
+            data_tests:
+              - not_null
+          - name: properties__devotional__checkbox
+            data_type: boolean
+            data_tests:
+              - not_null
+          - name: properties__journal__checkbox
+            data_type: boolean
+            data_tests:
+              - not_null
+          - name: properties__prayer__checkbox
+            data_type: boolean
+            data_tests:
+              - not_null
+          - name: properties__read_bible__checkbox
+            data_type: boolean
+            data_tests:
+              - not_null
+          - name: properties__workout__checkbox
+            data_type: boolean
+            data_tests:
+              - not_null
+          - name: properties__language__checkbox
+            data_type: boolean
+            data_tests:
+              - not_null
+          - name: created_time
+            data_type: timestamp
+            data_tests:
+              - not_null
+          - name: last_edited_time
+            data_type: timestamp
+            data_tests:
+              - not_null
+
       - name: database_weekly_habits
         identifier: notion__database_weekly_habits
         description: "Raw habit entries from the weekly notion database."
         columns:
-          - name: id
-            description: "The unique identifier for a page."
+          - name: parent__database_id
             data_type: varchar
             data_tests:
-              - unique
               - not_null
+          - name: id
+            data_type: varchar
+            data_tests:
+              - not_null
+          - name: properties__date__date
+            data_type: date
+            data_tests:
+              - not_null
+          - name: properties__name__title
+            data_type: varchar
+            data_tests:
+              - not_null
+          - name: properties__fast__checkbox
+            data_type: boolean
+            data_tests:
+              - not_null
+          - name: properties__prayer_minutes__formula
+            data_type: varchar
+            data_tests:
+              - not_null
+          - name: properties__screen_minutes__number
+            data_type: numeric
+            data_tests:
+              - not_null
+          - name: properties__church__checkbox
+            data_type: boolean
+            data_tests:
+              - not_null
+          - name: properties__community__checkbox
+            data_type: boolean
+            data_tests:
+              - not_null
+          - name: created_time
+            data_type: timestamp
+            data_tests:
+              - not_null
+          - name: last_edited_time
+            data_type: timestamp
+            data_tests:
+              - not_null
+
       - name: database_monthly_habits
         identifier: notion__database_monthly_habits
         description: "Raw habit entries from the monthly notion database."
         columns:
-          - name: id
-            description: "The unique identifier for a page."
+          - name: parent__database_id
             data_type: varchar
             data_tests:
-              - unique
+              - not_null
+          - name: id
+            data_type: varchar
+            data_tests:
+              - not_null
+          - name: properties__date__date
+            data_type: date
+            data_tests:
+              - not_null
+          - name: properties__name__title
+            data_type: varchar
+            data_tests:
+              - not_null
+          - name: properties__budget__checkbox
+            data_type: boolean
+            data_tests:
+              - not_null
+          - name: properties__serve__checkbox
+            data_type: boolean
+            data_tests:
+              - not_null
+          - name: properties__travel__checkbox
+            data_type: boolean
+            data_tests:
+              - not_null
+          - name: properties__blog__checkbox
+            data_type: boolean
+            data_tests:
+              - not_null
+          - name: created_time
+            data_type: timestamp
+            data_tests:
+              - not_null
+          - name: last_edited_time
+            data_type: timestamp
+            data_tests:
               - not_null

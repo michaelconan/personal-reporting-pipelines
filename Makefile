@@ -76,3 +76,7 @@ clean: ## Remove Python cache files and temporary artifacts
 dlt-clean: ## Clean DLT-specific files and data
 	@rm -rf ~/.dlt
 	@rm -f *.duckdb
+
+.PHONY: dbt-build
+dbt-build: ## Run dbt build (seed, run, test)
+	$(PIPENV) dbt build
