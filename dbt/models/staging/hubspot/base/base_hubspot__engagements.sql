@@ -1,4 +1,5 @@
 -- base model to remove duplicate engagements before creating junction tables
+-- TODO: use dbt_utils macro to remove duplicates by id sorting by latest date rather than custom logic
 
 with engagements as (
 
