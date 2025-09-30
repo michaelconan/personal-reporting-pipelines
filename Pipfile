@@ -21,6 +21,10 @@ sqlfluff-templater-dbt = "*"
 black = "*"
 dbt-bigquery = "*"
 marimo = "*"
+sphinx = "*"
+sphinx-rtd-theme = "*"
+myst-parser = "*"
+sphinx-autoapi = "*"
 
 [requires]
 python_version = "3.12"

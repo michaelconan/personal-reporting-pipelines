@@ -42,11 +42,10 @@ logger: Logger = getLogger(__name__)
 
 
 def iso_to_unix(iso_date: str) -> int:
-    """
-    Convert ISO date string to Unix timestamp in milliseconds.
+    """Convert ISO date string to Unix timestamp in milliseconds.
 
     Args:
-        iso_date: ISO format date string (e.g., '2023-01-15T10:30:00').
+        iso_date (str): ISO format date string (e.g., '2023-01-15T10:30:00').
 
     Returns:
         int: Unix timestamp in milliseconds.
@@ -59,7 +58,7 @@ def map_engagement(item: dict) -> dict:
     """Transform engagement data by converting timestamps to ISO format.
 
     Args:
-        item: Raw engagement item from HubSpot API.
+        item (dict): Raw engagement item from HubSpot API.
 
     Returns:
         dict: Transformed engagement item with ISO formatted timestamps.
@@ -83,12 +82,16 @@ def hubspot_source(
     companies, engagements, and schema data from the HubSpot CRM API.
 
     Args:
-        session: Optional requests session for HTTP calls.
-        initial_date: Start date for data extraction in YYYY-MM-DD format.
-        end_date: Optional end date for data extraction in YYYY-MM-DD format.
+        session (requests.Session, optional): Optional requests session for
+            HTTP calls. Defaults to None.
+        initial_date (str, optional): Start date for data extraction in
+            YYYY-MM-DD format. Defaults to `BASE_DATE`.
+        end_date (str, optional): Optional end date for data extraction in
+            YYYY-MM-DD format. Defaults to None.
 
     Yields:
-        DLT resources configured for HubSpot data extraction.
+        Generator[DltResource, None, None]: DLT resources configured for HubSpot
+            data extraction.
     """
     api_key = dlt.secrets["sources.hubspot.api_key"]
 
@@ -259,15 +262,20 @@ def refresh_hubspot(
     initial_date: str = BASE_DATE,
     end_date: str | None = None,
 ) -> LoadInfo:
-    """
-    Refresh HubSpot CRM data pipeline.
+    """Refresh HubSpot CRM data pipeline.
 
     Args:
-        is_incremental: Override incremental mode. If None, uses environment-based detection.
-        pipeline: dlt pipeline object. If None, a new one is created.
+        is_incremental (bool, optional): Override incremental mode.
+            If None, uses environment-based detection. Defaults to None.
+        pipeline (dlt.Pipeline, optional): dlt pipeline object.
+            If None, a new one is created. Defaults to None.
+        initial_date (str, optional): The start date for the data extraction.
+            Defaults to `BASE_DATE`.
+        end_date (str, optional): The end date for the data extraction.
+            Defaults to None.
 
     Returns:
-        LoadInfo: Pipeline run information and status.
+        dlt.common.pipeline.LoadInfo: Pipeline run information and status.
     """
 
     # Determine refresh mode if not explicitly provided
