@@ -1,27 +1,46 @@
-# Cache data
-__pycache__
-.pytest_cache
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-wheel-metadata/
+.eggs/
+*.egg-info/
+*.egg
+dist/
+build/
+*.so
 .coverage
 .coverage.*
-test-results-*.xml
-htmlcov
+htmlcov/
+.pytest_cache/
 
-# Logs
-logs/*
-*.log
-!logs/.gitkeep
+# dbt
+dbt_packages/
+target/
+logs/
 
-# Data files
-*.duckdb*
+# Sphinx
+docs/_build/
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test artifacts
+*.xml
+*.duckdb
+*.duckdb.wal
+
+# dbt
 dbt/.user.yml
-
-# Secrets and variables
-.env
-config/*
-.secrets
-*.pid
-
-# DBT compiled files
-dbt/*/target
-dbt/*/dbt_modules
-dbt/*/dbt_packages
