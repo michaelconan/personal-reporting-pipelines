@@ -99,13 +99,17 @@ def fitbit_source(
     activity data from the Fitbit Web API.
 
     Args:
-        api_key: Fitbit API access token for authentication.
-        initial_date: Start date for data extraction in YYYY-MM-DD format.
-        session: Optional requests session for HTTP calls.
-        end_date: Optional end date for data extraction in YYYY-MM-DD format.
+        api_key (str): Fitbit API access token for authentication.
+        initial_date (str, optional): Start date for data extraction in
+            YYYY-MM-DD format. Defaults to `BASE_DATE`.
+        session (requests.Session, optional): Optional requests session for
+            HTTP calls. Defaults to None.
+        end_date (str, optional): Optional end date for data extraction in
+            YYYY-MM-DD format. Defaults to None.
 
     Returns:
-        dlt source configured for Fitbit data extraction.
+        dlt.sources.rest_api.rest_api_source: dlt source configured for Fitbit
+            data extraction.
     """
     api_config = {
         "client": {
@@ -186,15 +190,20 @@ def refresh_fitbit(
     initial_date: str | None = BASE_DATE,
     end_date: str | None = None,
 ) -> LoadInfo:
-    """
-    Refresh Fitbit health data pipeline.
+    """Refresh Fitbit health data pipeline.
 
     Args:
-        is_incremental: Override incremental mode. If None, uses environment-based detection.
-        pipeline: dlt pipeline object. If None, a new one is created.
+        is_incremental (bool, optional): Override incremental mode.
+            If None, uses environment-based detection. Defaults to None.
+        pipeline (dlt.Pipeline, optional): dlt pipeline object.
+            If None, a new one is created. Defaults to None.
+        initial_date (str, optional): The start date for the data extraction.
+            Defaults to `BASE_DATE`.
+        end_date (str, optional): The end date for the data extraction.
+            Defaults to None.
 
     Returns:
-        LoadInfo: Pipeline run information and status.
+        dlt.common.pipeline.LoadInfo: Pipeline run information and status.
     """
 
     # Determine refresh mode if not explicitly provided
