@@ -79,4 +79,17 @@ dlt-clean: ## Clean DLT-specific files and data
 
 .PHONY: dbt-build
 dbt-build: ## Run dbt build (seed, run, test)
-	$(PIPENV) dbt build
+	$(PIPENV) dbt build --project-dir dbt --profiles-dir dbt
+
+.PHONY: docs
+docs: ## Generate dbt and Sphinx documentation
+	@echo "Installing dbt dependencies..."
+	$(PIPENV) dbt deps --project-dir dbt --profiles-dir dbt
+	@echo "Generating dbt documentation..."
+	$(PIPENV) dbt docs generate --project-dir dbt --profiles-dir dbt --target-path ../target
+	@echo "Building Sphinx documentation..."
+	$(PIPENV) sphinx-build -b html docs/source docs/_build/html
+	@echo "Copying dbt docs to Sphinx output..."
+	@mkdir -p docs/_build/html/dbt
+	@cp -r target/* docs/_build/html/dbt/
+	@echo "Documentation available at docs/_build/html/index.html"

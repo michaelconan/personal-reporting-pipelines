@@ -61,7 +61,7 @@ def name_db_table(row: dict) -> str:
     """Generate a table name for Notion database rows based on database ID.
 
     Args:
-        row: A database row containing parent database information.
+        row (dict): A database row containing parent database information.
 
     Returns:
         str: Formatted table name using the database mapping or ID.
@@ -84,13 +84,17 @@ def notion_source(
     metadata and row data from the Notion API.
 
     Args:
-        db_name: Name of the database to search for and extract data from.
-        initial_date: Start date for data extraction in YYYY-MM-DD format.
-        end_date: Optional end date for data extraction in YYYY-MM-DD format.
-        session: Optional requests session for HTTP calls.
+        db_name (str): Name of the database to search for and extract data from.
+        initial_date (str, optional): Start date for data extraction in
+            YYYY-MM-DD format. Defaults to `BASE_DATE`.
+        end_date (str, optional): Optional end date for data extraction in
+            YYYY-MM-DD format. Defaults to None.
+        session (requests.Session, optional): Optional requests session for
+            HTTP calls. Defaults to None.
 
     Yields:
-        DLT resources configured for Notion data extraction.
+        Generator[DltResource, None, None]: DLT resources configured for Notion
+            data extraction.
     """
     api_key = dlt.secrets["sources.notion.api_key"]
 
@@ -199,15 +203,20 @@ def refresh_notion(
     initial_date: str | None = BASE_DATE,
     end_date: str | None = None,
 ) -> LoadInfo:
-    """
-    Refresh Notion habits data pipeline.
+    """Refresh Notion habits data pipeline.
 
     Args:
-        is_incremental: Override incremental mode. If None, uses environment-based detection.
-        pipeline: dlt pipeline object. If None, a new one is created.
+        is_incremental (bool, optional): Override incremental mode.
+            If None, uses environment-based detection. Defaults to None.
+        pipeline (dlt.Pipeline, optional): dlt pipeline object.
+            If None, a new one is created. Defaults to None.
+        initial_date (str, optional): The start date for the data extraction.
+            Defaults to `BASE_DATE`.
+        end_date (str, optional): The end date for the data extraction.
+            Defaults to None.
 
     Returns:
-        LoadInfo: Pipeline run information and status.
+        dlt.common.pipeline.LoadInfo: Pipeline run information and status.
     """
 
     # Determine refresh mode if not explicitly provided
