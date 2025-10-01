@@ -1,0 +1,594 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Project Documentation &mdash; My Project  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Project Overview" href="project_overview.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="#" class="icon icon-home">
+            My Project
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="project_overview.html">Project Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pipelines.html">Pipelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dbt.html">dbt Models</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">My Project</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">My Project Documentation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="my-project-documentation">
+<h1>My Project Documentation<a class="headerlink" href="#my-project-documentation" title="Link to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="project_overview.html">Project Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="project_overview.html#architecture">Architecture</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pipelines.html">Pipelines</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pipelines.html#data-sources">Data Sources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pipelines.html#pipeline-refresh-patterns">Pipeline Refresh Patterns</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="dbt.html">dbt Models</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="dbt.html#dbt-development">dbt Development</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dbt.html#dbt-transform-workflow">dbt Transform Workflow</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<section id="personal-reporting-pipelines">
+<h2>personal-reporting-pipelines<a class="headerlink" href="#personal-reporting-pipelines" title="Link to this heading"></a></h2>
+<section id="quality">
+<h3>Quality<a class="headerlink" href="#quality" title="Link to this heading"></a></h3>
+<p><a class="reference external" href="https://github.com/michaelconan/personal-reporting-pipelines/actions/workflows/test-pipelines.yml"><img alt="Pipeline Tests" src="https://github.com/michaelconan/personal-reporting-pipelines/actions/workflows/test-pipelines.yml/badge.svg" /></a>
+<a class="reference external" href="https://codecov.io/gh/michaelconan/personal-reporting-pipelines"><img alt="codecov" src="https://codecov.io/gh/michaelconan/personal-reporting-pipelines/branch/main/graph/badge.svg" /></a>
+<a class="reference external" href="https://deepwiki.com/michaelconan/personal-reporting-pipelines"><img alt="Ask DeepWiki" src="https://deepwiki.com/badge.svg" /></a></p>
+</section>
+<section id="refresh">
+<h3>Refresh<a class="headerlink" href="#refresh" title="Link to this heading"></a></h3>
+<p><a class="reference external" href="https://github.com/michaelconan/personal-reporting-pipelines/actions/workflows/refresh-hubspot.yml"><img alt="Refresh HubSpot" src="https://github.com/michaelconan/personal-reporting-pipelines/actions/workflows/refresh-hubspot.yml/badge.svg" /></a>
+<a class="reference external" href="https://github.com/michaelconan/personal-reporting-pipelines/actions/workflows/refresh-fitbit.yml"><img alt="Refresh Fitbit" src="https://github.com/michaelconan/personal-reporting-pipelines/actions/workflows/refresh-fitbit.yml/badge.svg" /></a>
+<a class="reference external" href="https://github.com/michaelconan/personal-reporting-pipelines/actions/workflows/refresh-notion.yml"><img alt="Refresh Notion" src="https://github.com/michaelconan/personal-reporting-pipelines/actions/workflows/refresh-notion.yml/badge.svg" /></a></p>
+<p>Personal data integration and analytics platform using dlt and dbt against BigQuery, orchestrated with GitHub Actions.</p>
+</section>
+<section id="overview">
+<h3>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h3>
+<p>This repository contains a Docker Development Container for VSCode and the infrastructure and workflows for my personal data platform. It leverages Google Cloud Platform services including BigQuery for data warehousing and Secret Manager for secure credential management, with automated orchestration through GitHub Actions.</p>
+</section>
+<section id="data-sources">
+<h3>Data Sources<a class="headerlink" href="#data-sources" title="Link to this heading"></a></h3>
+<p>The following data will be ingested from my personal systems into a BigQuery warehouse for automation and analysis.</p>
+<ol class="arabic simple">
+<li><p>Notion</p></li>
+<li><p>HubSpot</p></li>
+<li><p>Fitbit</p></li>
+</ol>
+<section id="warehouse-data-flow">
+<h4>Warehouse Data Flow<a class="headerlink" href="#warehouse-data-flow" title="Link to this heading"></a></h4>
+<div class="highlight-mermaid notranslate"><div class="highlight"><pre><span></span>graph TB
+
+    %% Sources
+    S1[Notion]
+    S2[HubSpot]
+
+    subgraph raw
+        direction TB
+        R1[Daily Habits]
+        R2[Weekly Habits]
+        R3[Monthly Habits]
+        R4[Contacts]
+        R5[Companies]
+        R6[Engagements]
+    end
+
+    %% Source to Raw Flows
+    S1 --&gt; R1
+    S1 --&gt; R2
+    S1 --&gt; R3
+    S2 --&gt; R4
+    S2 --&gt; R5
+    S2 --&gt; R6
+
+    subgraph staging
+        C1[Notion Habits]
+        C2[CRM Contacts]
+        C3[CRM Companies]
+        C4[CRM Engagements]
+    end
+
+    %% Raw to Staging Flows
+    R1 --&gt; C1
+    R2 --&gt; C1
+    R3 --&gt; C1
+    R4 --&gt; C2
+    R5 --&gt; C3
+    R6 --&gt; C4
+</pre></div>
+</div>
+</section>
+</section>
+<section id="architecture">
+<h3>Architecture<a class="headerlink" href="#architecture" title="Link to this heading"></a></h3>
+<section id="data-pipeline-stack">
+<h4>Data Pipeline Stack<a class="headerlink" href="#data-pipeline-stack" title="Link to this heading"></a></h4>
+<ol class="arabic simple">
+<li><p><strong><a class="reference external" href="https://dlthub.com/docs/intro">dlt hub</a></strong> - Extract, load, and transform source data into BigQuery raw layer</p></li>
+<li><p><strong><a class="reference external" href="https://docs.getdbt.com/">dbt core</a></strong> - Transform raw data into analytics-ready models and views</p></li>
+<li><p><strong><a class="reference external" href="https://cloud.google.com/bigquery">BigQuery</a></strong> - Cloud data warehouse for storage and analysis</p></li>
+<li><p><strong><a class="reference external" href="https://cloud.google.com/secret-manager">GCP Secret Manager</a></strong> - Secure credential management for API keys and connections</p></li>
+<li><p><strong><a class="reference external" href="https://github.com/features/actions">GitHub Actions</a></strong> - Automated orchestration and scheduling of data pipelines</p></li>
+</ol>
+</section>
+<section id="project-structure">
+<h4>Project Structure<a class="headerlink" href="#project-structure" title="Link to this heading"></a></h4>
+<p>The project follows modern data engineering best practices with clear separation of concerns:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>├── pipelines/           # dlt data extraction pipelines
+│   ├── hubspot.py      # HubSpot CRM data pipeline
+│   ├── fitbit.py       # Fitbit health data pipeline
+│   ├── notion.py       # Notion habits data pipeline
+│   └── common/         # Shared utilities and helpers
+├── dbt/                # dbt transformation models
+│   └── michael/        # Personal dbt project
+├── .github/            # GitHub Actions workflows
+│   └── workflows/      # CI/CD and orchestration
+├── scripts/            # Utility scripts and helpers
+└── config/             # Configuration files and templates
+</pre></div>
+</div>
+</section>
+<section id="naming-conventions">
+<h4>Naming Conventions<a class="headerlink" href="#naming-conventions" title="Link to this heading"></a></h4>
+<ul class="simple">
+<li><p><strong>dlt pipelines</strong>: <code class="docutils literal notranslate"><span class="pre">{source}__{entity}</span></code> (e.g., <code class="docutils literal notranslate"><span class="pre">hubspot__contacts</span></code>, <code class="docutils literal notranslate"><span class="pre">fitbit__sleep</span></code>)</p></li>
+<li><p><strong>dbt models</strong>: <code class="docutils literal notranslate"><span class="pre">{layer}_{source}__{entity}</span></code> (e.g., <code class="docutils literal notranslate"><span class="pre">staging_hubspot__contacts</span></code>, <code class="docutils literal notranslate"><span class="pre">contacts</span></code>)</p></li>
+<li><p><strong>GitHub Actions</strong>: <code class="docutils literal notranslate"><span class="pre">{actions}-{frequency}</span></code> (e.g., <code class="docutils literal notranslate"><span class="pre">dlt-daily</span></code>)</p></li>
+</ul>
+</section>
+</section>
+<section id="setup">
+<h3>Setup<a class="headerlink" href="#setup" title="Link to this heading"></a></h3>
+<section id="prerequisites">
+<h4>Prerequisites<a class="headerlink" href="#prerequisites" title="Link to this heading"></a></h4>
+<ol class="arabic simple">
+<li><p><strong>Google Cloud Platform Account</strong> with BigQuery and Secret Manager APIs enabled</p></li>
+<li><p><strong>GitHub Account</strong> with repository access</p></li>
+<li><p><strong>Python 3.12+</strong> and pip for local development</p></li>
+<li><p><strong>Docker</strong> (optional, for containerized development)</p></li>
+</ol>
+</section>
+<section id="gcp-setup">
+<h4>GCP Setup<a class="headerlink" href="#gcp-setup" title="Link to this heading"></a></h4>
+<ol class="arabic">
+<li><p><strong>Create a GCP Project</strong> and enable required APIs:</p>
+<ul class="simple">
+<li><p>BigQuery API</p></li>
+<li><p>Secret Manager API</p></li>
+</ul>
+</li>
+<li><p><strong>Set up BigQuery</strong>:</p>
+<ul class="simple">
+<li><p>Create a dataset for raw data (<code class="docutils literal notranslate"><span class="pre">raw_data</span></code>)</p></li>
+<li><p>Create a dataset for transformed data (<code class="docutils literal notranslate"><span class="pre">analytics</span></code>)</p></li>
+<li><p>Ensure proper IAM permissions for service accounts</p></li>
+</ul>
+</li>
+<li><p><strong>Configure Secret Manager</strong>:</p>
+<ul>
+<li><p>Configure GCP service account key as default application credentials</p></li>
+<li><p>Store static keys and credentials for each data source in TOML fragments:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[sources.hubspot]</span>
+<span class="n">api_key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;your-key&quot;</span>
+
+<span class="k">[sources.notion]</span>
+<span class="n">api_key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;your-key&quot;</span>
+
+<span class="k">[sources.fitbit]</span>
+<span class="n">client_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;your-id&quot;</span>
+<span class="n">client_secret</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;your-secret&quot;</span>
+</pre></div>
+</div>
+</li>
+<li><p>After authorising Fitbit OAuth client, store refresh token in dedicated secert</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">sources-fitbit-refresh_token</span></code></p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>Create Service Account</strong>:</p>
+<ul class="simple">
+<li><p>Service account with BigQuery Admin and Secret Manager Secret Accessor roles</p></li>
+<li><p>Download JSON key file for GitHub Actions</p></li>
+</ul>
+</li>
+</ol>
+</section>
+<section id="local-development-setup">
+<h4>Local Development Setup<a class="headerlink" href="#local-development-setup" title="Link to this heading"></a></h4>
+<ol class="arabic">
+<li><p><strong>Clone and setup</strong>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>&lt;repository-url&gt;
+<span class="nb">cd</span><span class="w"> </span>personal-reporting-pipelines
+make<span class="w"> </span>install
+</pre></div>
+</div>
+</li>
+<li><p><strong>Configure credentials</strong>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set GCP project</span>
+gcloud<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span>project<span class="w"> </span>YOUR_PROJECT_ID
+
+<span class="c1"># Authenticate with GCP</span>
+gcloud<span class="w"> </span>auth<span class="w"> </span>application-default<span class="w"> </span>login
+</pre></div>
+</div>
+</li>
+<li><p><strong>Set environment variables</strong>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">GCP_PROJECT_ID</span><span class="o">=</span>your-project-id
+<span class="nb">export</span><span class="w"> </span><span class="nv">BIGQUERY_DATASET</span><span class="o">=</span>raw_data
+</pre></div>
+</div>
+</li>
+</ol>
+</section>
+<section id="github-actions-setup">
+<h4>GitHub Actions Setup<a class="headerlink" href="#github-actions-setup" title="Link to this heading"></a></h4>
+<ol class="arabic simple">
+<li><p><strong>Add repository secrets</strong>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">GOOGLE_APPLICATION_CREDENTIALS</span></code>: Service account JSON key</p></li>
+</ul>
+</li>
+<li><p><strong>Configure workflow schedules</strong> in <code class="docutils literal notranslate"><span class="pre">.github/workflows/</span></code>:</p>
+<ul class="simple">
+<li><p>Daily pipelines for HubSpot and Fitbit</p></li>
+<li><p>Weekly pipelines for Notion</p></li>
+<li><p>Manual triggers for full refresh scenarios</p></li>
+</ul>
+</li>
+</ol>
+</section>
+<section id="integrations">
+<h4>Integrations<a class="headerlink" href="#integrations" title="Link to this heading"></a></h4>
+<ol class="arabic simple">
+<li><p><strong>Google Cloud BigQuery</strong> - Data warehouse using <a class="reference external" href="https://docs.getdbt.com/reference/warehouse-profiles/bigquery-profile">dbt BigQuery adapter</a></p></li>
+<li><p><strong>GCP Secret Manager</strong> - Secure credential management for API keys and service accounts</p></li>
+</ol>
+</section>
+</section>
+<section id="pipeline-refresh-patterns">
+<h3>Pipeline Refresh Patterns<a class="headerlink" href="#pipeline-refresh-patterns" title="Link to this heading"></a></h3>
+<p>Your pipelines support flexible refresh modes for data loading:</p>
+<ul class="simple">
+<li><p><strong>Incremental (default)</strong>: Only loads new/changed data since last run</p></li>
+<li><p><strong>Full refresh</strong>: Completely reloads all data, useful for data quality issues or schema changes</p></li>
+</ul>
+<section id="how-to-trigger-full-refresh">
+<h4>How to Trigger Full Refresh<a class="headerlink" href="#how-to-trigger-full-refresh" title="Link to this heading"></a></h4>
+<section id="method-1-environment-variable-override-global">
+<h5>Method 1: Environment Variable Override (Global)<a class="headerlink" href="#method-1-environment-variable-override-global" title="Link to this heading"></a></h5>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">FORCE_FULL_REFRESH</span><span class="o">=</span><span class="nb">true</span>
+pipenv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>pipelines.hubspot
+</pre></div>
+</div>
+</section>
+<section id="method-2-pipeline-specific-override">
+<h5>Method 2: Pipeline-Specific Override<a class="headerlink" href="#method-2-pipeline-specific-override" title="Link to this heading"></a></h5>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Force full refresh for HubSpot only</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">PIPELINE_NAME</span><span class="o">=</span>HUBSPOT
+<span class="nb">export</span><span class="w"> </span><span class="nv">HUBSPOT_FULL_REFRESH</span><span class="o">=</span><span class="nb">true</span>
+pipenv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>pipelines.hubspot
+</pre></div>
+</div>
+</section>
+<section id="method-3-direct-function-parameter">
+<h5>Method 3: Direct Function Parameter<a class="headerlink" href="#method-3-direct-function-parameter" title="Link to this heading"></a></h5>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pipelines.hubspot</span><span class="w"> </span><span class="kn">import</span> <span class="n">refresh_hubspot</span>
+
+<span class="c1"># Force full refresh</span>
+<span class="n">refresh_hubspot</span><span class="p">(</span><span class="n">is_incremental</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="c1"># Use environment-based detection (default)</span>
+<span class="n">refresh_hubspot</span><span class="p">()</span>  <span class="c1"># or refresh_hubspot(is_incremental=None)</span>
+</pre></div>
+</div>
+</section>
+<section id="method-4-github-actions-integration">
+<h5>Method 4: GitHub Actions Integration<a class="headerlink" href="#method-4-github-actions-integration" title="Link to this heading"></a></h5>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># .github/workflows/hubspot-pipeline.yml</span>
+<span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">HubSpot Pipeline</span>
+<span class="nt">on</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">schedule</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">cron</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0</span><span class="nv"> </span><span class="s">2</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">*&#39;</span><span class="w">  </span><span class="c1"># Daily at 2 AM UTC</span>
+<span class="w">  </span><span class="nt">workflow_dispatch</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">inputs</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">force_full_refresh</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;Force</span><span class="nv"> </span><span class="s">full</span><span class="nv"> </span><span class="s">refresh&#39;</span>
+<span class="w">        </span><span class="nt">required</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">        </span><span class="nt">default</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;false&#39;</span>
+<span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">boolean</span>
+
+<span class="nt">jobs</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">run-pipeline</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">runs-on</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ubuntu-latest</span>
+<span class="w">    </span><span class="nt">steps</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Checkout code</span>
+<span class="w">        </span><span class="nt">uses</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">actions/checkout@v4</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Install dependencies</span>
+<span class="w">        </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">make install</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Run HubSpot Pipeline</span>
+<span class="w">        </span><span class="nt">env</span><span class="p">:</span>
+<span class="w">          </span><span class="nt">FORCE_FULL_REFRESH</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${{ inputs.force_full_refresh }}</span>
+<span class="w">        </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+<span class="w">          </span><span class="no">pipenv run python -m pipelines.hubspot</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="environment-variables-reference">
+<h4>Environment Variables Reference<a class="headerlink" href="#environment-variables-reference" title="Link to this heading"></a></h4>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Variable</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Example</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">FORCE_FULL_REFRESH</span></code></p></td>
+<td><p>Global override for all pipelines</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">FORCE_FULL_REFRESH=true</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PIPELINE_NAME</span></code></p></td>
+<td><p>Pipeline identifier for specific overrides</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">PIPELINE_NAME=HUBSPOT</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">{PIPELINE_NAME}_FULL_REFRESH</span></code></p></td>
+<td><p>Pipeline-specific full refresh flag</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">HUBSPOT_FULL_REFRESH=true</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="best-practices">
+<h4>Best Practices<a class="headerlink" href="#best-practices" title="Link to this heading"></a></h4>
+<ol class="arabic simple">
+<li><p><strong>Default to incremental</strong>: Always use incremental loading for regular operations</p></li>
+<li><p><strong>Use full refresh sparingly</strong>: Only when necessary for data quality or schema changes</p></li>
+<li><p><strong>Environment-based control</strong>: Use environment variables for production deployments</p></li>
+<li><p><strong>Logging</strong>: Always log the refresh mode being used for debugging</p></li>
+<li><p><strong>GitHub Actions integration</strong>: Use workflow inputs and environment variables to control refresh mode dynamically</p></li>
+<li><p><strong>Secret management</strong>: Store all credentials in GCP Secret Manager, never in code</p></li>
+<li><p><strong>Monitoring</strong>: Set up alerts for pipeline failures and data quality issues</p></li>
+</ol>
+</section>
+</section>
+<section id="development-and-testing">
+<h3>Development and Testing<a class="headerlink" href="#development-and-testing" title="Link to this heading"></a></h3>
+<section id="environments">
+<h4>Environments<a class="headerlink" href="#environments" title="Link to this heading"></a></h4>
+<ul class="simple">
+<li><p><strong>Development</strong>: Local development with GCP dev project</p></li>
+<li><p><strong>Staging</strong>: GitHub Actions testing environment</p></li>
+<li><p><strong>Production</strong>: Automated production pipelines via GitHub Actions</p></li>
+</ul>
+</section>
+<section id="local-development">
+<h4>Local Development<a class="headerlink" href="#local-development" title="Link to this heading"></a></h4>
+<ol class="arabic">
+<li><p><strong>Build Dev Container</strong> in VSCode, this will run <code class="docutils literal notranslate"><span class="pre">script/setup</span></code> to install dependencies</p></li>
+<li><p><strong>Run pipelines locally</strong> for testing:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pipenv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>pipelines.hubspot
+pipenv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>pipelines.fitbit
+pipenv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>pipelines.notion
+</pre></div>
+</div>
+</li>
+<li><p><strong>Test dbt models</strong>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>dbt/michael
+pipenv<span class="w"> </span>run<span class="w"> </span>dbt<span class="w"> </span>run<span class="w"> </span>--target<span class="w"> </span>dev
+pipenv<span class="w"> </span>run<span class="w"> </span>dbt<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--target<span class="w"> </span>dev
+</pre></div>
+</div>
+</li>
+</ol>
+</section>
+<section id="testing">
+<h4>Testing<a class="headerlink" href="#testing" title="Link to this heading"></a></h4>
+<ol class="arabic simple">
+<li><p><strong>Unit tests</strong> for pipeline functions and utilities</p></li>
+<li><p><strong>Integration tests</strong> for dlt sources and dbt models</p></li>
+<li><p><strong>End-to-end tests</strong> for complete pipeline execution</p></li>
+<li><p><strong>Data quality tests</strong> using dbt’s built-in testing framework</p></li>
+</ol>
+</section>
+<section id="dbt-development">
+<h4>dbt Development<a class="headerlink" href="#dbt-development" title="Link to this heading"></a></h4>
+<ol class="arabic simple">
+<li><p><strong>Open dbt project</strong> as root directory for SQLFluff and other utilities</p></li>
+<li><p><strong>Local profile</strong>: Copy BigQuery service account key to <code class="docutils literal notranslate"><span class="pre">~/.dbt/profiles.yml</span></code></p></li>
+<li><p><strong>Model development</strong>: Use <code class="docutils literal notranslate"><span class="pre">pipenv</span> <span class="pre">run</span> <span class="pre">dbt</span> <span class="pre">run</span> <span class="pre">--select</span> <span class="pre">model_name</span></code> for iterative development</p></li>
+<li><p><strong>Documentation</strong>: Generate with <code class="docutils literal notranslate"><span class="pre">pipenv</span> <span class="pre">run</span> <span class="pre">dbt</span> <span class="pre">docs</span> <span class="pre">generate</span></code> and <code class="docutils literal notranslate"><span class="pre">pipenv</span> <span class="pre">run</span> <span class="pre">dbt</span> <span class="pre">docs</span> <span class="pre">serve</span></code></p></li>
+</ol>
+</section>
+</section>
+<section id="github-actions-orchestration">
+<h3>GitHub Actions Orchestration<a class="headerlink" href="#github-actions-orchestration" title="Link to this heading"></a></h3>
+<section id="workflow-structure">
+<h4>Workflow Structure<a class="headerlink" href="#workflow-structure" title="Link to this heading"></a></h4>
+<p>The project uses GitHub Actions for automated pipeline execution:</p>
+<ul class="simple">
+<li><p><strong>Scheduled runs</strong>: Daily/weekly automated data ingestion</p></li>
+<li><p><strong>Manual triggers</strong>: On-demand pipeline execution with full refresh options</p></li>
+<li><p><strong>Pull request validation</strong>: Automated testing on code changes</p></li>
+<li><p><strong>Deployment</strong>: Automated deployment to production environment</p></li>
+</ul>
+</section>
+<section id="pipeline-workflows">
+<h4>Pipeline Workflows<a class="headerlink" href="#pipeline-workflows" title="Link to this heading"></a></h4>
+<ol class="arabic simple">
+<li><p><strong>HubSpot Pipeline</strong> (<code class="docutils literal notranslate"><span class="pre">.github/workflows/hubspot-pipeline.yml</span></code>)</p>
+<ul class="simple">
+<li><p>Daily execution at 2 AM UTC</p></li>
+<li><p>Manual trigger with full refresh option</p></li>
+<li><p>Uses <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">install</span></code> and <code class="docutils literal notranslate"><span class="pre">pipenv</span> <span class="pre">run</span> <span class="pre">python</span> <span class="pre">-m</span> <span class="pre">pipelines.hubspot</span></code></p></li>
+<li><p>dlt state files (<code class="docutils literal notranslate"><span class="pre">~/.dlt/**/state.json</span></code>) uploaded for debugging</p></li>
+</ul>
+</li>
+<li><p><strong>Fitbit Pipeline</strong> (<code class="docutils literal notranslate"><span class="pre">.github/workflows/fitbit-pipeline.yml</span></code>)</p>
+<ul class="simple">
+<li><p>Daily execution at 3 AM UTC</p></li>
+<li><p>Health data synchronization</p></li>
+<li><p>Uses <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">install</span></code> and <code class="docutils literal notranslate"><span class="pre">pipenv</span> <span class="pre">run</span> <span class="pre">python</span> <span class="pre">-m</span> <span class="pre">pipelines.fitbit</span></code></p></li>
+<li><p>dlt state files uploaded for debugging and monitoring</p></li>
+</ul>
+</li>
+<li><p><strong>Notion Pipeline</strong> (<code class="docutils literal notranslate"><span class="pre">.github/workflows/notion-pipeline.yml</span></code>)</p>
+<ul class="simple">
+<li><p>Weekly execution on Sundays at 9 AM UTC</p></li>
+<li><p>Habits and productivity data</p></li>
+<li><p>Uses <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">install</span></code> and <code class="docutils literal notranslate"><span class="pre">pipenv</span> <span class="pre">run</span> <span class="pre">python</span> <span class="pre">-m</span> <span class="pre">pipelines.notion</span></code></p></li>
+<li><p>dlt state files uploaded for data quality validation</p></li>
+</ul>
+</li>
+<li><p><strong>dbt Transform</strong> (<code class="docutils literal notranslate"><span class="pre">.github/workflows/dbt-transform.yml</span></code>)</p>
+<ul class="simple">
+<li><p>Daily execution at 4 AM UTC (after data ingestion)</p></li>
+<li><p>Automatically triggered after successful pipeline runs</p></li>
+<li><p>Runs dbt models, tests, and generates documentation</p></li>
+<li><p>Uses <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">install</span></code> and pipenv for dbt operations</p></li>
+</ul>
+</li>
+<li><p><strong>Pipeline Tests</strong> (<code class="docutils literal notranslate"><span class="pre">.github/workflows/pipeline-tests.yml</span></code>)</p>
+<ul class="simple">
+<li><p>Runs on pull requests and main branch pushes</p></li>
+<li><p>Executes <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">test</span></code> for comprehensive testing</p></li>
+<li><p>Uploads test coverage reports as artifacts</p></li>
+</ul>
+</li>
+</ol>
+</section>
+<section id="monitoring-and-alerts">
+<h4>Monitoring and Alerts<a class="headerlink" href="#monitoring-and-alerts" title="Link to this heading"></a></h4>
+<ul class="simple">
+<li><p><strong>Pipeline status</strong>: GitHub Actions workflow status monitoring</p></li>
+<li><p><strong>Data quality</strong>: dbt test results and alerts</p></li>
+<li><p><strong>Performance</strong>: Execution time tracking and optimization</p></li>
+<li><p><strong>Error handling</strong>: Automated retry logic and failure notifications</p></li>
+</ul>
+</section>
+<section id="dlt-logging-and-artifacts">
+<h4>dlt Logging and Artifacts<a class="headerlink" href="#dlt-logging-and-artifacts" title="Link to this heading"></a></h4>
+<p>dlt pipelines handle logging and artifacts differently than traditional applications:</p>
+<ul class="simple">
+<li><p><strong>Console logging</strong>: All pipeline output goes to stdout/stderr (captured by GitHub Actions)</p></li>
+<li><p><strong>Pipeline state</strong>: Stored in <code class="docutils literal notranslate"><span class="pre">~/.dlt/</span></code> folder (home directory) with metadata, progress, and state information</p></li>
+<li><p><strong>No log files</strong>: dlt doesn’t create separate log files in a <code class="docutils literal notranslate"><span class="pre">logs/</span></code> directory</p></li>
+<li><p><strong>Targeted artifacts</strong>: GitHub Actions uploads only <code class="docutils literal notranslate"><span class="pre">state.json</span></code> files for debugging and monitoring</p></li>
+<li><p><strong>Pipeline info</strong>: The <code class="docutils literal notranslate"><span class="pre">pipeline.run()</span></code> method returns execution information that gets logged</p></li>
+</ul>
+<p><strong>Note</strong>: The <code class="docutils literal notranslate"><span class="pre">~/.dlt/</span></code> folder location is dlt’s default behavior. You can customize this using the <code class="docutils literal notranslate"><span class="pre">DLT_DATA_DIR</span></code> environment variable if needed, but for GitHub Actions, the default home directory location works well.</p>
+</section>
+<section id="what-s-in-state-json-files">
+<h4>What’s in state.json Files<a class="headerlink" href="#what-s-in-state-json-files" title="Link to this heading"></a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">state.json</span></code> files contain essential pipeline information without the bulk of raw data:</p>
+<ul class="simple">
+<li><p><strong>Pipeline execution status</strong>: Success/failure states and timestamps</p></li>
+<li><p><strong>Resource progress</strong>: Which data sources were processed and their status</p></li>
+<li><p><strong>Incremental state</strong>: Cursor values and last processed timestamps</p></li>
+<li><p><strong>Error information</strong>: Any failures and their context</p></li>
+<li><p><strong>Schema changes</strong>: Data structure modifications detected during execution</p></li>
+</ul>
+<p>This targeted approach provides debugging insights while keeping artifact sizes manageable.</p>
+</section>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="project_overview.html" class="btn btn-neutral float-right" title="Project Overview" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Jules.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
