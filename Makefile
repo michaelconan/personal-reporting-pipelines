@@ -86,7 +86,7 @@ docs: ## Generate dbt and Sphinx documentation
 	@echo "Installing dbt dependencies..."
 	$(PIPENV) dbt deps --project-dir dbt --profiles-dir dbt
 	@echo "Generating dbt documentation..."
-	$(PIPENV) dbt docs generate --project-dir dbt --profiles-dir dbt --target-path ../target
+	$(PIPENV) dbt docs generate --project-dir dbt --profiles-dir dbt --target-path ../target --static
 	@echo "Building Sphinx documentation..."
 	$(PIPENV) sphinx-build -b html docs/source docs/_build/html
 	@echo "Copying dbt docs to Sphinx output..."
