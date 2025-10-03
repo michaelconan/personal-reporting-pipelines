@@ -3547,12 +3547,12 @@
         },
         "marimo": {
             "hashes": [
-                "sha256:6ed5c472368a56045007f5c6456b433ec59be15e6959e25469161e9f75f8d9b9",
-                "sha256:ce59bff2b7964a69faf65b20a57f3156ae845ddba364476720da89a3090670ef"
+                "sha256:2fdbc6cf30c8950aafe5db09e270851e0c13f49a079b9b3240f89bbe809e0728",
+                "sha256:55ac4b17bc517ed0fac414e44ab16a8b9998421d986cf889f8103bd9515edb71"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.9'",
-            "version": "==0.16.3"
+            "version": "==0.16.4"
         },
         "markdown": {
             "hashes": [
@@ -4112,7 +4112,6 @@
                 "sha256:7d4a113425c037300de3ac8b331637293da9be9713855c4fc9d2d97436d7259d",
                 "sha256:8c70e113920d51e89f212dd7be06219a9b88014e63a4cec69b684c327bc474e3"
             ],
-            "index": "pypi",
             "markers": "python_version >= '3.6'",
             "version": "==7.1.0"
         },
