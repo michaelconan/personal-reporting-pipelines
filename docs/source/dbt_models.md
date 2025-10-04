@@ -2,7 +2,7 @@
 
 This project uses dbt for data transformation. The dbt documentation, including model definitions and lineage, is available at the following link:
 
-[dbt Documentation](dbt/index.html)
+[dbt Documentation](dbt.html)
 
 ## dbt Development
 

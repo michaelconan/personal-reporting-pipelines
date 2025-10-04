@@ -69,6 +69,7 @@ clean: ## Remove Python cache files and temporary artifacts
 	@rm -rf htmlcov
 	@rm -rf build
 	@rm -rf dist
+	@rm -rf docs/_build
 	@rm -f test-results-*.xml
 	@echo "Cleanup complete!"
 
@@ -87,9 +88,10 @@ docs: ## Generate dbt and Sphinx documentation
 	$(PIPENV) dbt deps --project-dir dbt --profiles-dir dbt
 	@echo "Generating dbt documentation..."
 	$(PIPENV) dbt docs generate --project-dir dbt --profiles-dir dbt --target-path ../target --static
+	@cp target/static_index.html docs/source/dbt.html
 	@echo "Building Sphinx documentation..."
 	$(PIPENV) sphinx-build -b html docs/source docs/_build/html
 	@echo "Copying dbt docs to Sphinx output..."
 	@mkdir -p docs/_build/html/dbt
-	@cp -r target/* docs/_build/html/dbt/
+	@cp target/static_index.html docs/_build/html/dbt.html
 	@echo "Documentation available at docs/_build/html/index.html"

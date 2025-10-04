@@ -26,6 +26,11 @@ logs/
 
 # Sphinx
 docs/_build/
+docs/dbt.html
+
+.env
+.secrets/*.json
+.secrets/secrets.toml
 
 # IDE / Editor
 .vscode/
