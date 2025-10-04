@@ -8,6 +8,7 @@ Personal Reporting Documentation
    project_overview
    pipelines
    dbt_models
+   dbt
 
 .. include:: ../../README.md
    :parser: myst_parser.sphinx_

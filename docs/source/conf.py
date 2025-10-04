@@ -36,3 +36,6 @@ exclude_patterns = []
 
 html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
+
+# Copy additional files to the output directory
+html_extra_path = ["dbt.html"]
