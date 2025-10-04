@@ -1,5 +1,5 @@
-My Project Documentation
-========================
+Personal Reporting Documentation
+================================
 
 .. toctree::
    :maxdepth: 2
@@ -7,7 +7,7 @@ My Project Documentation
 
    project_overview
    pipelines
-   dbt
+   dbt_models
 
 .. include:: ../../README.md
    :parser: myst_parser.sphinx_
