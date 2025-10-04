@@ -26,7 +26,7 @@ logs/
 
 # Sphinx
 docs/_build/
-docs/dbt.html
+docs/source/dbt.html
 
 .env
 .secrets/*.json
