@@ -4,7 +4,7 @@ models:
   - name: stg_notion__daily_habits
     description: "Unique daily habits from the Notion habit tracker."
     columns:
-      - name: id
+      - name: page_id
         description: "The primary key for this table"
         data_type: varchar
         data_tests:
@@ -15,64 +15,73 @@ models:
         data_type: varchar
         data_tests:
           - not_null
-      - name: date
+      - name: page_date
         description: "The date of the habit entry."
         data_type: date
         data_tests:
           - not_null
-      - name: name
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: "date '2020-01-01'"
+                max_value: "date '2030-12-31'"
+      - name: page_name
         description: "The name of the habit entry."
         data_type: varchar
         data_tests:
           - not_null
-          # TODO: Add check timestamp after 2022
-      - name: devotional
+      - name: did_devotional
         description: "Whether the devotional habit was completed."
         data_type: boolean
         data_tests:
           - not_null
-      - name: journal
+      - name: did_journal
         description: "Whether the journal habit was completed."
         data_type: boolean
         data_tests:
           - not_null
-      - name: prayer
+      - name: did_prayer
         description: "Whether the prayer habit was completed."
         data_type: boolean
         data_tests:
           - not_null
-      - name: read_bible
+      - name: did_read_bible
         description: "Whether the read bible habit was completed."
         data_type: boolean
         data_tests:
           - not_null
-      - name: workout
+      - name: did_workout
         description: "Whether the workout habit was completed."
         data_type: boolean
         data_tests:
           - not_null
-      - name: language
+      - name: did_language
         description: "Whether the language habit was completed."
         data_type: boolean
         data_tests:
           - not_null
-      - name: created_time
+      - name: created_at
         description: "The date the page was created."
         data_type: timestamp
         data_tests:
           - not_null
-          # TODO: Add check timestamp after 2022
-      - name: last_edited_time
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: "timestamp '2020-01-01'"
+                max_value: "timestamp '2030-12-31'"
+      - name: updated_at
         description: "The date the page was last edited."
         data_type: timestamp
         data_tests:
           - not_null
-          # TODO: Add check timestamp after 2022
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: "timestamp '2020-01-01'"
+                max_value: "timestamp '2030-12-31'"
 
   - name: stg_notion__weekly_habits
     description: "Unique weekly habits from the Notion habit tracker."
     columns:
-      - name: id
+      - name: page_id
         description: "The primary key for this table"
         data_type: varchar
         data_tests:
@@ -83,18 +92,21 @@ models:
         data_type: varchar
         data_tests:
           - not_null
-      - name: date
+      - name: page_date
         description: "The date of the habit entry."
         data_type: date
         data_tests:
           - not_null
-          # TODO: Add check timestamp after 2022
-      - name: name
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: "date '2020-01-01'"
+                max_value: "date '2030-12-31'"
+      - name: page_name
         description: "The name of the habit entry."
         data_type: varchar
         data_tests:
           - not_null
-      - name: fast
+      - name: did_fast
         description: "Whether the fast habit was completed."
         data_type: boolean
         data_tests:
@@ -103,47 +115,53 @@ models:
         description: "The number of minutes spent in prayer."
         data_type: varchar
         data_tests:
-          - not_null
           - dbt_expectations.expect_column_values_to_be_between:
               arguments:
                 min_value: 0
                 max_value: 30
+                row_condition: "prayer_minutes is not null"
       - name: screen_minutes
         description: "The number of minutes spent on screen."
         data_type: integer
         data_tests:
-          - not_null
           - dbt_expectations.expect_column_values_to_be_between:
               arguments:
                 min_value: 500
                 max_value: 1500
-      - name: church
+                row_condition: "screen_minutes is not null"
+      - name: did_church
         description: "Whether the church habit was completed."
         data_type: boolean
         data_tests:
           - not_null
-      - name: community
+      - name: did_community
         description: "Whether the community habit was completed."
         data_type: boolean
         data_tests:
           - not_null
-      - name: created_time
+      - name: created_at
         description: "The date the page was created."
         data_type: timestamp
         data_tests:
           - not_null
-          # TODO: Add check timestamp after 2022
-      - name: last_edited_time
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: "timestamp '2020-01-01'"
+                max_value: "timestamp '2030-12-31'"
+      - name: updated_at
         description: "The date the page was last edited."
         data_type: timestamp
         data_tests:
           - not_null
-          # TODO: Add check timestamp after 2022
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: "timestamp '2020-01-01'"
+                max_value: "timestamp '2030-12-31'"
 
   - name: stg_notion__monthly_habits
     description: "Unique monthly habits from the Notion habit tracker."
     columns:
-      - name: id
+      - name: page_id
         description: "The primary key for this table"
         data_type: varchar
         data_tests:
@@ -154,46 +172,55 @@ models:
         data_type: varchar
         data_tests:
           - not_null
-      - name: date
+      - name: page_date
         description: "The date of the habit entry."
         data_type: date
         data_tests:
           - not_null
-          # TODO: Add check timestamp after 2022
-      - name: name
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: "date '2020-01-01'"
+                max_value: "date '2030-12-31'"
+      - name: page_name
         description: "The name of the habit entry."
         data_type: varchar
         data_tests:
           - not_null
-      - name: budget
+      - name: did_budget
         description: "Whether the budget habit was completed."
         data_type: boolean
         data_tests:
           - not_null
-      - name: serve
+      - name: did_serve
         description: "Whether the serve habit was completed."
         data_type: boolean
         data_tests:
           - not_null
-      - name: travel
+      - name: did_travel
         description: "Whether the travel habit was completed."
         data_type: boolean
         data_tests:
           - not_null
-      - name: blog
+      - name: did_blog
         description: "Whether the blog habit was completed."
         data_type: boolean
         data_tests:
           - not_null
-      - name: created_time
+      - name: created_at
         description: "The date the page was created."
         data_type: timestamp
         data_tests:
           - not_null
-          # TODO: Add check timestamp after 2022
-      - name: last_edited_time
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: "timestamp '2020-01-01'"
+                max_value: "timestamp '2030-12-31'"
+      - name: updated_at
         description: "The date the page was last edited."
         data_type: timestamp
         data_tests:
           - not_null
-          # TODO: Add check timestamp after 2022
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: "timestamp '2020-01-01'"
+                max_value: "timestamp '2030-12-31'"

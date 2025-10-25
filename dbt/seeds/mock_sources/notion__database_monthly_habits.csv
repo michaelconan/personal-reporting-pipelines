@@ -1,2 +1,2 @@
 parent__database_id,id,properties__date__date,properties__name__title,properties__budget__checkbox,properties__serve__checkbox,properties__travel__checkbox,properties__blog__checkbox,created_time,last_edited_time
-"db3","page3","2023-02-01","Month 1",true,true,true,true,"2023-02-01T00:00:00Z","2023-02-01T00:00:00Z"
+"db3","page3","{\"start\": \"2023-02-01\"}","Month 1",true,true,true,true,"2023-02-01T00:00:00Z","2023-02-01T00:00:00Z"

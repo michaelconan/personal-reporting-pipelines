@@ -1,21 +1,25 @@
 -- base model to remove duplicate engagements before creating junction tables
--- TODO: use dbt_utils macro to remove duplicates by id sorting by latest date rather than custom logic
-
 with engagements as (
 
     select
-        engagement__id as id,
+        engagement__id as engagement_id,
         engagement__type as engagement_type,
-        engagement__timestamp as engagement_timestamp,
+        {% if target.type == 'bigquery' %}
+            timestamp_millis(engagement__timestamp)
+        {% elif target.type == 'duckdb' %}
+            make_timestamp(cast(engagement__timestamp as bigint) * 1000000)
+        {% endif %}
+          as occurred_at,
         engagement__body_preview as body_preview,
         associations__company_ids as company_ids,
         associations__contact_ids as contact_ids,
-        engagement__created_at as created_at,
-        engagement__last_updated as last_updated,
-        row_number() over (
-            partition by engagement__id
-            order by engagement__last_updated desc
-        ) as row_num
+        {% if target.type == 'bigquery' %}
+            timestamp_millis(engagement__created_at)
+        {% elif target.type == 'duckdb' %}
+            make_timestamp(cast(engagement__created_at as bigint) * 1000000)
+        {% endif %}
+          as created_at,
+        engagement__last_updated as updated_at
     from
         {% if target.name == 'dev' %}
             {{ ref('hubspot__engagements') }}
@@ -23,10 +27,17 @@ with engagements as (
             {{ source('hubspot', 'engagements') }}
         {% endif %}
 
+),
+
+unique_engagements as (
+
+  {{ deduplicate(
+      relation='engagements',
+      partition_by='engagement_id',
+      order_by='updated_at desc',
+     )
+  }}
+
 )
 
-select *
-from
-    engagements
-where
-    row_num = 1
+select * from unique_engagements

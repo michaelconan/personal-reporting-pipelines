@@ -2,13 +2,13 @@
 with engagements as (
 
     select
-        id,
+        engagement_id,
         engagement_type,
         body_preview,
-        engagement_type in ('MEETING', 'CALL') as is_synchronous,
-        engagement_timestamp,
+        occurred_at,
         created_at,
-        last_updated as updated_at
+        updated_at,
+        engagement_type in ('MEETING', 'CALL') as is_synchronous
     from
         {{ ref('base_hubspot__engagements') }}
 

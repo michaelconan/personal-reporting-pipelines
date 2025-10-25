@@ -3,17 +3,13 @@
 with contacts as (
 
     select
-        id,
+        id as contact_id,
         properties__associatedcompanyid as company_id,
         properties__email as email,
         properties__firstname as first_name,
         properties__lastname as last_name,
         properties__createdate as created_at,
-        properties__lastmodifieddate as updated_at,
-        row_number() over (
-            partition by id
-            order by properties__lastmodifieddate desc
-        ) as row_num
+        properties__lastmodifieddate as updated_at
     from
         {% if target.name == 'dev' %}
             {{ ref('hubspot__contacts') }}
@@ -21,15 +17,17 @@ with contacts as (
             {{ source('hubspot', 'contacts') }}
         {% endif %}
 
+),
+
+unique_contacts as (
+
+  {{ deduplicate(
+      relation='contacts',
+      partition_by='contact_id',
+      order_by='updated_at desc',
+     )
+  }}
+
 )
 
-select
-    id,
-    company_id,
-    email,
-    first_name,
-    last_name,
-    created_at,
-    updated_at
-from contacts
-where row_num = 1
+select * from unique_contacts

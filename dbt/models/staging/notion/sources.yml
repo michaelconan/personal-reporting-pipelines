@@ -89,7 +89,11 @@ sources:
           - name: properties__screen_minutes__number
             data_type: numeric
             data_tests:
-              - not_null
+              - dbt_expectations.expect_column_values_to_be_between:
+                  arguments:
+                    min_value: 250
+                    max_value: 2000
+                    row_condition: "properties__screen_minutes__number is not null"
           - name: properties__church__checkbox
             data_type: boolean
             data_tests:

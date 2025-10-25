@@ -1,2 +1,2 @@
 parent__database_id,id,properties__date__date,properties__name__title,properties__fast__checkbox,properties__prayer_minutes__formula,properties__screen_minutes__number,properties__church__checkbox,properties__community__checkbox,created_time,last_edited_time
-"db2","page2","2023-01-08","Week 1",true,"30",120,true,true,"2023-01-08T00:00:00Z","2023-01-08T00:00:00Z"
+"db2","page2","{\"start\": \"2023-01-08\"}","Week 1",true,"{\"number\":20}",520,true,true,"2023-01-08T00:00:00Z","2023-01-08T00:00:00Z"

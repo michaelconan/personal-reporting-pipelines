@@ -1,10 +1,18 @@
-michael:
-  target: dev
+personal:
+  target: "{{ env_var('DBT_TARGET', 'dev') }}"
   outputs:
     dev:
       type: duckdb
       path: 'dbt.duckdb'
       schema: "{{ env_var('DBT_SCHEMA', 'reporting') }}"
+
+    test:
+      type: bigquery
+      method: service-account
+      project: "{{ env_var('GCP_PROJECT_ID') }}"
+      dataset: "test_{{ env_var('DBT_SCHEMA', 'reporting') }}"
+      threads: 4
+      keyfile: "{{ env_var('GOOGLE_APPLICATION_CREDENTIALS') }}"
 
     prod:
       type: bigquery

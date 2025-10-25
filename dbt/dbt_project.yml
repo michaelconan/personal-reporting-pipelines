@@ -2,7 +2,7 @@
 name: 'personal'
 version: '1.0.0'
 
-profile: 'michael'
+profile: 'personal'
 
 model-paths: ["models"]
 analysis-paths: ["analyses"]
@@ -19,14 +19,23 @@ clean-targets:         # directories to be removed by `dbt clean`
 # Configuring models
 # Full documentation: https://docs.getdbt.com/docs/configuring-models
 models:
-  staging:
-    +materialized: view
-    
+  personal:
+    +persist_docs:
+      relation: true
+      columns: true
+    staging:
+      +materialized: view
+
+sources:
+  personal:
+    staging:
+      +enabled: "{{ target.name != 'dev' }}"
 
 seeds:
-  mock_sources:
-    +tags: ["local"]
-    +enabled: "{{ target.name == 'dev' }}"
+  personal:
+    mock_sources:
+      +tags: ["local"]
+      +enabled: "{{ target.name == 'dev' }}"
 
 vars:
   'dbt_date:time_zone': 'UTC'

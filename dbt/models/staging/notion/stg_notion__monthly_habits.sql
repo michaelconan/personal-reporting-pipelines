@@ -1,41 +1,36 @@
--- TODO: use dbt_utils macro to remove duplicates by id sorting by latest date rather than custom logic
-with monthly_habit as (
+-- staging model for notion monthly habit data
+with monthly_habits as (
 
     select
         parent__database_id as database_id,
-        id,
-        properties__date__date as date,
-        properties__name__title as name,
-        properties__budget__checkbox as budget,
-        properties__serve__checkbox as serve,
-        properties__travel__checkbox as travel,
-        properties__blog__checkbox as blog,
-        created_time,
-        last_edited_time,
-        row_number() over (
-            partition by id
-            order by last_edited_time desc
-        ) as row_num
+        id as page_id,
+        cast(left({{ json_extract_value('properties__date__date', "'$.start'") }}, 10) as date)
+          as page_date,
+        properties__name__title as page_name,
+        properties__budget__checkbox as did_budget,
+        properties__serve__checkbox as did_serve,
+        properties__travel__checkbox as did_travel,
+        properties__blog__checkbox as did_blog,
+        created_time as created_at,
+        last_edited_time as updated_at
         from
-        {% if target.name == 'dev' %}
-            {{ ref('notion__database_monthly_habits') }}
-        {% else %}
-            {{ source('notion', 'database_monthly_habits') }}
-        {% endif %}
+            {% if target.name == 'dev' %}
+                {{ ref('notion__database_monthly_habits') }}
+            {% else %}
+                {{ source('notion', 'database_monthly_habits') }}
+            {% endif %}
+
+),
+
+unique_monthly_habits as (
+
+  {{ deduplicate(
+      relation='monthly_habits',
+      partition_by='page_id',
+      order_by='updated_at desc',
+     )
+  }}
 
 )
-select
-    database_id,
-    id,
-    date,
-    name,
-    budget,
-    serve,
-    travel,
-    blog,
-    created_time,
-    last_edited_time
-from
-    monthly_habit
-where
-    row_num = 1
+
+select * from unique_monthly_habits

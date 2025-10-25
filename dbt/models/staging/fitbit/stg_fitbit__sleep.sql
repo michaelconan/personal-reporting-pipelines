@@ -1,19 +1,17 @@
+-- staging model from fitbit sleep data
 with sleep as (
 
     select
         log_id,
         date_of_sleep,
-        duration,
-        start_time,
-        end_time,
-        "type",
+        duration as duration_ms,
+        duration / 3600000 as duration_hr,
+        start_time as started_at,
+        end_time as ended_at,
+        type as sleep_type,
         log_type,
         -- Check if duration exceeded set goal
-        duration >= {{ var('sleep_goal') }} as sleep_goal_met,
-        row_number() over (
-            partition by log_id
-            order by date_of_sleep desc
-        ) as row_num
+        duration >= {{ var('sleep_goal') }} as sleep_goal_met
     from
         {% if target.name == 'dev' %}
             {{ ref('fitbit__sleep') }}
@@ -21,18 +19,17 @@ with sleep as (
             {{ source('fitbit', 'sleep') }}
         {% endif %}
 
+),
+
+unique_sleep as (
+
+  {{ deduplicate(
+      relation='sleep',
+      partition_by='log_id',
+      order_by='date_of_sleep desc',
+     )
+  }}
+
 )
 
-select
-    log_id,
-    date_of_sleep,
-    duration,
-    start_time,
-    end_time,
-    "type",
-    log_type,
-    sleep_goal_met
-from
-    sleep
-where
-    row_num = 1
+select * from unique_sleep

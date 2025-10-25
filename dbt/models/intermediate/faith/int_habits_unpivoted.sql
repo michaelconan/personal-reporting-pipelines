@@ -1,68 +1,74 @@
-with daily_habit_unpivoted as (
+with daily_habits_unpivoted as (
 
     select
+        {{ dbt_utils.generate_surrogate_key(['page_id', 'habit']) }} as row_id,
+        'day' as habit_period,
         database_id,
-        id,
-        "date",
-        "name",
+        page_id,
+        page_date,
+        page_name,
         habit,
         is_complete,
-        created_time,
-        last_edited_time
+        created_at,
+        updated_at
     from {{ ref('stg_notion__daily_habits') }}
     unpivot (
         is_complete for habit in (
-            devotional, journal, prayer, read_bible, workout, language
+            did_devotional, did_journal, did_prayer, did_read_bible, did_workout, did_language
         )
     )
 
 ),
 
-weekly_habit_unpivoted as (
+weekly_habits_unpivoted as (
 
     select
+        {{ dbt_utils.generate_surrogate_key(['page_id', 'habit']) }} as row_id,
+        'week' as habit_period,
         database_id,
-        id,
-        "date",
-        "name",
+        page_id,
+        page_date,
+        page_name,
         habit,
         is_complete,
-        created_time,
-        last_edited_time
+        created_at,
+        updated_at
     from {{ ref('stg_notion__weekly_habits') }}
     unpivot (
         is_complete for habit in (
-            community, fast, church
+            did_community, did_fast, did_church
         )
     )
 
 ),
 
-monthly_habit_unpivoted as (
+monthly_habits_unpivoted as (
 
     select
+        {{ dbt_utils.generate_surrogate_key(['page_id', 'habit']) }} as row_id,
+        'month' as habit_period,
         database_id,
-        id,
-        "date",
-        "name",
+        page_id,
+        page_date,
+        page_name,
         habit,
         is_complete,
-        created_time,
-        last_edited_time
+        created_at,
+        updated_at
     from {{ ref('stg_notion__monthly_habits') }}
     unpivot (
         is_complete for habit in (
-            serve, travel, budget, blog
+            did_serve, did_travel, did_budget, did_blog
         )
     )
 
 )
 
 select *
-from daily_habit_unpivoted
+from daily_habits_unpivoted
 union all
 select *
-from weekly_habit_unpivoted
+from weekly_habits_unpivoted
 union all
 select *
-from monthly_habit_unpivoted
+from monthly_habits_unpivoted

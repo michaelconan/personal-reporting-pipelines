@@ -25,6 +25,7 @@ sphinx = "*"
 sphinx-rtd-theme = "*"
 myst-parser = "*"
 sphinx-autoapi = "*"
+dbt-coverage = "*"
 
 [requires]
 python_version = "3.12"
