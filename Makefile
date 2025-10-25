@@ -121,5 +121,5 @@ docs: dbt-deps dbt-docs
 	$(PIPENV) sphinx-build -b html docs/source docs/_build/html
 	@echo "Copying dbt docs to Sphinx output..."
 	@mkdir -p docs/_build/html/dbt
-	@cp target/static_index.html docs/_build/html/dbt.html
+	@cp dbt/target/static_index.html docs/_build/html/dbt.html
 	@echo "Documentation available at docs/_build/html/index.html"
