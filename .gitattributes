@@ -1,3 +1,2 @@
 * text=auto
-*.py eol=lf
-script/* eol=lf
+*.py *.md *.rst *.json *.yaml *.yml *.toml *.mdc eol=lf

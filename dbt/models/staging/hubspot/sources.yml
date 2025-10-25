@@ -97,12 +97,12 @@ sources:
                     values: ["CALL", "WHATS_APP", "MEETING", "SMS", "EMAIL", "LINKEDIN_MESSAGE", "NOTE", "TASK"]
           - name: engagement__timestamp
             description: "The timestamp of the engagement."
-            data_type: timestamp
+            data_type: bigint
             data_tests:
               - dbt_expectations.expect_column_values_to_be_between:
                   arguments:
-                    min_value: "timestamp '2023-01-01'"
-                    max_value: "timestamp '2030-01-01'"
+                    min_value: 1577836800000    # 2020-01-01
+                    max_value: 1924905600000    # 2030-12-31
           - name: associations__contact_ids
             description: "The IDs of the contact associated with an engagement."
             data_type: varchar
@@ -121,5 +121,3 @@ sources:
                   arguments:
                     min_value: 0
                     max_value: 10
-                  config:
-                    enabled: "{{ target.type != 'duckdb' }}"

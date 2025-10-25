@@ -1,0 +1,57 @@
+version: 2
+
+models:
+  - name: base_hubspot__engagements
+    description: "Base model for HubSpot engagements with deduplication applied. Removes duplicate engagements before creating junction tables."
+    columns:
+      - name: engagement_id
+        description: "The unique identifier for the engagement."
+        data_type: integer
+        data_tests:
+          - not_null
+          - unique
+      - name: engagement_type
+        description: "The type of the engagement (e.g., call, email, meeting)."
+        data_type: varchar
+        data_tests:
+          - not_null
+      - name: occurred_at
+        description: "The timestamp when the engagement occurred."
+        data_type: timestamp
+        data_tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: "timestamp '2020-01-01'"
+                max_value: "timestamp '2030-12-31'"
+      - name: body_preview
+        description: "A preview of the engagement body content."
+        data_type: varchar
+      - name: company_ids
+        description: "Array of company IDs associated with this engagement."
+        data_type: array
+        data_tests:
+          - not_null
+      - name: contact_ids
+        description: "Array of contact IDs associated with this engagement."
+        data_type: array
+        data_tests:
+          - not_null
+      - name: created_at
+        description: "The timestamp when the engagement was created in HubSpot."
+        data_type: timestamp
+        data_tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: "timestamp '2020-01-01'"
+                max_value: "timestamp '2030-12-31'"
+      - name: updated_at
+        description: "The timestamp when the engagement was last updated in HubSpot."
+        data_type: timestamp
+        data_tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: "timestamp '2020-01-01'"
+                max_value: "timestamp '2030-12-31'"

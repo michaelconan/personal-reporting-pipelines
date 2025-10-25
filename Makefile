@@ -7,6 +7,7 @@ PYTEST = $(PIPENV) pytest \
 	--cov=pipelines \
 	--cov-append \
 	-v -s
+DBTARGS = --project-dir dbt --profiles-dir dbt
 
 # Default target
 .DEFAULT_GOAL := help
@@ -78,16 +79,36 @@ dlt-clean: ## Clean DLT-specific files and data
 	@rm -rf ~/.dlt
 	@rm -f *.duckdb
 
-.PHONY: dbt-build
-dbt-build: ## Run dbt build (seed, run, test)
-	$(PIPENV) dbt build --project-dir dbt --profiles-dir dbt
+.PHONY: dbt-deps
+dbt-deps:
+	$(PIPENV) dbt deps $(DBTARGS)
+
+.PHONY: dbt-build-dev
+dbt-build-dev:
+	@DBT_TARGET=dev $(PIPENV) dbt build $(DBTARGS)
+
+.PHONY: dbt-build-test
+dbt-build-test:
+	@DBT_TARGET=test RAW_SCHEMA=test_raw $(PIPENV) dbt build $(DBTARGS)
+
+.PHONY: dbt-build-prod
+dbt-build-prod:
+	@DBT_TARGET=prod $(PIPENV) dbt build $(DBTARGS)
+
+.PHONY: dbt-doc-coverage
+dbt-doc-coverage:
+	$(PIPENV) dbt-coverage compute doc --run-artifacts-dir dbt/target --cov-format markdown
+
+.PHONY: dbt-test-coverage
+dbt-test-coverage:
+	$(PIPENV) dbt-coverage compute test --run-artifacts-dir dbt/target --cov-format markdown
 
 .PHONY: docs
 docs: ## Generate dbt and Sphinx documentation
 	@echo "Installing dbt dependencies..."
-	$(PIPENV) dbt deps --project-dir dbt --profiles-dir dbt
+	$(PIPENV) dbt deps $(DBTARGS)
 	@echo "Generating dbt documentation..."
-	$(PIPENV) dbt docs generate --project-dir dbt --profiles-dir dbt --target-path ../target --static
+	$(PIPENV) dbt docs generate $(DBTARGS) --target-path ../target --static
 	@cp target/static_index.html docs/source/dbt.html
 	@echo "Building Sphinx documentation..."
 	$(PIPENV) sphinx-build -b html docs/source docs/_build/html

@@ -1,0 +1,12 @@
+version: 2
+
+macros:
+  - name: json_extract_value
+    description: "Cross-database macro to extract scalar values from JSON columns. Uses json_extract_scalar for BigQuery and json_extract_string for DuckDB."
+    arguments:
+      - name: column_name
+        description: "The name of the JSON column to extract from"
+        type: string
+      - name: json_path
+        description: "The JSONPath expression to extract the value (e.g., '$.property_name')"
+        type: string

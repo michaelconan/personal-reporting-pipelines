@@ -1,6 +1,8 @@
-name: Test Pipelines
+name: test dlt pipelines
 on:
   pull_request:
+    branches:
+      - main
     paths:
       - 'pipelines/**'
       - 'tests/**'
@@ -34,11 +36,7 @@ jobs:
         with:
           python-version: '3.12'
           
-      - name: Install pipenv
-        run: |
-          pip install pipenv
-          
-      - name: Install dependencies
+      - name: Install pipenv and dependencies
         run: |
           make install
           

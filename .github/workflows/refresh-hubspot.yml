@@ -29,11 +29,7 @@ jobs:
         with:
           python-version: '3.12'
           
-      - name: Install pipenv
-        run: |
-          pip install pipenv
-          
-      - name: Install dependencies
+      - name: Install pipenv and dependencies
         run: |
           make install
           
