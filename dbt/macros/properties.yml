@@ -1,0 +1,25 @@
+version: 2
+
+macros:
+  - name: json_extract_value
+    description: "Cross-database macro to extract scalar values from JSON columns. Uses json_extract_scalar for BigQuery and json_extract_string for DuckDB."
+    arguments:
+      - name: column_name
+        description: "The name of the JSON column to extract from"
+        type: string
+      - name: json_path
+        description: "The JSONPath expression to extract the value (e.g., '$.property_name')"
+        type: string
+
+  - name: deduplicate
+    description: "Override of dbt_utils.deduplicate that adds DuckDB support using the QUALIFY clause with ROW_NUMBER(). For non-DuckDB adapters, delegates to the original dbt_utils implementation."
+    arguments:
+      - name: relation
+        description: "The relation (table or CTE) to deduplicate"
+        type: relation
+      - name: partition_by
+        description: "Column(s) to partition by for deduplication (e.g., 'id' or 'user_id, date')"
+        type: string
+      - name: order_by
+        description: "Column(s) to order by within each partition to determine which row to keep (e.g., 'updated_at desc')"
+        type: string

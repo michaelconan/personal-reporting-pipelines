@@ -46,13 +46,17 @@ seeds:
       - name: properties__lastmodifieddate
         data_type: timestamp
   - name: hubspot__engagements
+    config:
+      quote_columns: false
+      delimiter: ","
+      header: true
     columns:
       - name: engagement__id
         data_type: integer
       - name: engagement__type
         data_type: varchar
       - name: engagement__timestamp
-        data_type: timestamp
+        data_type: integer
       - name: engagement__body_preview
         data_type: varchar
       - name: associations__company_ids
@@ -60,7 +64,7 @@ seeds:
       - name: associations__contact_ids
         data_type: varchar
       - name: engagement__created_at
-        data_type: timestamp
+        data_type: integer
       - name: engagement__last_updated
         data_type: timestamp
   - name: notion__database_daily_habits
@@ -74,7 +78,7 @@ seeds:
         data_tests:
           - not_null
       - name: properties__date__date
-        data_type: date
+        data_type: json
         data_tests:
           - not_null
       - name: properties__name__title
@@ -124,7 +128,7 @@ seeds:
         data_tests:
           - not_null
       - name: properties__date__date
-        data_type: date
+        data_type: json
         data_tests:
           - not_null
       - name: properties__name__title
@@ -136,7 +140,7 @@ seeds:
         data_tests:
           - not_null
       - name: properties__prayer_minutes__formula
-        data_type: varchar
+        data_type: json
         data_tests:
           - not_null
       - name: properties__screen_minutes__number
@@ -170,7 +174,7 @@ seeds:
         data_tests:
           - not_null
       - name: properties__date__date
-        data_type: date
+        data_type: json
         data_tests:
           - not_null
       - name: properties__name__title

@@ -5,7 +5,9 @@ services like Google Cloud and BigQuery.
 """
 
 # base imports
+from nt import pipe
 import os
+import logging
 
 # PyPI imports
 import pytest
@@ -53,7 +55,11 @@ def bigquery_pipeline() -> dlt.Pipeline:
         dataset_name="live_data",
         dev_mode=True,
     )
+    logging.info(
+        f"Running pipeline: {pipeline.pipeline_name} with dataset: {pipeline.dataset_name}"
+    )
     yield pipeline
+
     # Cleanup
     pipeline.drop()
     with pipeline.sql_client() as client:

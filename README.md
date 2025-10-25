@@ -165,7 +165,7 @@ The project follows modern data engineering best practices with clear separation
 3. **Set environment variables**:
    ```bash
    export GCP_PROJECT_ID=your-project-id
-   export BIGQUERY_DATASET=raw_data
+   export RAW_SCHEMA_NAME=raw_data
    ```
 
 ### GitHub Actions Setup

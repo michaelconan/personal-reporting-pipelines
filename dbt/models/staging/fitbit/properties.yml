@@ -3,6 +3,19 @@ version: 2
 models:
   - name: stg_fitbit__sleep
     description: "Staging model for fitbit sleep data."
+    data_tests:
+      # Confirm no sleep logs overlap, indicates system-level error
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: |
+              not exists (
+                select 1
+                from {{ ref('stg_fitbit__sleep') }} s1
+                join {{ ref('stg_fitbit__sleep') }} s2 
+                on s1.log_id != s2.log_id
+                where s1.started_at < s2.ended_at
+                  and s1.ended_at > s2.started_at
+              )
     columns:
       - name: log_id
         description: "The primary key for this table"
@@ -13,21 +26,56 @@ models:
       - name: date_of_sleep
         description: "The date of the sleep log."
         data_type: date
-      - name: duration
+        data_tests:
+          - not_null
+      - name: duration_ms
         description: "The duration of the sleep in milliseconds."
         data_type: integer
-      - name: start_time
+        data_tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 7200000    # 2 hours
+                max_value: 43200000   # 12 hours
+      - name: duration_hr
+        description: "The duration of the sleep in hours."
+        data_type: float
+        data_tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 2    # 2 hours
+                max_value: 12   # 12 hours
+      - name: started_at
         description: "The start time of the sleep."
         data_type: timestamp
-      - name: end_time
+        data_tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: "timestamp '2019-01-01'"
+                max_value: "timestamp '2030-12-31'"
+      - name: ended_at
         description: "The end time of the sleep."
         data_type: timestamp
-      - name: type
+        data_tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: "timestamp '2020-01-01'"
+                max_value: "timestamp '2030-12-31'"
+      - name: sleep_type
         description: "The type of the sleep log."
         data_type: varchar
+        data_tests:
+          - not_null
       - name: log_type
         description: "The type of the log."
         data_type: varchar
+        data_tests:
+          - not_null
       - name: sleep_goal_met
         description: "Whether the sleep goal was met."
         data_type: boolean
+        data_tests:
+          - not_null

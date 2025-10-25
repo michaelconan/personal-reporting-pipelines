@@ -1,2 +1,2 @@
 parent__database_id,id,properties__date__date,properties__name__title,properties__devotional__checkbox,properties__journal__checkbox,properties__prayer__checkbox,properties__read_bible__checkbox,properties__workout__checkbox,properties__language__checkbox,created_time,last_edited_time
-"db1","page1","2023-01-02","Day 1",true,true,true,true,true,true,"2023-01-01T00:00:00Z","2023-01-01T00:00:00Z"
+"db1","page1","{\"start\": \"2023-01-02\"}","Day 1",true,true,true,true,true,true,"2023-01-01T00:00:00Z","2023-01-01T00:00:00Z"
