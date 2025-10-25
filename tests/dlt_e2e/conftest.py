@@ -5,7 +5,6 @@ services like Google Cloud and BigQuery.
 """
 
 # base imports
-from nt import pipe
 import os
 import logging
 
