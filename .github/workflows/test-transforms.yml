@@ -36,9 +36,13 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Install pipenv and dependencies
+        run: |
+          make install
+          make dbt-deps
+
       - name: run local tests
         run: |
-          make dbt-deps
           make dbt-build-dev
 
       - name: compute coverage

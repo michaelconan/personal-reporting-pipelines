@@ -32,6 +32,7 @@ jobs:
       - name: install pipenv and dependencies
         run: |
           make install
+          make dbt-deps
           
       - name: write keyfile
         run: |
@@ -41,7 +42,6 @@ jobs:
 
       - name: run dbt build
         run: |
-          make dbt-deps
           make dbt-build-prod
           
       - name: Remove keyfile
