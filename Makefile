@@ -97,11 +97,11 @@ dbt-build-prod:
 
 .PHONY: dbt-doc-coverage
 dbt-doc-coverage:
-	$(PIPENV) dbt-coverage compute doc --run-artifacts-dir dbt/target --cov-format markdown
+	$(PIPENV) dbt-coverage compute doc --run-artifacts-dir dbt/target --output-format markdown
 
 .PHONY: dbt-test-coverage
 dbt-test-coverage:
-	$(PIPENV) dbt-coverage compute test --run-artifacts-dir dbt/target --cov-format markdown
+	$(PIPENV) dbt-coverage compute test --run-artifacts-dir dbt/target --output-format markdown
 
 .PHONY: docs
 docs: ## Generate dbt and Sphinx documentation
