@@ -81,19 +81,28 @@ dlt-clean: ## Clean DLT-specific files and data
 
 .PHONY: dbt-deps
 dbt-deps:
+	@echo "Installing dbt dependencies..."
 	$(PIPENV) dbt deps $(DBTARGS)
 
 .PHONY: dbt-build-dev
 dbt-build-dev:
+	@echo "Building dbt project with dev target..."
 	@DBT_TARGET=dev $(PIPENV) dbt build $(DBTARGS)
 
 .PHONY: dbt-build-test
 dbt-build-test:
+	@echo "Building dbt project with test target..."
 	@DBT_TARGET=test RAW_SCHEMA=test_raw $(PIPENV) dbt build $(DBTARGS)
 
 .PHONY: dbt-build-prod
 dbt-build-prod:
+	@echo "Building dbt project with prod target..."
 	@DBT_TARGET=prod $(PIPENV) dbt build $(DBTARGS)
+
+.PHONY: dbt-docs
+dbt-docs:
+	@echo "Generating dbt documentation..."
+	$(PIPENV) dbt docs generate $(DBTARGS) --static
 
 .PHONY: dbt-doc-coverage
 dbt-doc-coverage:
@@ -103,13 +112,11 @@ dbt-doc-coverage:
 dbt-test-coverage:
 	$(PIPENV) dbt-coverage compute test --run-artifacts-dir dbt/target --output-format markdown
 
+## Generate dbt and Sphinx documentation
 .PHONY: docs
-docs: ## Generate dbt and Sphinx documentation
-	@echo "Installing dbt dependencies..."
-	$(PIPENV) dbt deps $(DBTARGS)
-	@echo "Generating dbt documentation..."
-	$(PIPENV) dbt docs generate $(DBTARGS) --target-path ../target --static
-	@cp target/static_index.html docs/source/dbt.html
+docs: dbt-deps dbt-docs
+	@echo "Consolidating documentation..."
+	@cp dbt/target/static_index.html docs/source/dbt.html
 	@echo "Building Sphinx documentation..."
 	$(PIPENV) sphinx-build -b html docs/source docs/_build/html
 	@echo "Copying dbt docs to Sphinx output..."

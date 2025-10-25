@@ -41,9 +41,10 @@ jobs:
           make install
           make dbt-deps
 
-      - name: run local tests
+      - name: run local tests and docs
         run: |
           make dbt-build-dev
+          make dbt-docs
 
       - name: compute coverage
         id: coverage
