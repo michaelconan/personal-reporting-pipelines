@@ -1,0 +1,45 @@
+version: 2
+
+models:
+  - name: engagements
+    description: "Mart table of HubSpot engagements joined with contact and company information."
+    versions:
+      - v: v1
+        defined_in: engagements_v1
+    columns:
+      - name: engagement_id
+        description: "The unique identifier for the engagement"
+        data_type: varchar
+        data_tests:
+          - not_null
+          - unique
+      - name: engagement_type
+        description: "The type of engagement (e.g., email, call, meeting)"
+        data_type: varchar
+        data_tests:
+          - not_null
+      - name: body_preview
+        description: "A preview of the engagement body/content"
+        data_type: varchar
+      - name: occurred_at
+        description: "The timestamp when the engagement occurred"
+        data_type: timestamp
+        data_tests:
+          - not_null
+      - name: is_synchronous
+        description: "Whether the engagement was synchronous (e.g., call or meeting)"
+        data_type: boolean
+        data_tests:
+          - not_null
+      - name: contact_id
+        description: "The unique identifier for the contact involved in the engagement"
+        data_type: integer
+      - name: first_name
+        description: "The first name of the contact"
+        data_type: varchar
+      - name: last_name
+        description: "The last name of the contact"
+        data_type: varchar
+      - name: company_name
+        description: "The name of the company associated with the contact"
+        data_type: varchar

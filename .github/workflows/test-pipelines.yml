@@ -24,41 +24,41 @@ jobs:
     timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
-      - name: Set environment variables
+      - name: set environment variables
         run: |
           echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/sa_key.json" >> $GITHUB_ENV
           
-      - name: Checkout code
+      - name: checkout code
         uses: actions/checkout@v4
         
-      - name: Set up Python 3.12
+      - name: set up python 3.12
         uses: actions/setup-python@v4
         with:
           python-version: '3.12'
           
-      - name: Install pipenv and dependencies
+      - name: install pipenv and dependencies
         run: |
           make install
           
-      - name: Write keyfile
+      - name: write keyfile
         run: |
           cat << 'EOF' > $GOOGLE_APPLICATION_CREDENTIALS
           ${{ secrets.GCP_SVC_KEY }}
           EOF
 
-      - name: Run tests
+      - name: run tests
         id: run_tests
         env:
           RUNTIME__LOG_LEVEL: "INFO"
         run: |
           make test-all
 
-      - name: Remove keyfile
+      - name: remove keyfile
         if: always()
         run: |
           rm $GOOGLE_APPLICATION_CREDENTIALS
           
-      - name: Upload coverage reports to Codecov
+      - name: upload coverage reports to Codecov
         if: steps.run_tests.outcome != 'skipped'
         uses: codecov/codecov-action@v5
         with:
@@ -68,7 +68,7 @@ jobs:
           name: codecov-umbrella
           fail_ci_if_error: true
           
-      - name: Upload test results to Codecov
+      - name: upload test results to Codecov
         if: steps.run_tests.outcome != 'skipped'
         uses: codecov/test-results-action@v1
         with:

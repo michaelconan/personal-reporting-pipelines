@@ -26,7 +26,7 @@ with companies as (
 
 unique_companies as (
 
-  {{ deduplicate(
+  {{ dbt_utils.deduplicate(
       relation='companies',
       partition_by='company_id',
       order_by='updated_at desc',

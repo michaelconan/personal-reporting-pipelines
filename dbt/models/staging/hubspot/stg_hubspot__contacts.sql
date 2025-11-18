@@ -21,7 +21,7 @@ with contacts as (
 
 unique_contacts as (
 
-  {{ deduplicate(
+  {{ dbt_utils.deduplicate(
       relation='contacts',
       partition_by='contact_id',
       order_by='updated_at desc',

@@ -10,16 +10,13 @@ macros:
       - name: json_path
         description: "The JSONPath expression to extract the value (e.g., '$.property_name')"
         type: string
-
-  - name: deduplicate
-    description: "Override of dbt_utils.deduplicate that adds DuckDB support using the QUALIFY clause with ROW_NUMBER(). For non-DuckDB adapters, delegates to the original dbt_utils implementation."
+  
+  - name: trunc_date
+    description: "Adapter-aware macro that truncates timestamps/dates to a specified part (e.g., 'month', 'year'). Pass the part as a quoted literal (for example: 'month'). BigQuery and DuckDB implementations are handled via adapter dispatch."
     arguments:
-      - name: relation
-        description: "The relation (table or CTE) to deduplicate"
-        type: relation
-      - name: partition_by
-        description: "Column(s) to partition by for deduplication (e.g., 'id' or 'user_id, date')"
+      - name: part
+        description: "The part to truncate to (e.g., 'year', 'month', 'day'). Must be passed as a quoted literal."
         type: string
-      - name: order_by
-        description: "Column(s) to order by within each partition to determine which row to keep (e.g., 'updated_at desc')"
+      - name: column
+        description: "The timestamp or date column/expression to truncate."
         type: string

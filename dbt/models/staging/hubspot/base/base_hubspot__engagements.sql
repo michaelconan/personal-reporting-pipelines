@@ -31,7 +31,7 @@ with engagements as (
 
 unique_engagements as (
 
-  {{ deduplicate(
+  {{ dbt_utils.deduplicate(
       relation='engagements',
       partition_by='engagement_id',
       order_by='updated_at desc',
