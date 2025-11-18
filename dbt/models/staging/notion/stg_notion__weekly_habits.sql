@@ -24,7 +24,7 @@ with weekly_habits as (
 
 unique_weekly_habits as (
 
-  {{ deduplicate(
+  {{ dbt_utils.deduplicate(
       relation='weekly_habits',
       partition_by='page_id',
       order_by='updated_at desc',

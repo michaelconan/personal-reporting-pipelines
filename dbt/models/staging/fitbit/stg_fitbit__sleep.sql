@@ -3,7 +3,7 @@ with sleep as (
 
     select
         log_id,
-        date_of_sleep,
+        cast(date_of_sleep as date) as date_of_sleep,
         duration as duration_ms,
         duration / 3600000 as duration_hr,
         start_time as started_at,
@@ -23,7 +23,7 @@ with sleep as (
 
 unique_sleep as (
 
-  {{ deduplicate(
+  {{ dbt_utils.deduplicate(
       relation='sleep',
       partition_by='log_id',
       order_by='date_of_sleep desc',

@@ -15,6 +15,13 @@ clean-targets:         # directories to be removed by `dbt clean`
   - "target"
   - "dbt_packages"
 
+# Override configuration for dbt_utils macros to add duckdb support
+dispatch:
+  - macro_namespace: dbt_utils
+    search_order:
+      - personal
+      - dbt_utils 
+
 
 # Configuring models
 # Full documentation: https://docs.getdbt.com/docs/configuring-models
@@ -41,3 +48,4 @@ vars:
   'dbt_date:time_zone': 'UTC'
   # 7 hours (in milliseconds)
   sleep_goal: 25200000
+  meet_goal: 5

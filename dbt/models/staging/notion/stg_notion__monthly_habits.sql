@@ -24,7 +24,7 @@ with monthly_habits as (
 
 unique_monthly_habits as (
 
-  {{ deduplicate(
+  {{ dbt_utils.deduplicate(
       relation='monthly_habits',
       partition_by='page_id',
       order_by='updated_at desc',
