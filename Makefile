@@ -106,11 +106,13 @@ dbt-docs:
 
 .PHONY: dbt-doc-coverage
 dbt-doc-coverage:
-	$(PIPENV) dbt-coverage compute doc --run-artifacts-dir dbt/target --output-format markdown
+	$(PIPENV) dbt-coverage compute doc --model-path-filter models/ \
+		--run-artifacts-dir dbt/target --output-format markdown
 
 .PHONY: dbt-test-coverage
 dbt-test-coverage:
-	$(PIPENV) dbt-coverage compute test --run-artifacts-dir dbt/target --output-format markdown
+	$(PIPENV) dbt-coverage compute test --model-path-filter models/ \
+		--run-artifacts-dir dbt/target --output-format markdown
 
 ## Generate dbt and Sphinx documentation
 .PHONY: docs
@@ -123,3 +125,10 @@ docs: dbt-deps dbt-docs
 	@mkdir -p docs/_build/html/dbt
 	@cp dbt/target/static_index.html docs/_build/html/dbt.html
 	@echo "Documentation available at docs/_build/html/index.html"
+
+.PHONY: fix-lint
+fix-lint: ## Auto-fix and lint SQL files
+	@echo "Auto-fixing SQL files..."
+	$(PIPENV) sqlfluff fix dbt/
+	@echo "Linting SQL files..."
+	$(PIPENV) sqlfluff lint dbt/

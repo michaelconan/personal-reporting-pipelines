@@ -1,15 +1,6 @@
 -- Override of dbt_utils.deduplicate for duckdb, see:
 -- https://docs.getdbt.com/reference/dbt-jinja-functions/dispatch#overriding-package-macros
-
-{% macro deduplicate(relation, partition_by, order_by) -%}
-    {{ return(adapter.dispatch('deduplicate')(relation, partition_by, order_by)) }}
-{%- endmacro %}
-
-{% macro default__deduplicate(relation, partition_by, order_by) -%}
-
-    {{ return(dbt_utils.deduplicate(relation, partition_by, order_by)) }}
-
-{%- endmacro %}
+-- https://github.com/dbt-labs/dbt-utils?tab=readme-ov-file#dispatch-macros
 
 {% macro duckdb__deduplicate(relation, partition_by, order_by) -%}
 

@@ -13,23 +13,19 @@ with monthly_habits as (
         properties__blog__checkbox as did_blog,
         created_time as created_at,
         last_edited_time as updated_at
-        from
-            {% if target.name == 'dev' %}
-                {{ ref('notion__database_monthly_habits') }}
-            {% else %}
-                {{ source('notion', 'database_monthly_habits') }}
-            {% endif %}
+    from
+        {{ make_source('notion', 'database_monthly_habits', target.name) }}
 
 ),
 
 unique_monthly_habits as (
 
-  {{ deduplicate(
-      relation='monthly_habits',
-      partition_by='page_id',
-      order_by='updated_at desc',
-     )
-  }}
+    {{ dbt_utils.deduplicate(
+        relation='monthly_habits',
+        partition_by='page_id',
+        order_by='updated_at desc',
+      )
+    }}
 
 )
 

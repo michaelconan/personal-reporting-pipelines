@@ -1,0 +1,28 @@
+version: 2
+
+models:
+  - name: habits
+    description: "Mart table combining life habits, health habits (sleep), and community engagement habits with monthly completion percentages."
+    versions:
+      - v: 1
+        defined_in: habits_v1
+    columns:
+      - name: habit_month
+        description: "The month for the habit tracking period"
+        data_type: date
+        data_tests:
+          - not_null
+      - name: habit
+        description: "The name of the habit being tracked (e.g., meet_1to1, meet_group, sleep, etc.)"
+        data_type: varchar
+        data_tests:
+          - not_null
+      - name: complete_pct
+        description: "The average completion percentage for the habit during the month"
+        data_type: float
+        data_tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+                max_value: 1
