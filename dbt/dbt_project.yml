@@ -41,6 +41,7 @@ sources:
 seeds:
   personal:
     mock_sources:
+      +schema: mock
       +tags: ["local"]
       +enabled: "{{ target.name == 'dev' }}"
 
