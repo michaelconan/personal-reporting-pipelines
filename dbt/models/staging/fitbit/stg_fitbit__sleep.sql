@@ -13,22 +13,18 @@ with sleep as (
         -- Check if duration exceeded set goal
         duration >= {{ var('sleep_goal') }} as sleep_goal_met
     from
-        {% if target.name == 'dev' %}
-            {{ ref('fitbit__sleep') }}
-        {% else %}
-            {{ source('fitbit', 'sleep') }}
-        {% endif %}
+        {{ make_source('fitbit', 'sleep', target.name) }}
 
 ),
 
 unique_sleep as (
 
-  {{ dbt_utils.deduplicate(
-      relation='sleep',
-      partition_by='log_id',
-      order_by='date_of_sleep desc',
-     )
-  }}
+    {{ dbt_utils.deduplicate(
+        relation='sleep',
+        partition_by='log_id',
+        order_by='date_of_sleep desc',
+        )
+    }}
 
 )
 

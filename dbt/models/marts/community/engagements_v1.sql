@@ -7,7 +7,7 @@ select
     c.contact_id,
     c.first_name,
     c.last_name,
-    a.contact_id,
+    a.company_id,
     a.company_name
 from
     {{ ref('stg_hubspot__engagements') }} e

@@ -11,22 +11,18 @@ with contacts as (
         properties__createdate as created_at,
         properties__lastmodifieddate as updated_at
     from
-        {% if target.name == 'dev' %}
-            {{ ref('hubspot__contacts') }}
-        {% else %}
-            {{ source('hubspot', 'contacts') }}
-        {% endif %}
+        {{ make_source('hubspot', 'contacts', target.name) }}
 
 ),
 
 unique_contacts as (
 
-  {{ dbt_utils.deduplicate(
-      relation='contacts',
-      partition_by='contact_id',
-      order_by='updated_at desc',
-     )
-  }}
+    {{ dbt_utils.deduplicate(
+        relation='contacts',
+        partition_by='contact_id',
+        order_by='updated_at desc',
+        )
+    }}
 
 )
 

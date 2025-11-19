@@ -16,7 +16,7 @@ health_habits as (
 
     select
         {{ trunc_date('month', 'date_of_sleep') }} as habit_month,
-        'sleep' as habit,
+        'met_sleep_goal' as habit,
         avg(cast(sleep_goal_met as int)) as complete_pct
     from
         {{ ref('stg_fitbit__sleep') }}
@@ -41,19 +41,33 @@ activities as (
 
 ),
 
+community_habit_check as (
+
+    select
+        {{ trunc_date('week', 'occurred_at') }} as habit_week,
+        case
+            when contacts = 1
+            then 'met_1to1'
+            else
+                'met_group'
+        end as habit,
+        count(*) >= {{ var('meet_goal') }} as is_complete
+    from
+        activities
+    group by
+        habit_week,
+        habit
+
+),
+
 community_habits as (
 
     select
-        {{ trunc_date('month', 'occurred_at') }} as habit_month,
-        case
-            when contacts = 1 then
-                'meet_1to1'
-            else
-                'meet_group'
-        end as habit,
-        avg(count(*) >= {{ var('meet_goal') }}) as complete_pct
+        {{ trunc_date('month', 'habit_week') }} as habit_month,
+        habit,
+        avg(cast(is_complete as int)) as complete_pct
     from
-        activities
+        community_habit_check
     group by
         habit_month,
         habit

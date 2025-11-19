@@ -48,4 +48,4 @@ vars:
   'dbt_date:time_zone': 'UTC'
   # 7 hours (in milliseconds)
   sleep_goal: 25200000
-  meet_goal: 5
+  meet_goal: 1

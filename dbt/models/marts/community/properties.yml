@@ -4,7 +4,7 @@ models:
   - name: engagements
     description: "Mart table of HubSpot engagements joined with contact and company information."
     versions:
-      - v: v1
+      - v: 1
         defined_in: engagements_v1
     columns:
       - name: engagement_id

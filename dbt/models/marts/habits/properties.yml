@@ -4,7 +4,7 @@ models:
   - name: habits
     description: "Mart table combining life habits, health habits (sleep), and community engagement habits with monthly completion percentages."
     versions:
-      - v: v1
+      - v: 1
         defined_in: habits_v1
     columns:
       - name: habit_month

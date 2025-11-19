@@ -123,3 +123,10 @@ docs: dbt-deps dbt-docs
 	@mkdir -p docs/_build/html/dbt
 	@cp dbt/target/static_index.html docs/_build/html/dbt.html
 	@echo "Documentation available at docs/_build/html/index.html"
+
+.PHONY: fix-lint
+fix-lint: ## Auto-fix and lint SQL files
+	@echo "Auto-fixing SQL files..."
+	$(PIPENV) sqlfluff fix dbt/
+	@echo "Linting SQL files..."
+	$(PIPENV) sqlfluff lint dbt/
