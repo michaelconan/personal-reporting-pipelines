@@ -27,6 +27,7 @@ jobs:
     env:
       DBT_PROJECT_DIR: dbt
       DBT_PROFILES_DIR: dbt
+      DBT_WARN_ERROR_OPTIONS: '{"silence":["NodeNotFoundOrDisabled"]}'
     steps:
       - name: check out code
         uses: actions/checkout@v4

@@ -20,3 +20,33 @@ macros:
       - name: column
         description: "The timestamp or date column/expression to truncate."
         type: string
+
+  - name: cast_safe
+    description: "Adapter-aware macro to safely cast columns to a specified type. Uses SAFE_CAST for BigQuery and TRY_CAST for DuckDB."
+    arguments:
+      - name: column
+        description: "The column or expression to cast."
+        type: string
+      - name: api_type
+        description: "The target type to cast to (e.g., 'INT64', 'STRING')."
+        type: string
+
+  - name: make_source
+    description: "Adapter-aware macro to load the live or mock source based on target name. Returns a ref() if target is 'dev', otherwise returns a source()."
+    arguments:
+      - name: source
+        description: "The source name."
+        type: string
+      - name: relation
+        description: "The relation/table name."
+        type: string
+      - name: target_name
+        description: "The target environment name (e.g. 'dev', 'prod')."
+        type: string
+
+  - name: timestamp_parse
+    description: "Adapter-aware macro to parse timestamps from columns. Uses timestamp_millis for BigQuery and make_timestamp for DuckDB."
+    arguments:
+      - name: column
+        description: "The column containing the timestamp to parse."
+        type: string

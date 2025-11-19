@@ -16,22 +16,18 @@ with daily_habits as (
         created_time as created_at,
         last_edited_time as updated_at
         from
-            {% if target.name == 'dev' %}
-                {{ ref('notion__database_daily_habits') }}
-            {% else %}
-                {{ source('notion', 'database_daily_habits') }}
-            {% endif %}
+            {{ make_source('notion', 'database_daily_habits', target.name) }}
 
 ),
 
 unique_daily_habits as (
 
-  {{ dbt_utils.deduplicate(
-      relation='daily_habits',
-      partition_by='page_id',
-      order_by='updated_at desc',
-     )
-  }}
+    {{ dbt_utils.deduplicate(
+        relation='daily_habits',
+        partition_by='page_id',
+        order_by='updated_at desc',
+      )
+    }}
 
 )
 

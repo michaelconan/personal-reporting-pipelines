@@ -13,23 +13,19 @@ with weekly_habits as (
         properties__community__checkbox as did_community,
         created_time as created_at,
         last_edited_time as updated_at
-        from
-            {% if target.name == 'dev' %}
-                {{ ref('notion__database_weekly_habits') }}
-            {% else %}
-                {{ source('notion', 'database_weekly_habits') }}
-            {% endif %}
+    from
+        {{ make_source('notion', 'database_weekly_habits', target.name) }}
 
 ),
 
 unique_weekly_habits as (
 
-  {{ dbt_utils.deduplicate(
-      relation='weekly_habits',
-      partition_by='page_id',
-      order_by='updated_at desc',
-     )
-  }}
+    {{ dbt_utils.deduplicate(
+        relation='weekly_habits',
+        partition_by='page_id',
+        order_by='updated_at desc',
+      )
+    }}
 
 )
 
