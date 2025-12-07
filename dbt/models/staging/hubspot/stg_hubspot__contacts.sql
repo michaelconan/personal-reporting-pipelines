@@ -11,7 +11,7 @@ with contacts as (
         properties__createdate as created_at,
         properties__lastmodifieddate as updated_at
     from
-        {{ make_source('hubspot', 'contacts', target.name) }}
+        {{ make_source('hubspot', 'contacts') }}
 
 ),
 
