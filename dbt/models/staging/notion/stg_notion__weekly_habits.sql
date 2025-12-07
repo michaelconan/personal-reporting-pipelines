@@ -14,7 +14,7 @@ with weekly_habits as (
         created_time as created_at,
         last_edited_time as updated_at
     from
-        {{ make_source('notion', 'database_weekly_habits', target.name) }}
+        {{ make_source('notion', 'database_weekly_habits') }}
 
 ),
 
