@@ -44,7 +44,7 @@ activities as (
 community_habit_check as (
 
     select
-        {{ trunc_date('week', 'occurred_at') }} as habit_week,
+        {{ trunc_date('week', 'cast(occurred_at as date)') }} as habit_week,
         case
             when contacts = 1
             then 'met_1to1'
@@ -76,9 +76,9 @@ community_habits as (
 
 select *
 from life_habits
-union
+union all
 select *
 from health_habits
-union
+union all
 select *
 from community_habits

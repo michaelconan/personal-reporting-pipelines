@@ -9,7 +9,7 @@ with companies as (
         -- parse numeric value from tier label
         {{ cast_safe("right(properties__hs_ideal_customer_profile, 1)", "integer") }} as company_tier
     from
-        {{ make_source('hubspot', 'companies', target.name) }}
+        {{ make_source('hubspot', 'companies') }}
 
 ),
 

@@ -4,6 +4,13 @@ version: '1.0.0'
 
 profile: 'personal'
 
+
+flags:
+  warn_error_options:
+    # This will not actually disable the error, no clear way to disable all source tests
+    # Message: "Test 'test' depends on a source named 'source' which is disabled"
+    silence: ["NodeNotFoundOrDisabled", "InvalidDisabledTargetInTestNode"]
+
 model-paths: ["models"]
 analysis-paths: ["analyses"]
 test-paths: ["tests"]

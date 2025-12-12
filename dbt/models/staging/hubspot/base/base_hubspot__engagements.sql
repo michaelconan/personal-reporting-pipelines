@@ -11,7 +11,7 @@ with engagements as (
         {{ timestamp_parse('engagement__timestamp') }} as occurred_at,
         {{ timestamp_parse('engagement__created_at') }} as created_at
     from
-        {{ make_source('hubspot', 'engagements', target.name) }}
+        {{ make_source('hubspot', 'engagements') }}
 
 ),
 

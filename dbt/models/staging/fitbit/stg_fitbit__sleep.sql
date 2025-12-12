@@ -13,7 +13,7 @@ with sleep as (
         -- Check if duration exceeded set goal
         duration >= {{ var('sleep_goal') }} as sleep_goal_met
     from
-        {{ make_source('fitbit', 'sleep', target.name) }}
+        {{ make_source('fitbit', 'sleep') }}
 
 ),
 
