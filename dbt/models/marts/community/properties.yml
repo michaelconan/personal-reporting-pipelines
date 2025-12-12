@@ -6,13 +6,16 @@ models:
     versions:
       - v: 1
         defined_in: engagements_v1
+    data_tests:
+      - dbt_expectations.expect_compound_columns_to_be_unique:
+          arguments:
+            column_list: ["engagement_id", "contact_id"]
     columns:
       - name: engagement_id
         description: "The unique identifier for the engagement"
         data_type: varchar
         data_tests:
           - not_null
-          - unique
       - name: engagement_type
         description: "The type of engagement (e.g., email, call, meeting)"
         data_type: varchar
