@@ -2,7 +2,7 @@
 # Makefile for development workflows and operations
 
 # Python environment
-PIPENV = pipenv run
+PIPENV = @pipenv run
 PYTEST = $(PIPENV) pytest \
 	--cov=pipelines \
 	--cov-append \
@@ -23,8 +23,9 @@ help: ## Show this help message
 ## Environment Setup
 .PHONY: install
 install: ## Install Python dependencies using pipenv
-	pip install --upgrade pipenv
-	pipenv install --dev
+	@pip install --upgrade pip
+	@pip install --upgrade pipenv
+	@pipenv install --dev
 
 ## Testing
 .PHONY: test-e2e

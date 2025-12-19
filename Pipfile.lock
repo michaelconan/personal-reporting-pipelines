@@ -732,12 +732,12 @@
         },
         "google-cloud-bigquery-storage": {
             "hashes": [
-                "sha256:c9bab6b8e41d6cb9806e589e65f320c89ada84f466e61566b7208d87924c1430",
-                "sha256:f2e3a08882155de1e9ec53c71c5784eb1f25dc6514c535f5796c3c9eeac17d17"
+                "sha256:1769e568070db672302771d2aec18341de10712aa9c4a8c549f417503e0149f0",
+                "sha256:d3c1ce9d2d3a4d7116259889dcbe3c7c70506f71f6ce6bbe54aa0a68bbba8f8f"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.7'",
-            "version": "==2.35.0"
+            "version": "==2.36.0"
         },
         "google-cloud-core": {
             "hashes": [
@@ -749,12 +749,12 @@
         },
         "google-cloud-secret-manager": {
             "hashes": [
-                "sha256:a3792bb1cb307326908297a61536031ac94852c22248f04ae112ff51a853b561",
-                "sha256:eaf1adce3ff5dc0f24335709eba3410dc7e9d20aeea3e8df5b758e27080ebf14"
+                "sha256:0d1d6f76327685a0ed78a4cf50f289e1bfbbe56026ed0affa98663b86d6d50d6",
+                "sha256:940a5447a6ec9951446fd1a0f22c81a4303fde164cd747aae152c5f5c8e6723e"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.7'",
-            "version": "==2.25.0"
+            "version": "==2.26.0"
         },
         "google-cloud-storage": {
             "hashes": [
@@ -2560,11 +2560,11 @@
         },
         "sqlglot": {
             "hashes": [
-                "sha256:16de5a1708e79aab4e252d55dd1b0762511ff28d4ef65ecc8f2383b963401633",
-                "sha256:e62083b3835054b72e20b554bf46fbb5190734ed9573372f52654023f082bc34"
+                "sha256:5798bfdb6e9bc36c964e6c64d7222624d98b2631cc20f44628a82eba7cf7b4bf",
+                "sha256:b3213b3e867dcc306074f1c90480aeee89a0e635cf0dfe70eb4a3af7b61972e6"
             ],
             "markers": "python_version >= '3.9'",
-            "version": "==28.4.1"
+            "version": "==28.5.0"
         },
         "sqlparse": {
             "hashes": [
