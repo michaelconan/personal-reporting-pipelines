@@ -22,15 +22,7 @@ select
     contact_id  -- HubSpot contact ID (extracted from JSON array)
 from
     {{ ref('base_hubspot__engagements') }},
-    -- Unnest JSON array of contact IDs into individual rows
-    -- Adapter-aware: Different syntax for BigQuery vs DuckDB
-    {% if target.type == 'duckdb' %}
-        -- DuckDB: Cast JSON array to varchar array, then unnest
-        unnest(cast(json_extract(contact_ids, '$') as varchar[])) as t(contact_id)
-    {% elif target.type == 'bigquery' %}
-        -- BigQuery: Use json_value_array function to extract array, then unnest
-        unnest(json_value_array(contact_ids)) as contact_id
-    {% endif %}
+    {{ unnest_json_array('contact_ids', 'contact_id') }}
 where
     -- Filter out engagements with no associated contacts
     contact_ids is not null

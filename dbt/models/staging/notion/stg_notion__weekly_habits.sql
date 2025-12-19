@@ -53,9 +53,9 @@ unique_weekly_habits as (
     -- Output: One row per unique page_id (most recent version)
 
     {{ dbt_utils.deduplicate(
-        relation='weekly_habits',  -- Source CTE to deduplicate
-        partition_by='page_id',  -- Group duplicates by page_id
-        order_by='updated_at desc',  -- Keep record with latest updated_at
+        relation='weekly_habits',
+        partition_by='page_id',
+        order_by='updated_at desc'
       )
     }}
 

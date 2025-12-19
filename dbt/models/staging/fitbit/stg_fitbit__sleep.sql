@@ -49,9 +49,9 @@ unique_sleep as (
     -- Output: One row per unique log_id (most recent version)
 
     {{ dbt_utils.deduplicate(
-        relation='sleep',  -- Source CTE to deduplicate
-        partition_by='log_id',  -- Group duplicates by log_id
-        order_by='date_of_sleep desc',  -- Keep record with latest date_of_sleep
+        relation='sleep',
+        partition_by='log_id',
+        order_by='date_of_sleep desc',
         )
     }}
 
