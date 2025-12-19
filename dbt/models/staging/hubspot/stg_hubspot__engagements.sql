@@ -21,7 +21,8 @@ with engagements as (
 
     select
         engagement_id,  -- HubSpot engagement ID
-        engagement_type,  -- Type of engagement (EMAIL, CALL, MEETING, NOTE, etc.)
+        -- Type of engagement (EMAIL, CALL, MEETING, NOTE, etc.)
+        engagement_type,
         body_preview,  -- Preview text of engagement content
         occurred_at,  -- Timestamp when engagement occurred
         created_at,  -- Timestamp when engagement was created

@@ -50,9 +50,9 @@ unique_engagements as (
     -- Output: One row per unique engagement_id (most recent version)
 
     {{ dbt_utils.deduplicate(
-        relation='engagements',  -- Source CTE to deduplicate
-        partition_by='engagement_id',  -- Group duplicates by engagement_id
-        order_by='updated_at desc',  -- Keep record with latest updated_at
+        relation='engagements',
+        partition_by='engagement_id',
+        order_by='updated_at desc'
         )
     }}
 

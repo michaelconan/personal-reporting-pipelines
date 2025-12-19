@@ -44,10 +44,10 @@ unique_companies as (
     -- Output: One row per unique company_id (most recent version)
 
     {{ dbt_utils.deduplicate(
-        relation='companies',  -- Source CTE to deduplicate
-        partition_by='company_id',  -- Group duplicates by company_id
-        order_by='updated_at desc',  -- Keep record with latest updated_at
-      )
+        relation='companies',
+        partition_by='company_id',
+        order_by='updated_at desc'
+        )
     }}
 
 )

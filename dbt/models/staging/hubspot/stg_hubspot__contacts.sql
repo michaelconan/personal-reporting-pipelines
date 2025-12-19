@@ -42,9 +42,9 @@ unique_contacts as (
     -- Output: One row per unique contact_id (most recent version)
 
     {{ dbt_utils.deduplicate(
-        relation='contacts',  -- Source CTE to deduplicate
-        partition_by='contact_id',  -- Group duplicates by contact_id
-        order_by='updated_at desc',  -- Keep record with latest updated_at
+        relation='contacts',
+        partition_by='contact_id',
+        order_by='updated_at desc'
         )
     }}
 

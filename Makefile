@@ -125,9 +125,9 @@ docs: dbt-deps dbt-docs
 	@cp dbt/target/static_index.html docs/_build/html/dbt.html
 	@echo "Documentation available at docs/_build/html/index.html"
 
-.PHONY: fix-lint
-fix-lint: ## Auto-fix and lint SQL files
+.PHONY: dbt-fix-lint
+dbt-fix-lint: ## Auto-fix and lint SQL files
 	@echo "Auto-fixing SQL files..."
-	$(PIPENV) sqlfluff fix dbt/
+	( cd dbt && $(PIPENV) sqlfluff fix )
 	@echo "Linting SQL files..."
-	$(PIPENV) sqlfluff lint dbt/
+	( cd dbt && $(PIPENV) sqlfluff lint )
