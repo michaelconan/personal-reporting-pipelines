@@ -11,6 +11,7 @@ import logging
 # PyPI imports
 import pytest
 import dlt
+from dlt.common.configuration.providers.google_secrets import GoogleSecretsProvider
 
 # Ensure Google Secrets are enabled for E2E tests
 # This counteracts any unit test configuration that might disable them
@@ -23,17 +24,19 @@ os.environ["DLT_TELEMETRY_DISABLED"] = "1"
 
 @pytest.fixture(scope="module", autouse=True)
 def check_config():
-    """Verify DLT configuration for end-to-end tests.
+    """Verify dlt configuration for end-to-end tests.
 
     Ensures that Google Secrets provider is properly configured
     and available for accessing real credentials during E2E testing.
     """
+    assert os.path.exists(os.environ["GOOGLE_APPLICATION_CREDENTIALS"])
     # Get providers of dlt secrets
     providers = dlt.secrets.config_providers
     # Environment, Secrets.toml, Google Secrets
     assert len(providers) == 3
     # Allow direct value secrets (like Fitbit refresh token)
-    assert providers[2].only_toml_fragments is False
+    google_providers = [p for p in providers if isinstance(p, GoogleSecretsProvider)]
+    assert google_providers[0].only_toml_fragments is False
 
 
 @pytest.fixture(scope="class")
