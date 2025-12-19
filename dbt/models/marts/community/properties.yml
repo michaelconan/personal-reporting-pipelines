@@ -1,16 +1,22 @@
 version: 2
 
 models:
-  - name: engagements
-    description: "Mart table of HubSpot engagements joined with contact and company information."
+  - name: engagement_contacts
+    description: "Mart table of HubSpot engagements joined with contact and company information. Grain: engagement + contact."
     versions:
       - v: 1
-        defined_in: engagements_v1
+        defined_in: engagement_contacts_v1
     data_tests:
       - dbt_expectations.expect_compound_columns_to_be_unique:
           arguments:
             column_list: ["engagement_id", "contact_id"]
     columns:
+      - name: engagement_key
+        description: "Surrogate key uniquely identifying each engagement-contact combination"
+        data_type: varchar
+        data_tests:
+          - not_null
+          - unique
       - name: engagement_id
         description: "The unique identifier for the engagement"
         data_type: varchar
@@ -43,6 +49,12 @@ models:
       - name: last_name
         description: "The last name of the contact"
         data_type: varchar
+      - name: company_id
+        description: "The unique identifier for the company associated with the contact"
+        data_type: integer
       - name: company_name
         description: "The name of the company associated with the contact"
         data_type: varchar
+      - name: updated_at
+        description: "The timestamp when the engagement was last updated"
+        data_type: timestamp

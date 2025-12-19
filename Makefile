@@ -2,7 +2,7 @@
 # Makefile for development workflows and operations
 
 # Python environment
-PIPENV = @pipenv run
+PIPENV = pipenv run
 PYTEST = $(PIPENV) pytest \
 	--cov=pipelines \
 	--cov-append \
