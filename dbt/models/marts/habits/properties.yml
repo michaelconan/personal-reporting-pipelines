@@ -2,27 +2,40 @@ version: 2
 
 models:
   - name: habits
-    description: "Mart table combining life habits, health habits (sleep), and community engagement habits with monthly completion percentages."
+    description: "Mart table combining life habits, health habits (sleep), and community engagement habits. Grain: one row per habit per date."
     versions:
       - v: 1
         defined_in: habits_v1
     columns:
-      - name: habit_month
-        description: "The month for the habit tracking period"
-        data_type: date
-        data_tests:
-          - not_null
-      - name: habit
-        description: "The name of the habit being tracked (e.g., meet_1to1, meet_group, sleep, etc.)"
+      - name: habit_key
+        description: "Surrogate key uniquely identifying each habit record"
         data_type: varchar
         data_tests:
           - not_null
-      - name: complete_pct
-        description: "The average completion percentage for the habit during the month"
-        data_type: float
+          - unique
+      - name: source_id
+        description: "The source identifier (page_id for life habits, log_id for health habits, engagement_id for community habits)"
+        data_type: varchar
+      - name: habit_date
+        description: "The date for the habit tracking period"
+        data_type: date
         data_tests:
           - not_null
-          - dbt_expectations.expect_column_values_to_be_between:
+      - name: habit_period
+        description: "The period for which the habit is tracked (day, week, or month)"
+        data_type: varchar
+        data_tests:
+          - not_null
+          - accepted_values:
               arguments:
-                min_value: 0
-                max_value: 1
+                values: ["day", "week", "month"]
+      - name: habit
+        description: "The name of the habit being tracked (e.g., met_1to1, met_group, met_sleep_goal, did_devotional, etc.)"
+        data_type: varchar
+        data_tests:
+          - not_null
+      - name: is_complete
+        description: "Whether the habit was completed on the given date"
+        data_type: boolean
+        data_tests:
+          - not_null

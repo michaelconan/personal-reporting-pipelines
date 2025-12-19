@@ -50,3 +50,13 @@ macros:
       - name: column_name
         description: "The column containing the timestamp to parse."
         type: string
+
+  - name: unnest_json_array
+    description: "Adapter-aware macro to unnest JSON arrays into rows. Uses json_value_array for BigQuery and json_extract with cast for DuckDB."
+    arguments:
+      - name: column_name
+        description: "The JSON array column to unnest."
+        type: string
+      - name: alias_name
+        description: "The alias name for the unnested column."
+        type: string
