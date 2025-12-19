@@ -1,6 +1,7 @@
 # personal-reporting-pipelines
 
 #### Development and Documentation
+#### Development and Documentation
 
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/michaelconan/personal-reporting-pipelines)
 [![codecov](https://codecov.io/gh/michaelconan/personal-reporting-pipelines/branch/main/graph/badge.svg)](https://codecov.io/gh/michaelconan/personal-reporting-pipelines)
@@ -10,10 +11,13 @@
 [![Publish Docs](https://github.com/michaelconan/personal-reporting-pipelines/actions/workflows/docs.yml/badge.svg)](https://github.com/michaelconan/personal-reporting-pipelines/actions/workflows/docs.yml)
 
 #### Data Refresh Workflows
+#### Data Refresh Workflows
 
 [![Refresh HubSpot](https://github.com/michaelconan/personal-reporting-pipelines/actions/workflows/refresh-hubspot.yml/badge.svg)](https://github.com/michaelconan/personal-reporting-pipelines/actions/workflows/refresh-hubspot.yml)
 [![Refresh Fitbit](https://github.com/michaelconan/personal-reporting-pipelines/actions/workflows/refresh-fitbit.yml/badge.svg)](https://github.com/michaelconan/personal-reporting-pipelines/actions/workflows/refresh-fitbit.yml)
 [![Refresh Notion](https://github.com/michaelconan/personal-reporting-pipelines/actions/workflows/refresh-notion.yml/badge.svg)](https://github.com/michaelconan/personal-reporting-pipelines/actions/workflows/refresh-notion.yml)
+
+[![Run Transformations](https://github.com/michaelconan/personal-reporting-pipelines/actions/workflows/run-transforms.yml/badge.svg)](https://github.com/michaelconan/personal-reporting-pipelines/actions/workflows/run-transforms.yml)
 
 [![Run Transformations](https://github.com/michaelconan/personal-reporting-pipelines/actions/workflows/run-transforms.yml/badge.svg)](https://github.com/michaelconan/personal-reporting-pipelines/actions/workflows/run-transforms.yml)
 
@@ -89,6 +93,7 @@ graph TB
 The project follows modern data engineering best practices with clear separation of concerns:
 
 ```
+├── pipelines/          # dlt data extraction pipelines
 ├── pipelines/          # dlt data extraction pipelines
 │   ├── hubspot.py      # HubSpot CRM data pipeline
 │   ├── fitbit.py       # Fitbit health data pipeline
@@ -182,6 +187,8 @@ The project follows modern data engineering best practices with clear separation
    - Weekly pipelines for source refreshes: Notion, HubSpot, Fitbit
    - Weekly pipeline for data transformations
    - Manual triggers for full refresh scenarios
+
+3. **Gemini workflows** are leveraged from [run-gemini-cli](https://github.com/google-github-actions/run-gemini-cli)
 
 3. **Gemini workflows** are leveraged from [run-gemini-cli](https://github.com/google-github-actions/run-gemini-cli)
 
