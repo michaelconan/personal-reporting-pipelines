@@ -1,4 +1,4 @@
-name: test dbt models
+name: test dbt transformations
 
 on:
   pull_request:

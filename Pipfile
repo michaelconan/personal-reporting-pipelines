@@ -13,6 +13,7 @@ dbt-duckdb = "*"
 
 [dev-packages]
 pytest-cov = "*"
+pytest-dotenv = "*"
 pytest-mock = "*"
 pre-commit = "*"
 responses = "*"
