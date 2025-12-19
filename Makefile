@@ -2,7 +2,7 @@
 # Makefile for development workflows and operations
 
 # Python environment
-PIPENV = pipenv run
+PIPENV = @pipenv run
 PYTEST = $(PIPENV) pytest \
 	--cov=pipelines \
 	--cov-append \
@@ -23,8 +23,9 @@ help: ## Show this help message
 ## Environment Setup
 .PHONY: install
 install: ## Install Python dependencies using pipenv
-	pip install pipenv
-	pipenv install --dev
+	@pip install --upgrade pip
+	@pip install --upgrade pipenv
+	@pipenv install --dev
 
 ## Testing
 .PHONY: test-e2e
@@ -35,8 +36,7 @@ test-e2e: ## Run tests with coverage
 		--cov-branch \
 		--cov-report=xml \
 		--junitxml=test-results-e2e.xml \
-		-v -s \
-		|| true
+		-v -s
 
 .PHONY: test-local
 test-local: ## Run offline local tests only
@@ -46,8 +46,7 @@ test-local: ## Run offline local tests only
 		--cov-branch \
 		--cov-report=xml \
 		--junitxml=test-results-local.xml \
-		-v -s \
-		|| true
+		-v -s
 
 .PHONY: test-all
 test-all: test-local test-e2e ## Run all tests with coverage
