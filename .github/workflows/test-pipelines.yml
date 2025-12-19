@@ -46,20 +46,37 @@ jobs:
           ${{ secrets.GCP_SVC_KEY }}
           EOF
 
-      - name: run tests
-        id: run_tests
+      - name: run local tests
+        id: run_local_tests
         env:
           RUNTIME__LOG_LEVEL: "INFO"
         run: |
-          make test-all
+          make test-local
+
+      - name: run e2e tests
+        id: run_e2e_tests
+        env:
+          RUNTIME__LOG_LEVEL: "INFO"
+        run: |
+          make test-e2e
 
       - name: remove keyfile
         if: always()
         run: |
           rm $GOOGLE_APPLICATION_CREDENTIALS
           
+      - name: check if tests ran
+        id: check_tests
+        if: always()
+        run: |
+          if [ "${{ steps.run_local_tests.outcome }}" != "skipped" ] || [ "${{ steps.run_e2e_tests.outcome }}" != "skipped" ]; then
+            echo "tests_ran=true" >> $GITHUB_OUTPUT
+          else
+            echo "tests_ran=false" >> $GITHUB_OUTPUT
+          fi
+          
       - name: upload coverage reports to Codecov
-        if: steps.run_tests.outcome != 'skipped'
+        if: steps.check_tests.outputs.tests_ran == 'true'
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -69,8 +86,9 @@ jobs:
           fail_ci_if_error: true
           
       - name: upload test results to Codecov
-        if: steps.run_tests.outcome != 'skipped'
-        uses: codecov/test-results-action@v1
+        if: steps.check_tests.outputs.tests_ran == 'true'
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./test-results-local.xml,./test-results-e2e.xml
+          report_type: test_results

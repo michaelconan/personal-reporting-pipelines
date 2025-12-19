@@ -23,7 +23,7 @@ help: ## Show this help message
 ## Environment Setup
 .PHONY: install
 install: ## Install Python dependencies using pipenv
-	pip install pipenv
+	pip install --upgrade pipenv
 	pipenv install --dev
 
 ## Testing
@@ -35,8 +35,7 @@ test-e2e: ## Run tests with coverage
 		--cov-branch \
 		--cov-report=xml \
 		--junitxml=test-results-e2e.xml \
-		-v -s \
-		|| true
+		-v -s
 
 .PHONY: test-local
 test-local: ## Run offline local tests only
@@ -46,8 +45,7 @@ test-local: ## Run offline local tests only
 		--cov-branch \
 		--cov-report=xml \
 		--junitxml=test-results-local.xml \
-		-v -s \
-		|| true
+		-v -s
 
 .PHONY: test-all
 test-all: test-local test-e2e ## Run all tests with coverage
