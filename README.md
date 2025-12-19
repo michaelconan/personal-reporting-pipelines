@@ -3,9 +3,10 @@
 #### Development and Documentation
 
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/michaelconan/personal-reporting-pipelines)
+[![codecov](https://codecov.io/gh/michaelconan/personal-reporting-pipelines/branch/main/graph/badge.svg)](https://codecov.io/gh/michaelconan/personal-reporting-pipelines)
+
 [![Test Pipelines](https://github.com/michaelconan/personal-reporting-pipelines/actions/workflows/test-pipelines.yml/badge.svg)](https://github.com/michaelconan/personal-reporting-pipelines/actions/workflows/test-pipelines.yml)
 [![Test Transforms](https://github.com/michaelconan/personal-reporting-pipelines/actions/workflows/test-transforms.yml/badge.svg)](https://github.com/michaelconan/personal-reporting-pipelines/actions/workflows/test-transforms.yml)
-[![codecov](https://codecov.io/gh/michaelconan/personal-reporting-pipelines/branch/main/graph/badge.svg)](https://codecov.io/gh/michaelconan/personal-reporting-pipelines)
 [![Publish Docs](https://github.com/michaelconan/personal-reporting-pipelines/actions/workflows/docs.yml/badge.svg)](https://github.com/michaelconan/personal-reporting-pipelines/actions/workflows/docs.yml)
 
 #### Data Refresh Workflows
@@ -94,18 +95,18 @@ The project follows modern data engineering best practices with clear separation
 │   ├── notion.py       # Notion habits data pipeline
 │   └── common/         # Shared utilities and helpers
 ├── dbt/                # dbt transformation models
-│   └── personal/       # Personal dbt project
-├── .github/            # GitHub Actions workflows
-│   └── workflows/      # CI/CD and orchestration
-├── scripts/            # Utility scripts and helpers
-└── config/             # Configuration files and templates
+│   ├── models/         # personal dbt models (staging, intermediate, marts)
+│   ├── macros/         # custom macros for adapters and mocking
+│   ├── tests/          # custom tests when missing from packages
+│   └── seeds/          # reference tables and mock sources
+└── .github/            # github actions workflows
+    └── workflows/      # CI/CD and refresh orchestration
 ```
 
 ### Naming Conventions
 
 - **dlt pipelines**: `{source}__{entity}` (e.g., `hubspot__contacts`, `fitbit__sleep`)
-- **dbt models**: `{layer}_{source}__{entity}` (e.g., `staging_hubspot__contacts`, `contacts`)
-- **GitHub Actions**: `{actions}-{frequency}` (e.g., `dlt-daily`)
+- **dbt models**: `{layer}_{source}__{entity}` (e.g., `stg_hubspot__contacts`, `contacts`)
 
 ## Setup
 
@@ -178,8 +179,8 @@ The project follows modern data engineering best practices with clear separation
    - `GOOGLE_APPLICATION_CREDENTIALS`: Service account JSON key
 
 2. **Configure workflow schedules** in `.github/workflows/`:
-   - Daily pipelines for HubSpot and Fitbit
-   - Weekly pipelines for Notion
+   - Weekly pipelines for source refreshes: Notion, HubSpot, Fitbit
+   - Weekly pipeline for data transformations
    - Manual triggers for full refresh scenarios
 
 3. **Gemini workflows** are leveraged from [run-gemini-cli](https://github.com/google-github-actions/run-gemini-cli)
@@ -191,7 +192,7 @@ The project follows modern data engineering best practices with clear separation
 
 ## Pipeline Refresh Patterns
 
-Your pipelines support flexible refresh modes for data loading:
+The pipelines support flexible refresh modes for data loading:
 
 - **Incremental (default)**: Only loads new/changed data since last run
 - **Full refresh**: Completely reloads all data, useful for data quality issues or schema changes
@@ -320,36 +321,6 @@ The project uses GitHub Actions for automated pipeline execution:
 - **Pull request validation**: Automated testing on code changes
 - **Deployment**: Automated deployment to production environment
 
-### Pipeline Workflows
-
-1. **HubSpot Pipeline** (`.github/workflows/hubspot-pipeline.yml`)
-   - Daily execution at 2 AM UTC
-   - Manual trigger with full refresh option
-   - Uses `make install` and `pipenv run python -m pipelines.hubspot`
-   - dlt state files (`~/.dlt/**/state.json`) uploaded for debugging
-
-2. **Fitbit Pipeline** (`.github/workflows/fitbit-pipeline.yml`)
-   - Daily execution at 3 AM UTC
-   - Health data synchronization
-   - Uses `make install` and `pipenv run python -m pipelines.fitbit`
-   - dlt state files uploaded for debugging and monitoring
-
-3. **Notion Pipeline** (`.github/workflows/notion-pipeline.yml`)
-   - Weekly execution on Sundays at 9 AM UTC
-   - Habits and productivity data
-   - Uses `make install` and `pipenv run python -m pipelines.notion`
-   - dlt state files uploaded for data quality validation
-
-4. **dbt Transform** (`.github/workflows/dbt-transform.yml`)
-   - Daily execution at 4 AM UTC (after data ingestion)
-   - Automatically triggered after successful pipeline runs
-   - Runs dbt models, tests, and generates documentation
-   - Uses `make install` and pipenv for dbt operations
-
-5. **Pipeline Tests** (`.github/workflows/pipeline-tests.yml`)
-   - Runs on pull requests and main branch pushes
-   - Executes `make test` for comprehensive testing
-   - Uploads test coverage reports as artifacts
 
 ### Monitoring and Alerts
 

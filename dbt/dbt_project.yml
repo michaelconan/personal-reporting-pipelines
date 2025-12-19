@@ -39,6 +39,8 @@ models:
       columns: true
     staging:
       +materialized: view
+    marts:
+      +materialized: table
 
 sources:
   personal:
