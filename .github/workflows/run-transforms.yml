@@ -44,7 +44,7 @@ jobs:
 
       - name: run dbt build
         run: |
-          make dbt-build-prod
+          make dbt-build target=prod
           
       - name: Remove keyfile
         if: always()
