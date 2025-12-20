@@ -1,7 +1,6 @@
 # personal-reporting-pipelines
 
 #### Development and Documentation
-#### Development and Documentation
 
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/michaelconan/personal-reporting-pipelines)
 [![codecov](https://codecov.io/gh/michaelconan/personal-reporting-pipelines/branch/main/graph/badge.svg)](https://codecov.io/gh/michaelconan/personal-reporting-pipelines)
@@ -11,13 +10,10 @@
 [![Publish Docs](https://github.com/michaelconan/personal-reporting-pipelines/actions/workflows/docs.yml/badge.svg)](https://github.com/michaelconan/personal-reporting-pipelines/actions/workflows/docs.yml)
 
 #### Data Refresh Workflows
-#### Data Refresh Workflows
 
 [![Refresh HubSpot](https://github.com/michaelconan/personal-reporting-pipelines/actions/workflows/refresh-hubspot.yml/badge.svg)](https://github.com/michaelconan/personal-reporting-pipelines/actions/workflows/refresh-hubspot.yml)
 [![Refresh Fitbit](https://github.com/michaelconan/personal-reporting-pipelines/actions/workflows/refresh-fitbit.yml/badge.svg)](https://github.com/michaelconan/personal-reporting-pipelines/actions/workflows/refresh-fitbit.yml)
 [![Refresh Notion](https://github.com/michaelconan/personal-reporting-pipelines/actions/workflows/refresh-notion.yml/badge.svg)](https://github.com/michaelconan/personal-reporting-pipelines/actions/workflows/refresh-notion.yml)
-
-[![Run Transformations](https://github.com/michaelconan/personal-reporting-pipelines/actions/workflows/run-transforms.yml/badge.svg)](https://github.com/michaelconan/personal-reporting-pipelines/actions/workflows/run-transforms.yml)
 
 [![Run Transformations](https://github.com/michaelconan/personal-reporting-pipelines/actions/workflows/run-transforms.yml/badge.svg)](https://github.com/michaelconan/personal-reporting-pipelines/actions/workflows/run-transforms.yml)
 
@@ -35,54 +31,11 @@ The following data will be ingested from my personal systems into a BigQuery war
 2. HubSpot
 3. Fitbit
 
-### Warehouse Data Flow
-
-```mermaid
-graph TB
-
-    %% Sources
-    S1[Notion]
-    S2[HubSpot]
-
-    subgraph raw
-        direction TB
-        R1[Daily Habits]
-        R2[Weekly Habits]
-        R3[Monthly Habits]
-        R4[Contacts]
-        R5[Companies]
-        R6[Engagements]
-    end
-
-    %% Source to Raw Flows
-    S1 --> R1
-    S1 --> R2
-    S1 --> R3
-    S2 --> R4
-    S2 --> R5
-    S2 --> R6
-
-    subgraph staging
-        C1[Notion Habits]
-        C2[CRM Contacts]
-        C3[CRM Companies]
-        C4[CRM Engagements]
-    end
-
-    %% Raw to Staging Flows
-    R1 --> C1
-    R2 --> C1
-    R3 --> C1
-    R4 --> C2
-    R5 --> C3
-    R6 --> C4
-```
-
 ## Architecture
 
 ### Data Pipeline Stack
 
-1. **[dlt hub](https://dlthub.com/docs/intro)** - Extract, load, and transform source data into BigQuery raw layer
+1. **[dlt hub](https://dlthub.com/docs/intro)** - Extract, normalise, and load source data into BigQuery raw layer
 2. **[dbt core](https://docs.getdbt.com/)** - Transform raw data into analytics-ready models and views
 3. **[BigQuery](https://cloud.google.com/bigquery)** - Cloud data warehouse for storage and analysis
 4. **[GCP Secret Manager](https://cloud.google.com/secret-manager)** - Secure credential management for API keys and connections
@@ -93,7 +46,6 @@ graph TB
 The project follows modern data engineering best practices with clear separation of concerns:
 
 ```
-├── pipelines/          # dlt data extraction pipelines
 ├── pipelines/          # dlt data extraction pipelines
 │   ├── hubspot.py      # HubSpot CRM data pipeline
 │   ├── fitbit.py       # Fitbit health data pipeline
@@ -111,7 +63,7 @@ The project follows modern data engineering best practices with clear separation
 ### Naming Conventions
 
 - **dlt pipelines**: `{source}__{entity}` (e.g., `hubspot__contacts`, `fitbit__sleep`)
-- **dbt models**: `{layer}_{source}__{entity}` (e.g., `stg_hubspot__contacts`, `contacts`)
+- **dbt models** (except marts): `{layer}_{source}__{entity}` (e.g., `stg_hubspot__contacts`, `contacts`)
 
 ## Setup
 
@@ -129,8 +81,8 @@ The project follows modern data engineering best practices with clear separation
    - Secret Manager API
 
 2. **Set up BigQuery**:
-   - Create a dataset for raw data (`raw_data`)
-   - Create a dataset for transformed data (`analytics`)
+   - Create a dataset for raw data (e.g., `raw_data`)
+   - Create a dataset for transformed data (e.g., `analytics`)
    - Ensure proper IAM permissions for service accounts
 
 3. **Configure Secret Manager**:
@@ -147,7 +99,7 @@ The project follows modern data engineering best practices with clear separation
      client_id = "your-id"
      client_secret = "your-secret"
      ```
-   - After authorising Fitbit OAuth client, store refresh token in dedicated secert
+   - After authorising Fitbit OAuth client, store refresh token in dedicated secret
      - `sources-fitbit-refresh_token`
 
 4. **Create Service Account**:
@@ -163,18 +115,10 @@ The project follows modern data engineering best practices with clear separation
    make install
    ```
 
-2. **Configure credentials**:
-   ```bash
-   # Set GCP project
-   gcloud config set project YOUR_PROJECT_ID
-   
-   # Authenticate with GCP
-   gcloud auth application-default login
-   ```
-
-3. **Set environment variables**:
+2. **Set environment variables**:
    ```bash
    export GCP_PROJECT_ID=your-project-id
+   export GOOGLE_APPLICATION_CREDENTIALS=/path/to/service/account/key.json
    export RAW_SCHEMA_NAME=raw_data
    ```
 
@@ -182,13 +126,12 @@ The project follows modern data engineering best practices with clear separation
 
 1. **Add repository secrets**:
    - `GOOGLE_APPLICATION_CREDENTIALS`: Service account JSON key
+   - `GCP_PROJECT_ID`: Google cloud project identifier
 
 2. **Configure workflow schedules** in `.github/workflows/`:
-   - Weekly pipelines for source refreshes: Notion, HubSpot, Fitbit
-   - Weekly pipeline for data transformations
-   - Manual triggers for full refresh scenarios
-
-3. **Gemini workflows** are leveraged from [run-gemini-cli](https://github.com/google-github-actions/run-gemini-cli)
+   - Scheduled pipelines for source refreshes: Notion, HubSpot, Fitbit
+   - Scheduled pipeline for data transformations after source refresh
+   - Manual trigger option for full refresh scenarios
 
 3. **Gemini workflows** are leveraged from [run-gemini-cli](https://github.com/google-github-actions/run-gemini-cli)
 
@@ -215,7 +158,6 @@ pipenv run python -m pipelines.hubspot
 #### Method 2: Pipeline-Specific Override
 ```bash
 # Force full refresh for HubSpot only
-export PIPELINE_NAME=HUBSPOT
 export HUBSPOT_FULL_REFRESH=true
 pipenv run python -m pipelines.hubspot
 ```
@@ -283,24 +225,26 @@ jobs:
 
 ### Environments
 
-- **Development**: Local development with GCP dev project
-- **Staging**: GitHub Actions testing environment
+- **Development**: Local development with duckdb database
+- **Testing**: Local tests with non-production BigQuery schemas
 - **Production**: Automated production pipelines via GitHub Actions
 
 ### Local Development
 
-1. **Build Dev Container** in VSCode, this will run `script/setup` to install dependencies
+1. **Build Dev Container** in VSCode, this will run `make install` to install dependencies
 2. **Run pipelines locally** for testing:
    ```bash
-   pipenv run python -m pipelines.hubspot
-   pipenv run python -m pipelines.fitbit
-   pipenv run python -m pipelines.notion
+   # Local unit tests
+   make test-local
+   # Bigquery end-to-end tests
+   make test-e2e
    ```
 3. **Test dbt models**:
    ```bash
-   cd dbt/michael
-   pipenv run dbt run --target dev
-   pipenv run dbt test --target dev
+   # Local duckdb test
+   make dbt-build target=dev
+   # Bigquery non-prod schema test
+   make dbt-build target=test
    ```
 
 ### Testing
@@ -312,10 +256,9 @@ jobs:
 
 ### dbt Development
 
-1. **Open dbt project** as root directory for SQLFluff and other utilities
-2. **Local profile**: Copy BigQuery service account key to `~/.dbt/profiles.yml`
-3. **Model development**: Use `pipenv run dbt run --select model_name` for iterative development
-4. **Documentation**: Generate with `pipenv run dbt docs generate` and `pipenv run dbt docs serve`
+1. **Model development**: Use `make dbt-run target=dev select="model_name"` for iterative development
+2. **Model testing**: Use `make dbt-test target=dev select="model_name"` for iterative testing
+3. **Documentation**: Generate with `make dbt-docs target=dev`
 
 ## GitHub Actions Orchestration
 
