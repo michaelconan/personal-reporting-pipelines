@@ -8,6 +8,15 @@ PYTEST = $(PIPENV) pytest \
 	--cov-append \
 	-v -s
 DBTARGS = --project-dir dbt --profiles-dir dbt
+target ?= dev
+select ?= "*"
+
+# dbt exclude logic for dev environment
+# mock seeds are used in place of sources
+DBT_EXCLUDE :=
+ifeq ($(target),dev)
+	DBT_EXCLUDE := --exclude "source:*"
+endif
 
 # Default target
 .DEFAULT_GOAL := help
@@ -83,25 +92,25 @@ dbt-deps:
 	@echo "Installing dbt dependencies..."
 	$(PIPENV) dbt deps $(DBTARGS)
 
-.PHONY: dbt-build-dev
-dbt-build-dev:
-	@echo "Building dbt project with dev target..."
-	@DBT_TARGET=dev $(PIPENV) dbt build $(DBTARGS)
+.PHONY: dbt-run
+dbt-run:
+	@echo "Running dbt project with $(target) target..."
+	$(PIPENV) dbt run $(DBTARGS) --target $(target) --select $(select) $(DBT_EXCLUDE)
 
-.PHONY: dbt-build-test
-dbt-build-test:
-	@echo "Building dbt project with test target..."
-	@DBT_TARGET=test RAW_SCHEMA=test_raw $(PIPENV) dbt build $(DBTARGS)
+.PHONY: dbt-test
+dbt-test:
+	@echo "Testing dbt project with $(target) target..."
+	$(PIPENV) dbt test $(DBTARGS) --target $(target) --select $(select) $(DBT_EXCLUDE)
 
-.PHONY: dbt-build-prod
-dbt-build-prod:
-	@echo "Building dbt project with prod target..."
-	@DBT_TARGET=prod $(PIPENV) dbt build $(DBTARGS)
+.PHONY: dbt-build
+dbt-build:
+	@echo "Building dbt project with $(target) target..."
+	$(PIPENV) dbt build $(DBTARGS) --target $(target) --select $(select) $(DBT_EXCLUDE)
 
 .PHONY: dbt-docs
 dbt-docs:
 	@echo "Generating dbt documentation..."
-	$(PIPENV) dbt docs generate $(DBTARGS) --static
+	$(PIPENV) dbt docs generate $(DBTARGS) --static --target $(target)
 
 .PHONY: dbt-doc-coverage
 dbt-doc-coverage:
