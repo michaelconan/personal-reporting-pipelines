@@ -158,7 +158,6 @@ pipenv run python -m pipelines.hubspot
 #### Method 2: Pipeline-Specific Override
 ```bash
 # Force full refresh for HubSpot only
-export PIPELINE_NAME=HUBSPOT
 export HUBSPOT_FULL_REFRESH=true
 pipenv run python -m pipelines.hubspot
 ```
