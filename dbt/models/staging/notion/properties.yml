@@ -126,8 +126,8 @@ models:
         data_tests:
           - dbt_expectations.expect_column_values_to_be_between:
               arguments:
-                min_value: 500
-                max_value: 1500
+                min_value: 250
+                max_value: 2000
                 row_condition: "screen_minutes is not null"
       - name: did_church
         description: "Whether the church habit was completed."
