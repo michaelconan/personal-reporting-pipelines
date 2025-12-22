@@ -1,5 +1,4 @@
 name: test dbt transformations
-
 on:
   pull_request:
     branches:
