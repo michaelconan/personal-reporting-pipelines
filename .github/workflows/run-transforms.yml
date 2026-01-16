@@ -45,11 +45,9 @@ jobs:
       - name: install 1password cli
         uses: 1password/install-cli-action@v2
 
-      - name: sign in with service account
-        run: |
-          export OP_SERVICE_ACCOUNT_TOKEN=${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-
-      - name: inject secrets
+      - name: inject secrets using service account
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
         run: |
           make inject
 

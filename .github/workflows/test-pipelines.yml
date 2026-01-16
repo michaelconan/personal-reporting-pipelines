@@ -51,15 +51,10 @@ jobs:
         if: github.actor != 'dependabot[bot]'
         uses: 1password/install-cli-action@v2
 
-      - name: sign in with service account
-        if: github.actor != 'dependabot[bot]'
-        run: |
-          export OP_SERVICE_ACCOUNT_TOKEN=${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-
-      - name: inject secrets
+      - name: inject secrets using service account
         if: github.actor != 'dependabot[bot]'
         env:
-          OP_VAULT: "reporting"
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
         run: |
           make inject
 
