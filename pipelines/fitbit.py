@@ -15,6 +15,7 @@ API Resources:
 
 # Base
 from logging import getLogger, Logger
+import subprocess
 
 # PyPI
 import requests
@@ -30,7 +31,7 @@ from dlt.sources.helpers.rest_client.paginators import (
 from dlt.common.pipeline import LoadInfo
 
 # Common custom tasks
-from pipelines import RAW_SCHEMA, BASE_DATE
+from pipelines import RAW_SCHEMA, BASE_DATE, SECRET_STORE
 from pipelines.common.utils import (
     get_refresh_mode,
     get_write_disposition,
@@ -69,20 +70,37 @@ def get_fitbit_token() -> str:
     resp.raise_for_status()
     result = resp.json()
 
-    # Connect to Google Cloud Secret Manager
-    _, project_id = google.auth.default()
-    client = secretmanager_v1.SecretManagerServiceClient()
-    parent = client.secret_path(project_id, "sources-fitbit-refresh_token")
+    if SECRET_STORE == "google":
+        # Connect to Google Cloud Secret Manager
+        _, project_id = google.auth.default()
+        client = secretmanager_v1.SecretManagerServiceClient()
+        parent = client.secret_path(project_id, "sources-fitbit-refresh_token")
 
-    # Update secret manager with refresh token for next run
-    client.add_secret_version(
-        request={
-            "parent": parent,
-            "payload": {
-                "data": result["refresh_token"].encode("UTF-8"),
-            },
-        }
-    )
+        # Update secret manager with refresh token for next run
+        client.add_secret_version(
+            request={
+                "parent": parent,
+                "payload": {
+                    "data": result["refresh_token"].encode("UTF-8"),
+                },
+            }
+        )
+
+    else:
+        # Update refresh token in 1Password
+        edit_result = subprocess.run(
+            [
+                "op",
+                "item",
+                "edit",
+                "fitbit",
+                f"refresh_token={result['refresh_token']}",
+                "--vault",
+                "reporting",
+            ],
+            capture_output=True,
+        )
+        logger.info(f"Updated 1password item: {edit_result.stdout}")
 
     return result["access_token"]
 

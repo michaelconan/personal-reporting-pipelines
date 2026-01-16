@@ -190,14 +190,6 @@
             "markers": "python_version >= '3.8'",
             "version": "==2.17.0"
         },
-        "cachetools": {
-            "hashes": [
-                "sha256:69a7a52634fed8b8bf6e24a050fb60bff1c9bd8f6d24572b99c32d4e71e62a51",
-                "sha256:82c5c05585e70b6ba2d3ae09ea60b79548872185d2f24ae1f2709d37299fd607"
-            ],
-            "markers": "python_version >= '3.9'",
-            "version": "==6.2.4"
-        },
         "certifi": {
             "hashes": [
                 "sha256:97de8790030bbd5c2d96b7ec782fc2f7820ef8dba6db909ccf95449f2d062d4b",

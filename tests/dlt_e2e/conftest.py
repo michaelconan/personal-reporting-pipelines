@@ -13,6 +13,8 @@ import pytest
 import dlt
 from dlt.common.configuration.providers.google_secrets import GoogleSecretsProvider
 
+from pipelines import SECRET_STORE
+
 # Ensure Google Secrets are enabled for E2E tests
 # This counteracts any unit test configuration that might disable them
 os.environ["PROVIDERS__ENABLE_GOOGLE_SECRETS"] = "true"
@@ -29,14 +31,20 @@ def check_config():
     Ensures that Google Secrets provider is properly configured
     and available for accessing real credentials during E2E testing.
     """
+    # Required for BigQuery and Google Secrets
     assert os.path.exists(os.environ["GOOGLE_APPLICATION_CREDENTIALS"])
-    # Get providers of dlt secrets
-    providers = dlt.secrets.config_providers
-    # Environment, Secrets.toml, Google Secrets
-    assert len(providers) == 3
-    # Allow direct value secrets (like Fitbit refresh token)
-    google_providers = [p for p in providers if isinstance(p, GoogleSecretsProvider)]
-    assert google_providers[0].only_toml_fragments is False
+
+    # Validate provider if using Google Secrets
+    if SECRET_STORE == "google":
+        # Get providers of dlt secrets
+        providers = dlt.secrets.config_providers
+        # Environment, Secrets.toml, Google Secrets
+        assert len(providers) == 3
+        # Allow direct value secrets (like Fitbit refresh token)
+        google_providers = [
+            p for p in providers if isinstance(p, GoogleSecretsProvider)
+        ]
+        assert google_providers[0].only_toml_fragments is False
 
 
 @pytest.fixture(scope="class")
