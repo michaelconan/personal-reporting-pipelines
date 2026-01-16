@@ -19,10 +19,6 @@ jobs:
     env:
       GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
     steps:
-      - name: Set environment variables
-        run: |
-          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/sa_key.json" >> $GITHUB_ENV
-          
       - name: checkout code
         uses: actions/checkout@v4
         
@@ -36,17 +32,33 @@ jobs:
           make install
           make dbt-deps
           
+      - name: set environment variables
+        run: |
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/sa_key.json" >> $GITHUB_ENV
+          
       - name: write keyfile
         run: |
           cat << 'EOF' > $GOOGLE_APPLICATION_CREDENTIALS
           ${{ secrets.GCP_SVC_KEY }}
           EOF
 
+      - name: install 1password cli
+        uses: 1password/install-cli-action@v2
+
+      - name: sign in with service account
+        run: |
+          export OP_SERVICE_ACCOUNT_TOKEN=${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+
+      - name: inject secrets
+        run: |
+          make inject
+
       - name: run dbt build
         run: |
           make dbt-build target=prod
           
-      - name: Remove keyfile
+      - name: remove keyfile and secrets
         if: always()
         run: |
-          rm $GOOGLE_APPLICATION_CREDENTIALS
+          rm -f $GOOGLE_APPLICATION_CREDENTIALS
+          rm -f .dlt/secrets.toml

@@ -30,7 +30,7 @@ docs/source/dbt.html
 
 .env
 .secrets/*.json
-.secrets/secrets.toml
+*/secrets.toml
 
 # IDE / Editor
 .vscode/
