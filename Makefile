@@ -36,6 +36,10 @@ install: ## Install Python dependencies using pipenv
 	@pip install --upgrade pipenv
 	@pipenv install --dev
 
+.PHONY: inject
+inject:
+	@op inject -i .dlt/secrets.toml.tpl -o .dlt/secrets.toml
+
 ## Testing
 .PHONY: test-e2e
 test-e2e: ## Run tests with coverage
