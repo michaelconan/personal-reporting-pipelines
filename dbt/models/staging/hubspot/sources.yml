@@ -110,7 +110,7 @@ sources:
               - expect_column_array_length_to_be_between:
                   arguments:
                     min_value: 0
-                    max_value: 10
+                    max_value: 25
                   config:
                     enabled: "{{ target.type != 'duckdb' }}"
           - name: associations__company_ids

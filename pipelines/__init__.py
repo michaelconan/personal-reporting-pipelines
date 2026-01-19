@@ -9,6 +9,9 @@ import os
 # IS_TEST = os.getenv("TEST") or os.getenv("CI")
 BASE_DATE = "2020-01-01"
 
+# google or 1password
+SECRET_STORE = os.getenv("SECRET_STORE", default="1password")
+
 # Load and set dynamic schema and table variables based on DBT target
 DBT_TARGET = os.getenv("DBT_TARGET", default="prod")
 prefix = f"{DBT_TARGET}_" if DBT_TARGET != "prod" else ""
