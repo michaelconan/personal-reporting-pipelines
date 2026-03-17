@@ -3,7 +3,6 @@ import os
 import re
 import json
 from typing import Callable
-from urllib.parse import parse_qs, urlparse
 
 # PyPI imports
 import pytest
@@ -296,18 +295,18 @@ def test_hubspot_pipeline(mock_hs_apis, duckdb_pipeline):
 
         # Check contacts table
         contacts_table = client.execute_sql(
-            f"SELECT 1 FROM {dataset}.hubspot__contacts"
+            f"SELECT 1 FROM {dataset}.hubspot__contacts",
         )
         assert len(contacts_table) == 5
 
         # Check companies table
         companies_table = client.execute_sql(
-            f"SELECT 1 FROM {dataset}.hubspot__companies"
+            f"SELECT 1 FROM {dataset}.hubspot__companies",
         )
         assert len(companies_table) == 5
 
         # Check meetings table
         meetings_table = client.execute_sql(
-            f"SELECT 1 FROM {dataset}.hubspot__meetings"
+            f"SELECT 1 FROM {dataset}.hubspot__meetings",
         )
         assert len(meetings_table) == 5

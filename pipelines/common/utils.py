@@ -4,7 +4,6 @@ Common utilities for pipeline operations.
 
 # Base imports
 import os
-from typing import Any
 from logging import getLogger
 
 # PyPI imports
@@ -59,7 +58,7 @@ def get_refresh_mode(default_incremental: bool = True) -> bool:
         full_refresh_var = f"{pipeline_name}_FULL_REFRESH"
         if os.getenv(full_refresh_var, "").lower() in ("true", "1", "yes"):
             logger.info(
-                f"Full refresh forced for {pipeline_name} via {full_refresh_var}"
+                f"Full refresh forced for {pipeline_name} via {full_refresh_var}",
             )
             return False
 

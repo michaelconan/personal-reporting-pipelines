@@ -4,7 +4,6 @@
 # Python environment
 PIPENV = pipenv run
 PYTEST = $(PIPENV) pytest \
-	--cov=pipelines \
 	--cov-append \
 	-v -s
 DBTARGS = --project-dir dbt --profiles-dir dbt
@@ -44,9 +43,7 @@ inject:
 .PHONY: test-e2e
 test-e2e: ## Run tests with coverage
 	$(PIPENV) pytest tests/dlt_e2e \
-		--cov=pipelines \
 		--cov-append \
-		--cov-branch \
 		--cov-report=xml \
 		--junitxml=test-results-e2e.xml \
 		-v -s
@@ -54,9 +51,7 @@ test-e2e: ## Run tests with coverage
 .PHONY: test-local
 test-local: ## Run offline local tests only
 	$(PIPENV) pytest tests/dlt_unit \
-		--cov=pipelines \
 		--cov-append \
-		--cov-branch \
 		--cov-report=xml \
 		--junitxml=test-results-local.xml \
 		-v -s

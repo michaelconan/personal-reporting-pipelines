@@ -7,9 +7,9 @@ This page provides access to the dbt documentation generated from your dbt proje
    :file: dbt.html
 
 .. note::
-   This documentation is automatically generated from your dbt project. 
+   This documentation is automatically generated from your dbt project.
    To regenerate it, run::
-   
+
       pipenv run dbt docs generate
       pipenv run dbt docs serve
 

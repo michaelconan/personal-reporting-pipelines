@@ -11,7 +11,7 @@ models:
               not exists (
                 select 1
                 from {{ ref('stg_fitbit__sleep') }} s1
-                join {{ ref('stg_fitbit__sleep') }} s2 
+                join {{ ref('stg_fitbit__sleep') }} s2
                 on s1.log_id != s2.log_id
                 where s1.started_at < s2.ended_at
                   and s1.ended_at > s2.started_at

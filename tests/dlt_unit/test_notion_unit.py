@@ -50,7 +50,7 @@ def mock_notion_apis(monkeypatch: MonkeyPatch, mock_responses) -> Callable:
                     "results": [],
                     "next_cursor": None,
                     "has_more": False,
-                }
+                },
             ),
         )
 
@@ -89,7 +89,11 @@ class TestNotionPhases:
         ("resource", "expected_tables", "configs"),
         (
             # columns hint mirrors pipeline config: title is a rich text array stored as JSON
-            ("data_sources", 1, {"max_table_nesting": 1, "columns": {"title": {"data_type": "json"}}}),
+            (
+                "data_sources",
+                1,
+                {"max_table_nesting": 1, "columns": {"title": {"data_type": "json"}}},
+            ),
             ("data_source_rows", 1, {"max_table_nesting": 2}),
         ),
     )
@@ -208,13 +212,13 @@ def test_notion_pipeline_refresh(mock_notion_apis, duckdb_pipeline, increment: b
     with duckdb_pipeline.sql_client() as client:
         # Check data_sources table (search results)
         databases_table = client.execute_sql(
-            f"SELECT 1 FROM {dataset}.notion__data_sources"
+            f"SELECT 1 FROM {dataset}.notion__data_sources",
         )
         assert len(databases_table) == 1
 
         # Check data_source_rows table
         rows_table = client.execute_sql(
-            f"SELECT 1 FROM {dataset}.notion__data_source_daily_habits"
+            f"SELECT 1 FROM {dataset}.notion__data_source_daily_habits",
         )
         assert len(rows_table) == expected_rows
 
@@ -233,6 +237,6 @@ def test_notion_pipeline_refresh(mock_notion_apis, duckdb_pipeline, increment: b
     with duckdb_pipeline.sql_client() as client:
         # Check data_source_rows table
         rows_table2 = client.execute_sql(
-            f"SELECT 1 FROM {dataset}.notion__data_source_daily_habits"
+            f"SELECT 1 FROM {dataset}.notion__data_source_daily_habits",
         )
         assert len(rows_table2) == expected_rows

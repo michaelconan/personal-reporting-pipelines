@@ -16,7 +16,7 @@ API Resources:
     - `Meetings <https://developers.hubspot.com/docs/api-reference/crm-meetings-v3/guide>`_
     - `Tasks <https://developers.hubspot.com/docs/api-reference/crm-tasks-v3/guide>`_
     - `Notes <https://developers.hubspot.com/docs/api-reference/crm-notes-v3/guide>`_
-    - `Communications <https://developers.hubspot.com/docs/api-reference/crm-communications-v3/guide>`_
+    - `Communications <https://developers.hubspot.com/docs/api-reference/crm-communications-v3/guide>`_  # noqa: E501
 - `Associations <https://developers.hubspot.com/docs/api-reference/crm-associations-v4/guide>`_
 """
 
@@ -168,9 +168,9 @@ def hubspot_source(
                                     "propertyName": hs_object["filter"],
                                     "operator": "GTE",
                                     "value": "{incremental.start_value}",
-                                }
-                            ]
-                        }
+                                },
+                            ],
+                        },
                     ],
                 },
                 "paginator": JSONResponseCursorPaginator(
@@ -192,7 +192,7 @@ def hubspot_source(
                     "propertyName": hs_object["filter"],
                     "operator": "LTE",
                     "value": "{incremental.end_value}",
-                }
+                },
             )
 
         api_config["resources"].append(object_resource)
@@ -216,7 +216,7 @@ def hubspot_source(
                         "data_selector": "results",
                     },
                     "include_from_parent": ["id", "updatedAt"],
-                }
+                },
             )
 
     yield from rest_api_resources(api_config)

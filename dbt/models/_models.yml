@@ -1,4 +1,4 @@
-models: 
+models:
 
   # Daily time spine
   - name: time_spine_daily
