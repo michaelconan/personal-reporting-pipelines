@@ -33,6 +33,7 @@ help: ## Show this help message
 install: ## Install Python dependencies using pipenv
 	@pip install --upgrade pip
 	@pip install --upgrade pipenv
+	@pipenv lock
 	@pipenv install --dev
 
 .PHONY: inject
