@@ -4,12 +4,13 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-dlt = {extras = ["bigquery", "parquet", "duckdb"], version = ">=1.15"}
+dlt = {extras = ["bigquery", "parquet", "duckdb"], version = "*"}
 google-cloud-bigquery-storage = "*"
 google-cloud-secret-manager = "*"
 google-api-python-client = "*"
 psutil = "*"
 dbt-duckdb = "*"
+dbt-bigquery = "*"
 
 [dev-packages]
 pytest-cov = "*"
@@ -20,7 +21,7 @@ responses = "*"
 sqlfluff = "*"
 sqlfluff-templater-dbt = "*"
 black = "*"
-dbt-bigquery = "*"
+faker = "*"
 marimo = "*"
 sphinx = "*"
 sphinx-rtd-theme = "*"

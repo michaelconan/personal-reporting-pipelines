@@ -48,7 +48,7 @@ def mock_hs_apis(monkeypatch: MonkeyPatch, mock_responses) -> Callable:
         if offset == 0:
             # Return data for first page
             return sample_response("hubspot_engagements_run1-page1.json")
-        elif offset == limit:
+        elif offset >= limit:
             # Return data for second page
             return sample_response("hubspot_engagements_run1-page2.json")
         else:

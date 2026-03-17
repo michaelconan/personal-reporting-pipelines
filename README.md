@@ -38,7 +38,7 @@ The following data will be ingested from my personal systems into a BigQuery war
 1. **[dlt hub](https://dlthub.com/docs/intro)** - Extract, normalise, and load source data into BigQuery raw layer
 2. **[dbt core](https://docs.getdbt.com/)** - Transform raw data into analytics-ready models and views
 3. **[BigQuery](https://cloud.google.com/bigquery)** - Cloud data warehouse for storage and analysis
-4. **[GCP Secret Manager](https://cloud.google.com/secret-manager)** - Secure credential management for API keys and connections
+4. **[1Password Secrets](https://developer.1password.com/docs/cli/reference/)** - Secure credential management with templates and command line automation
 5. **[GitHub Actions](https://github.com/features/actions)** - Automated orchestration and scheduling of data pipelines
 
 ### Project Structure
