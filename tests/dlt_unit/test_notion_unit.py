@@ -25,21 +25,21 @@ def mock_notion_apis(monkeypatch: MonkeyPatch, mock_responses) -> Callable:
     monkeypatch.setenv("SOURCES__NOTION__API_KEY", "dummy_api_key")
 
     def cursor_callback(request):
-        """Handle cursor-based pagination for Notion database queries."""
+        """Handle cursor-based pagination for Notion data source queries."""
         body = json.loads(request.body)
         start_cursor = body.get("start_cursor")
         after_date = body["filter"]["date"]["after"]
 
         if "2024-06-05" in after_date:
             # Subsequent run page
-            return sample_response("notion_database_rows_run2.json")
+            return sample_response("notion_data_source_rows_run2.json")
         else:
             if not start_cursor:
                 # First page
-                return sample_response("notion_database_rows_run1-page1.json")
+                return sample_response("notion_data_source_rows_run1-page1.json")
             elif start_cursor == "cursor_page2_token":
                 # Second page
-                return sample_response("notion_database_rows_run1-page2.json")
+                return sample_response("notion_data_source_rows_run1-page2.json")
         # No more data
         return (
             200,
@@ -54,9 +54,9 @@ def mock_notion_apis(monkeypatch: MonkeyPatch, mock_responses) -> Callable:
             ),
         )
 
-    def databases_callback(request):
-        """Handle database search requests (single page)."""
-        return sample_response("notion_databases.json")
+    def data_sources_callback(request):
+        """Handle data source search requests (single page)."""
+        return sample_response("notion_data_sources.json")
 
     def setup(endpoints=[]):
         """Nested function to only register mock endpoints for tests.
@@ -65,17 +65,17 @@ def mock_notion_apis(monkeypatch: MonkeyPatch, mock_responses) -> Callable:
             endpoints (list, optional): Specific endpoints to register. Defaults to [] (all).
         """
         # Mock the API responses
-        if not endpoints or "databases" in endpoints:
+        if not endpoints or "data_sources" in endpoints:
             mock_responses.add_callback(
                 mock_responses.POST,
                 BASE_URL + "/search",
-                callback=databases_callback,
+                callback=data_sources_callback,
                 content_type="application/json",
             )
-        if not endpoints or "database_rows" in endpoints:
+        if not endpoints or "data_source_rows" in endpoints:
             mock_responses.add_callback(
                 mock_responses.POST,
-                re.compile(BASE_URL + r"/databases/([a-f0-9\-]+)/query"),
+                re.compile(BASE_URL + r"/data_sources/([a-f0-9\-]+)/query"),
                 callback=cursor_callback,
                 content_type="application/json",
             )
@@ -88,8 +88,9 @@ class TestNotionPhases:
     TEST_PARAMS = (
         ("resource", "expected_tables", "configs"),
         (
-            ("databases", 1, {"max_table_nesting": 1}),
-            ("database_rows", 1, {"max_table_nesting": 2}),
+            # columns hint mirrors pipeline config: title is a rich text array stored as JSON
+            ("data_sources", 1, {"max_table_nesting": 1, "columns": {"title": {"data_type": "json"}}}),
+            ("data_source_rows", 1, {"max_table_nesting": 2}),
         ),
     )
 
@@ -205,15 +206,15 @@ def test_notion_pipeline_refresh(mock_notion_apis, duckdb_pipeline, increment: b
     # Check the loaded data
     dataset = duckdb_pipeline.dataset_name
     with duckdb_pipeline.sql_client() as client:
-        # Check databases table (search results)
+        # Check data_sources table (search results)
         databases_table = client.execute_sql(
-            f"SELECT 1 FROM {dataset}.notion__databases"
+            f"SELECT 1 FROM {dataset}.notion__data_sources"
         )
         assert len(databases_table) == 1
 
-        # Check database_rows table
+        # Check data_source_rows table
         rows_table = client.execute_sql(
-            f"SELECT 1 FROM {dataset}.notion__database_daily_habits"
+            f"SELECT 1 FROM {dataset}.notion__data_source_daily_habits"
         )
         assert len(rows_table) == expected_rows
 
@@ -230,8 +231,8 @@ def test_notion_pipeline_refresh(mock_notion_apis, duckdb_pipeline, increment: b
     assert info2.has_failed_jobs is False
     # Validate loaded data from incremental run
     with duckdb_pipeline.sql_client() as client:
-        # Check database_rows table
+        # Check data_source_rows table
         rows_table2 = client.execute_sql(
-            f"SELECT 1 FROM {dataset}.notion__database_daily_habits"
+            f"SELECT 1 FROM {dataset}.notion__data_source_daily_habits"
         )
         assert len(rows_table2) == expected_rows

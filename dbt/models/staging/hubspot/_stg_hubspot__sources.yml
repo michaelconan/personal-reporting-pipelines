@@ -153,3 +153,83 @@ sources:
           - name: _hubspot__communications_id
             description: "The parent communication ID."
             data_type: integer
+
+      - name: deals
+        identifier: hubspot__deals
+        description: "Raw deal data from HubSpot CRM."
+        columns:
+          - name: id
+            description: "Primary key for the HubSpot deal."
+            data_type: integer
+            data_tests:
+              - not_null
+          - name: properties__dealname
+            data_type: varchar
+          - name: properties__dealstage
+            data_type: varchar
+          - name: properties__pipeline
+            data_type: varchar
+          - name: properties__amount
+            data_type: numeric
+          - name: properties__closedate
+            data_type: timestamp
+          - name: properties__hs_deal_stage_probability
+            data_type: numeric
+          - name: properties__hs_is_closed
+            data_type: boolean
+          - name: properties__hs_is_closed_won
+            data_type: boolean
+          - name: properties__hs_lastmodifieddate
+            data_type: timestamp
+          - name: created_at
+            data_type: timestamp
+          - name: updated_at
+            data_type: timestamp
+
+      - name: deals_to_contacts
+        identifier: hubspot__deals_to_contacts
+        description: "Association table between deals and contacts."
+        columns:
+          - name: to_object_id
+            description: "The contact ID."
+            data_type: integer
+          - name: _hubspot__deals_id
+            description: "The parent deal ID."
+            data_type: integer
+
+      - name: tickets
+        identifier: hubspot__tickets
+        description: "Raw ticket data from HubSpot CRM."
+        columns:
+          - name: id
+            description: "Primary key for the HubSpot ticket."
+            data_type: integer
+            data_tests:
+              - not_null
+          - name: properties__subject
+            data_type: varchar
+          - name: properties__hs_ticket_priority
+            data_type: varchar
+          - name: properties__hs_pipeline
+            data_type: varchar
+          - name: properties__hs_pipeline_stage
+            data_type: varchar
+          - name: properties__hs_ticket_category
+            data_type: varchar
+          - name: properties__hs_lastmodifieddate
+            data_type: timestamp
+          - name: created_at
+            data_type: timestamp
+          - name: updated_at
+            data_type: timestamp
+
+      - name: tickets_to_contacts
+        identifier: hubspot__tickets_to_contacts
+        description: "Association table between tickets and contacts."
+        columns:
+          - name: to_object_id
+            description: "The contact ID."
+            data_type: integer
+          - name: _hubspot__tickets_id
+            description: "The parent ticket ID."
+            data_type: integer

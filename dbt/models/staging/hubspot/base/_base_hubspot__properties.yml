@@ -27,16 +27,6 @@ models:
       - name: body_preview
         description: "A preview of the engagement body content."
         data_type: varchar
-      - name: company_ids
-        description: "Array of company IDs associated with this engagement."
-        data_type: array
-        data_tests:
-          - not_null
-      - name: contact_ids
-        description: "Array of contact IDs associated with this engagement."
-        data_type: array
-        data_tests:
-          - not_null
       - name: created_at
         description: "The timestamp when the engagement was created in HubSpot."
         data_type: timestamp
