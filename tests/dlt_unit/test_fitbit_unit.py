@@ -95,7 +95,7 @@ class TestFitbitPhases:
 
         # WHEN
         source = fitbit_source(api_key="dummy_token").with_resources(
-            f"fitbit__{resource}"
+            f"fitbit__{resource}",
         )
         info = duckdb_pipeline.extract(source)
 
@@ -239,6 +239,6 @@ def test_fitbit_pipeline(mock_fitbit_apis, duckdb_pipeline):
 
         # Check activities table
         activities_table = client.execute_sql(
-            f"SELECT 1 FROM {dataset}.fitbit__activities"
+            f"SELECT 1 FROM {dataset}.fitbit__activities",
         )
         assert len(activities_table) == 5

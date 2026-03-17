@@ -67,7 +67,7 @@ jobs:
             ## DBT Coverage Report
 
             ### Documentation Coverage
-            
+
             ${{ steps.coverage.outputs.doc_coverage }}
 
             ### Test Coverage

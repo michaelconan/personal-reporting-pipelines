@@ -132,7 +132,7 @@ def notion_source(
                         "map": lambda r: filter_fields(
                             r,
                             EXCLUDE_PATHS + ["$.properties"],
-                        )
+                        ),
                     },
                 ],
                 "endpoint": {
@@ -186,7 +186,7 @@ def notion_source(
                     "property": "Last edited time",
                     "date": {"before": "{incremental.end_value}"},
                 },
-            ]
+            ],
         }
         # Add end date to incremental load range
         # rows_resource["endpoint"]["incremental"]["end_value"] = end_date

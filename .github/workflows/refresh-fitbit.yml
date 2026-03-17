@@ -19,20 +19,20 @@ jobs:
     steps:
       - name: checkout code
         uses: actions/checkout@v4
-        
+
       - name: set up python 3.12
         uses: actions/setup-python@v4
         with:
           python-version: '3.12'
-          
+
       - name: install pipenv and dependencies
         run: |
           make install
-          
+
       - name: set google credentials environment variable
         run: |
           echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/sa_key.json" >> $GITHUB_ENV
-          
+
       - name: write keyfile
         run: |
           cat << 'EOF' > $GOOGLE_APPLICATION_CREDENTIALS
@@ -54,7 +54,7 @@ jobs:
           RUNTIME__LOG_LEVEL: "INFO"
         run: |
           pipenv run python -m pipelines.fitbit
-          
+
       - name: remove keyfile
         if: always()
         run: |

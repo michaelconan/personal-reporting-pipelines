@@ -22,6 +22,7 @@ repos:
   rev: 6.1.0
   hooks:
     - id: flake8
+      additional_dependencies: [flake8-pyproject]
 - repo: https://github.com/pre-commit/mirrors-mypy
   rev: v1.7.1
   hooks:
@@ -30,3 +31,5 @@ repos:
   rev: 1.7.5
   hooks:
     - id: bandit
+      additional_dependencies: [pbr]
+      args: [-c, pyproject.toml]

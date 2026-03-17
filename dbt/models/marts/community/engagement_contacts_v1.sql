@@ -15,23 +15,23 @@ select
     -- Generate composite surrogate key for engagement-contact combination
     -- This ensures uniqueness at the grain of this table
     {{ dbt_utils.generate_surrogate_key(['e.engagement_id', 'c.contact_id']) }} as engagement_key,
-    
+
     -- Engagement attributes
     e.engagement_id,  -- HubSpot engagement ID
     e.engagement_type,  -- Type of engagement (EMAIL, CALL, MEETING, etc.)
     e.body_preview,  -- Preview text of engagement content
     e.occurred_at,  -- Timestamp when engagement occurred
     e.is_synchronous,  -- Boolean: true for CALL/MEETING, false for EMAIL/etc.
-    
+
     -- Contact attributes
     c.contact_id,  -- HubSpot contact ID
     c.first_name,  -- Contact's first name
     c.last_name,  -- Contact's last name
-    
+
     -- Company attributes (via contact)
     a.company_id,  -- HubSpot company ID associated with contact
     a.company_name,  -- Company name
-    
+
     -- Metadata
     e.updated_at  -- Timestamp when engagement was last updated
 from

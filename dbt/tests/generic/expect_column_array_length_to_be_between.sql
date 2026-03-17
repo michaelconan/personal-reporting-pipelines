@@ -1,5 +1,5 @@
 {% test expect_column_array_length_to_be_between(model, column_name, min_value, max_value) %}
-    
+
     {% set array_length_sql %}
         {% if target.type == 'bigquery' %}
             array_length(json_extract_array({{ column_name }}))
@@ -9,7 +9,7 @@
             {{ exceptions.raise_compiler_error("Unsupported adapter: " ~ target.type) }}
         {% endif %}
     {% endset %}
-    
+
     select
         *
     from {{ model }}

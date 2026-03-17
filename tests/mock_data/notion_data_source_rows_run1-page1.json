@@ -18,7 +18,7 @@
         },
         "Date": {
           "id": "date",
-          "type": "date", 
+          "type": "date",
           "date": {"start": "2024-06-01", "end": null}
         },
         "Completed": {
@@ -30,7 +30,7 @@
     },
     {
       "object": "page",
-      "id": "page-002", 
+      "id": "page-002",
       "created_time": "2024-06-02T19:05:00.000Z",
       "last_edited_time": "2024-06-02T20:25:00.000Z",
       "parent": {
@@ -39,7 +39,7 @@
       },
       "properties": {
         "Name": {
-          "id": "title", 
+          "id": "title",
           "type": "title",
           "title": [{"type": "text", "text": {"content": "Read 30 minutes", "link": null}}]
         },
@@ -50,7 +50,7 @@
         },
         "Completed": {
           "id": "checkbox",
-          "type": "checkbox", 
+          "type": "checkbox",
           "checkbox": false
         }
       }
@@ -58,7 +58,7 @@
     {
       "object": "page",
       "id": "page-003",
-      "created_time": "2024-06-03T19:05:00.000Z", 
+      "created_time": "2024-06-03T19:05:00.000Z",
       "last_edited_time": "2024-06-03T20:25:00.000Z",
       "parent": {
         "type": "data_source_id",
@@ -71,7 +71,7 @@
           "title": [{"type": "text", "text": {"content": "Meditate", "link": null}}]
         },
         "Date": {
-          "id": "date", 
+          "id": "date",
           "type": "date",
           "date": {"start": "2024-06-03", "end": null}
         },

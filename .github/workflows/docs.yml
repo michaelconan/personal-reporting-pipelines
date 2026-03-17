@@ -11,7 +11,7 @@ jobs:
   build:
     permissions:
       contents: read
-    
+
     runs-on: ubuntu-latest
     steps:
       - name: "Check out repository"
@@ -28,7 +28,7 @@ jobs:
 
       - name: "Build documentation"
         run: make docs
-      
+
       - name: Upload pages artifact
         uses: actions/upload-pages-artifact@v3
         with:

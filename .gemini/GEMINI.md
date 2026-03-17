@@ -177,7 +177,7 @@ where row_num = 1
 # Global override
 export FORCE_FULL_REFRESH=true
 
-# Pipeline-specific override  
+# Pipeline-specific override
 export PIPELINE_NAME=HUBSPOT
 export HUBSPOT_FULL_REFRESH=true
 ```
@@ -195,7 +195,7 @@ export HUBSPOT_FULL_REFRESH=true
   ```toml
   [sources.hubspot]
   api_key = "your-key"
-  
+
   [sources.fitbit]
   client_id = "your-id"
   client_secret = "your-secret"
@@ -233,7 +233,7 @@ cd dbt && pipenv run dbt test --target dev
 
 ### Pipeline Scheduling
 - **HubSpot**: Daily at 2 AM UTC
-- **Fitbit**: Daily at 3 AM UTC  
+- **Fitbit**: Daily at 3 AM UTC
 - **Notion**: Weekly on Sundays at 9 AM UTC
 - **dbt Transform**: Daily at 4 AM UTC (after ingestion)
 
@@ -254,7 +254,7 @@ cd dbt && pipenv run dbt test --target dev
 - **API limits**: Handle rate limiting with backoff strategies
 - **Schema evolution**: Use `write_disposition="merge"` for schema changes
 
-### dbt Model Issues  
+### dbt Model Issues
 - **Incremental models**: Use proper `is_incremental()` logic
 - **BigQuery specifics**: Handle nested JSON and arrays appropriately
 - **Testing failures**: Always validate referential integrity
@@ -272,7 +272,7 @@ cd dbt && pipenv run dbt test --target dev
 - Validate environment variable handling
 - Ensure proper typing and documentation
 
-### SQL Code Review  
+### SQL Code Review
 - Verify SQLFluff compliance
 - Check for proper aliasing and formatting
 - Validate business logic in transformations
@@ -291,13 +291,13 @@ cd dbt && pipenv run dbt test --target dev
 - Track API rate limit usage
 - Optimize batch sizes for BigQuery loading
 
-### dbt Performance  
+### dbt Performance
 - Monitor model compilation and execution times
 - Use incremental models for large datasets
 - Optimize BigQuery partitioning and clustering
 
 ### Data Quality Monitoring
-- dbt test results tracking  
+- dbt test results tracking
 - Pipeline success/failure alerts
 - Data freshness monitoring
 - Schema drift detection
