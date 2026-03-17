@@ -5,11 +5,11 @@ sources:
     description: "Source data from the Notion habit tracker."
     schema: "{{ env_var('RAW_SCHEMA', 'raw') }}"
     tables:
-      - name: database_daily_habits
-        identifier: notion__database_daily_habits
-        description: "Raw habit entries from the daily notion database."
+      - name: data_source_daily_habits
+        identifier: notion__data_source_daily_habits
+        description: "Raw habit entries from the daily habits data source."
         columns:
-          - name: parent__database_id
+          - name: parent__data_source_id
             data_type: varchar
             data_tests:
               - not_null
@@ -58,11 +58,11 @@ sources:
             data_tests:
               - not_null
 
-      - name: database_weekly_habits
-        identifier: notion__database_weekly_habits
-        description: "Raw habit entries from the weekly notion database."
+      - name: data_source_weekly_habits
+        identifier: notion__data_source_weekly_habits
+        description: "Raw habit entries from the weekly habits data source."
         columns:
-          - name: parent__database_id
+          - name: parent__data_source_id
             data_type: varchar
             data_tests:
               - not_null
@@ -102,6 +102,14 @@ sources:
             data_type: boolean
             data_tests:
               - not_null
+          - name: properties__cook__checkbox
+            data_type: boolean
+          - name: properties__cardio__checkbox
+            data_type: boolean
+          - name: properties__sabbath__checkbox
+            data_type: boolean
+          - name: properties__date_night__checkbox
+            data_type: boolean
           - name: created_time
             data_type: timestamp
             data_tests:
@@ -111,11 +119,48 @@ sources:
             data_tests:
               - not_null
 
-      - name: database_monthly_habits
-        identifier: notion__database_monthly_habits
-        description: "Raw habit entries from the monthly notion database."
+      - name: data_source_habit_reference
+        identifier: notion__data_source_habit_reference
+        description: "Reference table of all tracked disciplines from the Notion habit reference database."
         columns:
-          - name: parent__database_id
+          - name: parent__data_source_id
+            data_type: varchar
+            data_tests:
+              - not_null
+          - name: id
+            data_type: varchar
+            data_tests:
+              - not_null
+          - name: properties__name__title
+            data_type: varchar
+            data_tests:
+              - not_null
+          - name: properties__category__select
+            data_type: varchar
+          - name: properties__frequency__select
+            data_type: varchar
+          - name: properties__type__select
+            data_type: varchar
+          - name: properties__source__select
+            data_type: varchar
+          - name: properties__target__number
+            data_type: numeric
+          - name: properties__threshold__number
+            data_type: numeric
+          - name: properties__below_threshold__checkbox
+            data_type: boolean
+          - name: properties__active__formula
+            data_type: varchar
+          - name: properties__start_date__date
+            data_type: varchar
+          - name: properties__end_date__date
+            data_type: varchar
+
+      - name: data_source_monthly_habits
+        identifier: notion__data_source_monthly_habits
+        description: "Raw habit entries from the monthly habits data source."
+        columns:
+          - name: parent__data_source_id
             data_type: varchar
             data_tests:
               - not_null
@@ -147,6 +192,10 @@ sources:
             data_type: boolean
             data_tests:
               - not_null
+          - name: properties__goal_review__checkbox
+            data_type: boolean
+          - name: properties__training__checkbox
+            data_type: boolean
           - name: created_time
             data_type: timestamp
             data_tests:
