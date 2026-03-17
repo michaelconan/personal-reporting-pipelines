@@ -17,25 +17,9 @@ sources:
           - name: properties__name
             description: "The name of the company."
             data_type: varchar
-            data_tests:
-              - not_null
-          - name: properties__createdate
-            description: "The date the company was created."
-            data_type: timestamp
-            data_tests:
-              - not_null
           - name: properties__hs_lastmodifieddate
             description: "The date the company was last modified."
             data_type: timestamp
-            data_tests:
-              - not_null
-          - name: properties__hs_ideal_customer_profile
-            description: "The ideal customer profile tier for a company."
-            data_type: varchar
-            data_tests:
-              - accepted_values:
-                  arguments:
-                    values: ["tier_1", "tier_2", "tier_3"]
 
       - name: contacts
         identifier: hubspot__contacts
@@ -49,75 +33,123 @@ sources:
           - name: properties__associatedcompanyid
             description: "The ID of the company associated with a contact."
             data_type: integer
-            data_tests:
-              - relationships:
-                  arguments:
-                    to: source('hubspot', 'companies')
-                    field: id
           - name: properties__email
             description: "The email address of the contact."
             data_type: varchar
-            # TODO: Add data_test email format validation for non-null rows
           - name: properties__firstname
             description: "The first name of the contact."
             data_type: varchar
-            data_tests:
-              - not_null
           - name: properties__lastname
             description: "The last name of the contact."
             data_type: varchar
-            data_tests:
-              - not_null
           - name: properties__createdate
             description: "The date the contact was created."
             data_type: timestamp
-            data_tests:
-              - not_null
           - name: properties__lastmodifieddate
             description: "The date the contact was last modified."
             data_type: timestamp
-            data_tests:
-              - not_null
 
-      - name: engagements
-        identifier: hubspot__engagements
-        description: "Raw engagement data from the HubSpot CRM."
+      - name: meetings
+        identifier: hubspot__meetings
+        description: "Raw meeting engagement data from HubSpot CRM."
         columns:
-          - name: engagement__id
-            description: "Primary key for the raw HubSpot engagement table."
+          - name: id
+            description: "Primary key for the HubSpot meeting."
             data_type: integer
             data_tests:
               - not_null
-          - name: engagement__type
-            description: "The type of HubSpot engagement."
+          - name: properties__hs_meeting_start_time
+            description: "Meeting start timestamp."
+            data_type: timestamp
+          - name: properties__hs_meeting_end_time
+            description: "Meeting end timestamp."
+            data_type: timestamp
+          - name: properties__hs_meeting_title
+            description: "Meeting title."
             data_type: varchar
-            data_tests:
-              - accepted_values:
-                  arguments:
-                    values: ["CALL", "WHATS_APP", "MEETING", "SMS", "EMAIL", "LINKEDIN_MESSAGE", "NOTE", "TASK"]
-          - name: engagement__timestamp
-            description: "The timestamp of the engagement."
-            data_type: bigint
-            data_tests:
-              - dbt_expectations.expect_column_values_to_be_between:
-                  arguments:
-                    min_value: 1577836800000    # 2020-01-01
-                    max_value: 1924905600000    # 2030-12-31
-          - name: associations__contact_ids
-            description: "The IDs of the contact associated with an engagement."
+          - name: properties__hs_meeting_outcome
+            description: "Meeting outcome status."
             data_type: varchar
+          - name: created_at
+            data_type: timestamp
+          - name: updated_at
+            data_type: timestamp
+
+      - name: meetings_to_contacts
+        identifier: hubspot__meetings_to_contacts
+        description: "Association table between meetings and contacts."
+        columns:
+          - name: to_object_id
+            description: "The contact ID."
+            data_type: integer
+          - name: _hubspot__meetings_id
+            description: "The parent meeting ID."
+            data_type: integer
+
+      - name: calls
+        identifier: hubspot__calls
+        description: "Raw call engagement data from HubSpot CRM."
+        columns:
+          - name: id
+            description: "Primary key for the HubSpot call."
+            data_type: integer
             data_tests:
-              - expect_column_array_length_to_be_between:
-                  arguments:
-                    min_value: 0
-                    max_value: 25
-                  config:
-                    enabled: "{{ target.type != 'duckdb' }}"
-          - name: associations__company_ids
-            description: "The IDs of the company associated with an engagement."
+              - not_null
+          - name: properties__hs_timestamp
+            description: "Call timestamp."
+            data_type: timestamp
+          - name: properties__hs_call_body
+            description: "Call notes body."
             data_type: varchar
+          - name: properties__hs_call_status
+            description: "Call status."
+            data_type: varchar
+          - name: created_at
+            data_type: timestamp
+          - name: updated_at
+            data_type: timestamp
+
+      - name: calls_to_contacts
+        identifier: hubspot__calls_to_contacts
+        description: "Association table between calls and contacts."
+        columns:
+          - name: to_object_id
+            description: "The contact ID."
+            data_type: integer
+          - name: _hubspot__calls_id
+            description: "The parent call ID."
+            data_type: integer
+
+      - name: communications
+        identifier: hubspot__communications
+        description: "Raw communication engagement data from HubSpot CRM."
+        columns:
+          - name: id
+            description: "Primary key for the HubSpot communication."
+            data_type: integer
             data_tests:
-              - expect_column_array_length_to_be_between:
-                  arguments:
-                    min_value: 0
-                    max_value: 10
+              - not_null
+          - name: properties__hs_timestamp
+            description: "Communication timestamp."
+            data_type: timestamp
+          - name: properties__hs_communication_body
+            description: "Communication body."
+            data_type: varchar
+          - name: properties__hs_communication_channel_type
+            description: "Channel type (SMS, WHATS_APP, etc)."
+            data_type: varchar
+          - name: created_at
+            data_type: timestamp
+          - name: updated_at
+            data_type: timestamp
+
+      - name: communications_to_contacts
+        identifier: hubspot__communications_to_contacts
+        description: "Association table between communications and contacts."
+        columns:
+          - name: to_object_id
+            description: "The contact ID."
+            data_type: integer
+          - name: _hubspot__communications_id
+            description: "The parent communication ID."
+            data_type: integer

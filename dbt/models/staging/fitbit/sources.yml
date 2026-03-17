@@ -32,3 +32,22 @@ sources:
           - name: log_type
             description: "The type of the log."
             data_type: varchar
+
+      - name: activities
+        identifier: fitbit__activities
+        description: "Activity log data recorded in fitbit, often from Garmin."
+        columns:
+          - name: log_id
+            description: "Primary key for the raw activity table."
+            data_type: integer
+            data_tests:
+              - not_null
+          - name: start_time
+            description: "The start time of the activity."
+            data_type: timestamp
+          - name: steps
+            description: "Number of steps recorded for the activity."
+            data_type: integer
+          - name: last_modified
+            description: "When the activity log was last modified."
+            data_type: timestamp
