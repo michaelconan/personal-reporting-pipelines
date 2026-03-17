@@ -1,2 +1,2 @@
-id,properties__name,properties__createdate,properties__hs_lastmodifieddate,properties__hs_ideal_customer_profile
-1,"Big Company","2023-01-01T00:00:00Z","2023-01-02T00:00:00Z","tier_1"
+id,properties__createdate,properties__hs_ideal_customer_profile,properties__hs_lastmodifieddate,properties__hs_object_id,properties__name,created_at,updated_at,archived,_dlt_load_id,_dlt_id,url
+1990508,2025-02-21 12:25:15,,2025-05-26 02:07:14,8007468,"Williams, Wagner and Brown",2024-12-14 13:45:52.440000+00:00,2025-12-18 18:24:43,False,4156984,3803442,
