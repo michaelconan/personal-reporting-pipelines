@@ -22,7 +22,7 @@ with habits as (
         habit_period,
         habit,
         is_complete
-    from {{ ref('habits_v1') }}
+    from {{ ref('habits', v=1) }}
     where is_complete is not null
 
 ),

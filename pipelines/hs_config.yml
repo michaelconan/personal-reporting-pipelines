@@ -71,6 +71,33 @@ objects:
     properties:
       - hs_note_body
       - hs_engagement_source
+  - name: deals
+    filter: hs_lastmodifieddate
+    associations:
+      - contacts
+    properties:
+      - dealname
+      - dealstage
+      - pipeline
+      - amount
+      - closedate
+      - hs_deal_stage_probability
+      - hs_is_closed
+      - hs_is_closed_won
+      - hs_engagement_source
+  - name: tickets
+    filter: hs_lastmodifieddate
+    associations:
+      - contacts
+    properties:
+      - subject
+      - content
+      - hs_ticket_priority
+      - hs_pipeline
+      - hs_pipeline_stage
+      - hs_ticket_category
+      - hs_resolution
+      - hs_engagement_source
   #  Requires an additional scope
   # - name: emails
   #   filter: hs_lastmodifieddate

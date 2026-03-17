@@ -156,6 +156,7 @@ def notion_source(
         "table_name": name_db_table,
         # Prevent nested tables for multi-value properties
         "max_table_nesting": 2,
+        "columns": {"title": {"data_type": "json"}},
         "processing_steps": [
             {"map": lambda r: filter_fields(r, EXCLUDE_PATHS)},
         ],
