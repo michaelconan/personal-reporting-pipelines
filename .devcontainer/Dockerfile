@@ -1,4 +1,4 @@
-FROM python:3.12-slim
+FROM python:3.13-slim
 
 # User and Group identifiers
 ARG UID=1000
@@ -29,9 +29,12 @@ RUN apt-get update && \
 # Install duckdb for local development
 RUN curl https://install.duckdb.org | sh
 
-# Create and run as non-root user
-RUN addgroup --gid $GID vscode && \
-    adduser --uid $UID --gid $GID vscode
+# Install pipenv for dependency management
+RUN pip install --upgrade pip && pip install pipenv
+
+# Create non-root user (GID 1000 is already in use, so use 1001)
+RUN groupadd --gid 1001 vscode && \
+    useradd --uid 1000 --gid 1001 --shell /bin/bash --create-home vscode
 
 # Allow the non-root user to run sudo without a password
 RUN echo "vscode ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/vscode \
