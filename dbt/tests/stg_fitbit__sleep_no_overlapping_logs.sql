@@ -1,11 +1,19 @@
 -- Singular test: fails if any sleep logs have overlapping time periods.
--- Uses a plain self-join (not a correlated NOT EXISTS) to avoid a known
--- DuckDB assertion failure (duckdb/duckdb#XXXX) with that query pattern.
-select
-    s1.log_id as log_id_1,
-    s2.log_id as log_id_2
-from {{ ref('stg_fitbit__sleep') }} s1
-inner join {{ ref('stg_fitbit__sleep') }} s2
-    on s1.log_id < s2.log_id
-where s1.started_at < s2.ended_at
-  and s1.ended_at > s2.started_at
+-- Uses LEAD() instead of a self-join to avoid a DuckDB internal assertion
+-- failure (TIMESTAMP != VARCHAR in ColumnBindingResolver) that occurs when a
+-- view using dbt_utils.deduplicate is referenced twice in the same query.
+-- Mathematical note: if any two intervals overlap, an adjacent pair (when
+-- sorted by start time) must also overlap, so LEAD on adjacent rows is
+-- sufficient to detect any overlap.
+with sleep_ordered as (
+    select
+        log_id,
+        started_at,
+        ended_at,
+        lead(started_at) over (order by started_at) as next_started_at
+    from {{ ref('stg_fitbit__sleep') }}
+)
+select log_id
+from sleep_ordered
+where next_started_at is not null
+  and ended_at > next_started_at
