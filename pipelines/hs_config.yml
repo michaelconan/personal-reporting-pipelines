@@ -79,12 +79,16 @@ objects:
       - dealname
       - dealstage
       - pipeline
+      - dealtype
       - amount
+      - deal_currency_code
+      - createdate
       - closedate
+      - hs_forecast_probability
       - hs_deal_stage_probability
-      - hs_is_closed
-      - hs_is_closed_won
-      - hs_engagement_source
+      - closed_lost_reason
+      - closed_won_reason
+      - hs_lastmodifieddate
   - name: tickets
     filter: hs_lastmodifieddate
     associations:

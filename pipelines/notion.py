@@ -22,12 +22,13 @@ from dlt.sources import DltResource
 from dlt.common.pipeline import LoadInfo
 
 # Common custom tasks
-from pipelines import RAW_SCHEMA, BASE_DATE
+from pipelines import RAW_SCHEMA, BASE_DATE, SECRET_STORE
 from pipelines.common.utils import (
     get_refresh_mode,
     get_write_disposition,
     log_refresh_mode,
     filter_fields,
+    validate_required_secrets,
 )
 
 # list[str]: JSONPath expressions to exclude attributes from the Notion source records
@@ -125,7 +126,10 @@ def notion_source(
             {
                 "name": "notion__data_sources",
                 "max_table_nesting": 1,
-                "columns": {"title": {"data_type": "json"}},
+                "columns": {
+                    "title": {"data_type": "json"},
+                    "description": {"data_type": "json"},
+                },
                 "processing_steps": [
                     # Exclude data source property metadata details entirely
                     {
@@ -220,6 +224,11 @@ def refresh_notion(
     Returns:
         dlt.common.pipeline.LoadInfo: Pipeline run information and status.
     """
+    validate_required_secrets(
+        secret_store=SECRET_STORE,
+        required_secret_keys=["sources.notion.api_key"],
+        pipeline_name="Notion Habits",
+    )
 
     # Determine refresh mode if not explicitly provided
     if is_incremental is None:

@@ -36,6 +36,7 @@ from pipelines.common.utils import (
     get_refresh_mode,
     get_write_disposition,
     log_refresh_mode,
+    validate_required_secrets,
 )
 
 
@@ -224,6 +225,15 @@ def refresh_fitbit(
     Returns:
         dlt.common.pipeline.LoadInfo: Pipeline run information and status.
     """
+    validate_required_secrets(
+        secret_store=SECRET_STORE,
+        required_secret_keys=[
+            "sources.fitbit.client_id",
+            "sources.fitbit.client_secret",
+            "sources.fitbit.refresh_token",
+        ],
+        pipeline_name="Fitbit Health",
+    )
 
     # Determine refresh mode if not explicitly provided
     if is_incremental is None:

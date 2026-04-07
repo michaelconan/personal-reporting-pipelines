@@ -38,7 +38,7 @@ install: ## Install Python dependencies using pipenv
 
 .PHONY: inject
 inject:
-	@op inject -i .dlt/secrets.toml.tpl -o .dlt/secrets.toml
+	@op inject -f -i .dlt/secrets.toml.tpl -o .dlt/secrets.toml
 
 ## Testing
 .PHONY: test-e2e
@@ -64,6 +64,21 @@ test-all: test-local test-e2e ## Run all tests with coverage
 test-coverage: ## Generate coverage reports only
 	$(PIPENV) coverage report --show-missing
 	$(PIPENV) coverage html
+
+.PHONY: refresh-fitbit
+refresh-fitbit: ## Run Fitbit dlt pipeline refresh
+	$(PIPENV) python -m pipelines.fitbit
+
+.PHONY: refresh-notion
+refresh-notion: ## Run Notion dlt pipeline refresh
+	$(PIPENV) python -m pipelines.notion
+
+.PHONY: refresh-hubspot
+refresh-hubspot: ## Run HubSpot dlt pipeline refresh
+	$(PIPENV) python -m pipelines.hubspot
+
+.PHONY: refresh-all
+refresh-all: refresh-fitbit refresh-notion refresh-hubspot ## Run all dlt pipeline refreshes
 
 .PHONY: clean
 clean: ## Remove Python cache files and temporary artifacts
