@@ -18,7 +18,7 @@ sources:
             data_tests:
               - not_null
           - name: properties__date__date
-            data_type: date
+            data_type: json
             data_tests:
               - not_null
           - name: properties__name__title
@@ -71,7 +71,7 @@ sources:
             data_tests:
               - not_null
           - name: properties__date__date
-            data_type: date
+            data_type: json
             data_tests:
               - not_null
           - name: properties__name__title
@@ -169,7 +169,7 @@ sources:
             data_tests:
               - not_null
           - name: properties__date__date
-            data_type: date
+            data_type: json
             data_tests:
               - not_null
           - name: properties__name__title

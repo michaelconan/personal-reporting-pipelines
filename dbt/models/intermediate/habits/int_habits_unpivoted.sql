@@ -92,13 +92,20 @@ monthly_habits_unpivoted as (
         )
     )
 
+),
+
+combined as (
+
+    select *
+    from daily_habits_unpivoted
+    union all by name
+    select *
+    from weekly_habits_unpivoted
+    union all by name
+    select *
+    from monthly_habits_unpivoted
+
 )
 
 select *
-from daily_habits_unpivoted
-union all
-select *
-from weekly_habits_unpivoted
-union all
-select *
-from monthly_habits_unpivoted
+from combined

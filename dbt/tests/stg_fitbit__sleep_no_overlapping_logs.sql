@@ -5,17 +5,22 @@
 -- Mathematical note: if any two intervals overlap, an adjacent pair (when
 -- sorted by start time) must also overlap, so LEAD on adjacent rows is
 -- sufficient to detect any overlap.
-with sleep_ordered as (
+with sleep_typed as (
     select
-        log_id,
-        cast(started_at as timestamp) as started_at,
-        cast(ended_at as timestamp) as ended_at,
-        lead(cast(started_at as timestamp)) over (
-            order by cast(started_at as timestamp)
-        ) as next_started_at
-    from {{ ref('stg_fitbit__sleep') }}
+        cast(start_time as timestamp) as sleep_started_at,
+        cast(end_time as timestamp) as sleep_ended_at
+    from {{ make_source('fitbit', 'sleep') }}
+),
+sleep_ordered as (
+    select
+        sleep_started_at,
+        sleep_ended_at,
+        lead(sleep_started_at) over (
+            order by sleep_started_at
+        ) as next_sleep_started_at
+    from sleep_typed
 )
-select log_id
+select 1
 from sleep_ordered
-where next_started_at is not null
-  and ended_at > next_started_at
+where next_sleep_started_at is not null
+  and sleep_ended_at > next_sleep_started_at
