@@ -39,11 +39,12 @@ from dlt.sources import DltResource
 from dlt.common.pipeline import LoadInfo
 
 # Common custom tasks
-from pipelines import RAW_SCHEMA, BASE_DATE
+from pipelines import RAW_SCHEMA, BASE_DATE, SECRET_STORE
 from pipelines.common.utils import (
     get_refresh_mode,
     get_write_disposition,
     log_refresh_mode,
+    validate_required_secrets,
 )
 
 
@@ -243,6 +244,11 @@ def refresh_hubspot(
     Returns:
         dlt.common.pipeline.LoadInfo: Pipeline run information and status.
     """
+    validate_required_secrets(
+        secret_store=SECRET_STORE,
+        required_secret_keys=["sources.hubspot.api_key"],
+        pipeline_name="HubSpot CRM",
+    )
 
     # Determine refresh mode if not explicitly provided
     if is_incremental is None:
