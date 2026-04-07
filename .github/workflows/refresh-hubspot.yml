@@ -50,6 +50,7 @@ jobs:
 
       - name: run hubspot pipeline
         env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
           FORCE_FULL_REFRESH: ${{ inputs.force_full_refresh }}
           RUNTIME__LOG_LEVEL: "INFO"
         run: |
