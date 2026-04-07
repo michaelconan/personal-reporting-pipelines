@@ -69,6 +69,7 @@ jobs:
         id: run_e2e_tests
         if: github.actor != 'dependabot[bot]'
         env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
           RUNTIME__LOG_LEVEL: "INFO"
         run: |
           make test-e2e

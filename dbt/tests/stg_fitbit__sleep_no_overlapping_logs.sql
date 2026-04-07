@@ -8,9 +8,11 @@
 with sleep_ordered as (
     select
         log_id,
-        started_at,
-        ended_at,
-        lead(started_at) over (order by started_at) as next_started_at
+        cast(started_at as timestamp) as started_at,
+        cast(ended_at as timestamp) as ended_at,
+        lead(cast(started_at as timestamp)) over (
+            order by cast(started_at as timestamp)
+        ) as next_started_at
     from {{ ref('stg_fitbit__sleep') }}
 )
 select log_id
