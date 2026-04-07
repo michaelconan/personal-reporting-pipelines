@@ -45,16 +45,29 @@ unique_sleep as (
     -- CTE: Deduplicated Sleep Logs
     -- Purpose: Remove duplicate records for the same log_id, keeping only
     --          the most recent version (by date_of_sleep).
-    -- Method: Uses dbt_utils.deduplicate macro with ROW_NUMBER() window function
+    -- Method: Explicit ROW_NUMBER() dedup to avoid a DuckDB planner bug that
+    --         can be triggered when querying views built via dbt_utils.deduplicate.
     -- Output: One row per unique log_id (most recent version)
-
-    {{ dbt_utils.deduplicate(
-        relation='sleep',
-        partition_by='log_id',
-        order_by='date_of_sleep desc',
-        )
-    }}
-
+    select
+        log_id,
+        date_of_sleep,
+        duration_ms,
+        duration_hr,
+        started_at,
+        ended_at,
+        sleep_type,
+        log_type,
+        sleep_goal_met
+    from (
+        select
+            *,
+            row_number() over (
+                partition by log_id
+                order by date_of_sleep desc
+            ) as row_num
+        from sleep
+    ) deduped
+    where row_num = 1
 )
 
 -- Final output: Clean, deduplicated sleep data with duration metrics and goal status
