@@ -27,7 +27,7 @@ dispatch:
   - macro_namespace: dbt_utils
     search_order:
       - personal
-      - dbt_utils 
+      - dbt_utils
 
 
 # Configuring models
@@ -39,6 +39,8 @@ models:
       columns: true
     staging:
       +materialized: view
+    intermediate:
+      +materialized: table    
     marts:
       +materialized: table
 
@@ -58,4 +60,6 @@ vars:
   'dbt_date:time_zone': 'UTC'
   # 7 hours (in milliseconds)
   sleep_goal: 25200000
+  # 7500 steps per day
+  steps_goal: 7500
   meet_goal: 1

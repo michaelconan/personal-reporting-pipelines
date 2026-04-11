@@ -10,7 +10,7 @@ macros:
       - name: json_path
         description: "The JSONPath expression to extract the value (e.g., '$.property_name')"
         type: string
-  
+
   - name: trunc_date
     description: "Adapter-aware macro that truncates timestamps/dates to a specified part (e.g., 'month', 'year'). Pass the part as a quoted literal (for example: 'month'). BigQuery and DuckDB implementations are handled via adapter dispatch."
     arguments:

@@ -41,7 +41,7 @@ def sample_resource(
     file_name: str,
     fallback: str | None = None,
     data_selector: str | None = None,
-    resource_configs: dict = {},
+    resource_configs: dict | None = None,
 ) -> Any:
     """Create a DLT resource from sample JSON data for testing.
 
@@ -55,7 +55,7 @@ def sample_resource(
         DLT resource configured with the sample data.
     """
 
-    @dlt.resource(**resource_configs)
+    @dlt.resource(**(resource_configs or {}))
     def sample_resource():
         source = sample_data(file_name=file_name, fallback=fallback)
         if data_selector:

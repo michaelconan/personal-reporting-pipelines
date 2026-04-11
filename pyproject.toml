@@ -1,0 +1,75 @@
+[tool.pytest.ini_options]
+markers = [
+    "e2e: marks tests as end-to-end tests",
+    "local: marks executable offline",
+]
+# Disable responses plugin by default to prevent interference with e2e tests
+addopts = "-s -p no:pytest-responses"
+# Test discovery patterns
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+[tool.coverage.run]
+source = ["pipelines"]
+branch = true
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "*/__pycache__/*",
+    "*/venv/*",
+    "*/.venv/*",
+    "*/virtualenvs/*",
+]
+
+[tool.coverage.report]
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol.*\\):",
+    "@(abc\\.)?abstractmethod",
+]
+
+[tool.coverage.html]
+directory = "htmlcov"
+
+[tool.coverage.xml]
+output = "coverage.xml"
+
+[tool.flake8]
+max-line-length = 100
+extend-ignore = [
+    "E203",  # whitespace before ':' (conflicts with black)
+    "W503",  # line break before binary operator (conflicts with black)
+]
+exclude = [
+    ".git",
+    "__pycache__",
+    "dbt/dbt_packages",
+    "docs",
+]
+
+[tool.mypy]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# dlt config dicts are not well-typed; suppress errors in pipeline source files
+module = ["pipelines.hubspot", "pipelines.fitbit", "pipelines.notion"]
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+# Sphinx-generated config file; not worth annotating
+module = ["docs.source.conf"]
+ignore_errors = true
+
+[tool.bandit]
+# B101 (assert) and B608 (SQL) are expected patterns in pytest test files
+exclude_dirs = ["tests"]

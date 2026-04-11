@@ -34,7 +34,7 @@ jobs:
       - name: set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.13'
 
       - name: Install pipenv and dependencies
         run: |
@@ -67,7 +67,7 @@ jobs:
             ## DBT Coverage Report
 
             ### Documentation Coverage
-            
+
             ${{ steps.coverage.outputs.doc_coverage }}
 
             ### Test Coverage
