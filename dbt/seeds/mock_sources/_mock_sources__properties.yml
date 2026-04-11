@@ -1,22 +1,16 @@
 version: 2
 
 seeds:
+  - name: fitbit__activities
+    config:
+      column_types:
+        log_id: bigint
+
   - name: fitbit__sleep
-    columns:
-      - name: log_id
-        data_type: integer
-      - name: date_of_sleep
-        data_type: date
-      - name: duration
-        data_type: integer
-      - name: start_time
-        data_type: timestamp
-      - name: end_time
-        data_type: timestamp
-      - name: type
-        data_type: varchar
-      - name: log_type
-        data_type: varchar
+    config:
+      column_types:
+        log_id: bigint
+
   - name: hubspot__companies
     columns:
       - name: id
@@ -29,6 +23,7 @@ seeds:
         data_type: timestamp
       - name: properties__hs_ideal_customer_profile
         data_type: varchar
+
   - name: hubspot__contacts
     columns:
       - name: id
@@ -45,31 +40,10 @@ seeds:
         data_type: timestamp
       - name: properties__lastmodifieddate
         data_type: timestamp
-  - name: hubspot__engagements
-    config:
-      quote_columns: false
-      delimiter: ","
-      header: true
+
+  - name: notion__data_source_daily_habits
     columns:
-      - name: engagement__id
-        data_type: integer
-      - name: engagement__type
-        data_type: varchar
-      - name: engagement__timestamp
-        data_type: integer
-      - name: engagement__body_preview
-        data_type: varchar
-      - name: associations__company_ids
-        data_type: varchar
-      - name: associations__contact_ids
-        data_type: varchar
-      - name: engagement__created_at
-        data_type: integer
-      - name: engagement__last_updated
-        data_type: timestamp
-  - name: notion__database_daily_habits
-    columns:
-      - name: parent__database_id
+      - name: parent__data_source_id
         data_type: varchar
         data_tests:
           - not_null
@@ -117,9 +91,10 @@ seeds:
         data_type: timestamp
         data_tests:
           - not_null
-  - name: notion__database_weekly_habits
+
+  - name: notion__data_source_weekly_habits
     columns:
-      - name: parent__database_id
+      - name: parent__data_source_id
         data_type: varchar
         data_tests:
           - not_null
@@ -163,9 +138,10 @@ seeds:
         data_type: timestamp
         data_tests:
           - not_null
-  - name: notion__database_monthly_habits
+
+  - name: notion__data_source_monthly_habits
     columns:
-      - name: parent__database_id
+      - name: parent__data_source_id
         data_type: varchar
         data_tests:
           - not_null

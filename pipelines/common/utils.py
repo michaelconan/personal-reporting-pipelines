@@ -4,13 +4,66 @@ Common utilities for pipeline operations.
 
 # Base imports
 import os
-from typing import Any
 from logging import getLogger
 
 # PyPI imports
+import dlt
 from jsonpath_ng import parse
 
 logger = getLogger(__name__)
+
+
+def validate_required_secrets(
+    *,
+    secret_store: str,
+    required_secret_keys: list[str],
+    pipeline_name: str,
+) -> None:
+    """Validate secret store configuration and required secrets.
+
+    Args:
+        secret_store: Backing secret store name
+            (for example: google, 1password).
+        required_secret_keys: DLT secret keys required by the pipeline.
+        pipeline_name: Human-readable pipeline name for error messages.
+
+    Raises:
+        ValueError: If secret store value is unsupported.
+        EnvironmentError: If store-specific configuration is missing.
+    """
+    supported_stores = {"google", "1password"}
+    if secret_store not in supported_stores:
+        raise ValueError(
+            f"Unsupported SECRET_STORE '{secret_store}'. "
+            f"Expected one of: {sorted(supported_stores)}.",
+        )
+
+    if secret_store == "google":
+        credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+        if not credentials_path:
+            raise EnvironmentError(
+                "SECRET_STORE is 'google' but "
+                "GOOGLE_APPLICATION_CREDENTIALS is not set.",
+            )
+    elif secret_store == "1password":
+        op_token = os.getenv("OP_SERVICE_ACCOUNT_TOKEN")
+        if not op_token:
+            raise EnvironmentError(
+                "SECRET_STORE is '1password' but "
+                "OP_SERVICE_ACCOUNT_TOKEN is not set.",
+            )
+
+    missing_keys: list[str] = []
+    for key in required_secret_keys:
+        if not dlt.secrets.get(key):
+            missing_keys.append(key)
+
+    if missing_keys:
+        missing = ", ".join(sorted(missing_keys))
+        raise EnvironmentError(
+            f"Missing required secrets for {pipeline_name} "
+            f"(SECRET_STORE={secret_store}): {missing}",
+        )
 
 
 def filter_fields(item: dict, paths: list[str]) -> dict:
@@ -18,7 +71,8 @@ def filter_fields(item: dict, paths: list[str]) -> dict:
 
     Args:
         item (dict): Record dictionary to apply filters to.
-        paths (list[str]): One or more JSONPath expressions to filter out fields.
+        paths (list[str]): One or more JSONPath expressions to filter out
+            fields.
 
     Returns:
         dict: Updated dictionary with specified fields removed.
@@ -50,7 +104,9 @@ def get_refresh_mode(default_incremental: bool = True) -> bool:
         bool: True for incremental, False for full refresh
     """
     if should_force_full_refresh():
-        logger.info("Full refresh forced via FORCE_FULL_REFRESH environment variable")
+        logger.info(
+            "Full refresh forced via FORCE_FULL_REFRESH environment variable",
+        )
         return False
 
     # Check for specific pipeline override
@@ -59,7 +115,8 @@ def get_refresh_mode(default_incremental: bool = True) -> bool:
         full_refresh_var = f"{pipeline_name}_FULL_REFRESH"
         if os.getenv(full_refresh_var, "").lower() in ("true", "1", "yes"):
             logger.info(
-                f"Full refresh forced for {pipeline_name} via {full_refresh_var}"
+                f"Full refresh forced for {pipeline_name} "
+                f"via {full_refresh_var}",
             )
             return False
 
@@ -79,7 +136,11 @@ def get_write_disposition(is_incremental: bool) -> str | None:
     return None if is_incremental else "replace"
 
 
-def log_refresh_mode(pipeline_name: str, is_incremental: bool, schema: str) -> None:
+def log_refresh_mode(
+    pipeline_name: str,
+    is_incremental: bool,
+    schema: str,
+) -> None:
     """
     Log the refresh mode being used.
 

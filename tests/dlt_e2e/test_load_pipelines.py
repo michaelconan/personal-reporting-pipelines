@@ -75,7 +75,7 @@ class TestPipelines:
         # GIVEN
         secrets = dlt.secrets
         # secrets.config_providers[2].only_toml_fragments = False
-        token = secrets["sources.fitbit.refresh_token"]
+        secrets["sources.fitbit.refresh_token"]
 
         # WHEN
         # Run the pipeline

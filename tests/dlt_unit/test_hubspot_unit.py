@@ -1,8 +1,8 @@
 # base imports
+import os
 import re
 import json
 from typing import Callable
-from urllib.parse import parse_qs, urlparse
 
 # PyPI imports
 import pytest
@@ -15,6 +15,32 @@ from tests.dlt_unit.conftest import sample_data, sample_response, sample_resourc
 
 
 pytestmark = pytest.mark.local
+
+MOCK_FOLDER = "tests/mock_data"
+
+# All CRM objects in the HubSpot pipeline
+CRM_OBJECTS = [
+    "contacts",
+    "companies",
+    "meetings",
+    "calls",
+    "communications",
+    "tasks",
+    "notes",
+    "deals",
+    "tickets",
+]
+
+# Objects that have association endpoints configured
+OBJECTS_WITH_ASSOCIATIONS = {
+    "meetings",
+    "calls",
+    "communications",
+    "tasks",
+    "notes",
+    "deals",
+    "tickets",
+}
 
 
 @pytest.fixture
@@ -31,28 +57,18 @@ def mock_hs_apis(monkeypatch: MonkeyPatch, mock_responses) -> Callable:
         filters = payload["filterGroups"][0]["filters"]
         start_filter = [f for f in filters if f["operator"] == "GTE"][0]
         if after is None:
-            # Return data for first page
-            return sample_response(f"hubspot_{object}_run1-page1.json")
+            file_name = f"hubspot_{object}_run1-page1.json"
         elif int(start_filter["value"]) > iso_to_unix("2025-01-01"):
             # Return data for subsequent run
-            return sample_response(f"hubspot_{object}_run2.json")
+            file_name = f"hubspot_{object}_run2.json"
         else:
             # Return data for second page
-            return sample_response(f"hubspot_{object}_run1-page2.json")
+            file_name = f"hubspot_{object}_run1-page2.json"
 
-    def engagement_callback(request):
-        parsed_url = urlparse(request.url)
-        params = parse_qs(parsed_url.query)
-        offset = int(params.get("offset", [0])[0])
-        limit = int(params.get("limit", [0])[0])
-        if offset == 0:
-            # Return data for first page
-            return sample_response("hubspot_engagements_run1-page1.json")
-        elif offset == limit:
-            # Return data for second page
-            return sample_response("hubspot_engagements_run1-page2.json")
-        else:
-            return (200, {}, json.dumps({"results": []}))
+        file_path = os.path.join(MOCK_FOLDER, file_name)
+        if not os.path.exists(file_path):
+            return (200, {}, json.dumps({"total": 0, "results": []}))
+        return sample_response(file_name)
 
     def setup(endpoints=[]):
         """Nested function to only register mock endpoints for tests.
@@ -60,28 +76,26 @@ def mock_hs_apis(monkeypatch: MonkeyPatch, mock_responses) -> Callable:
         Args:
             endpoints (list, optional): Specific endpoints to register. Defaults to [] (all).
         """
-        # Mock the API responses
-        if not endpoints or "engagements" in endpoints:
-            mock_responses.add_callback(
+        # Mock association endpoints for full pipeline only — individual resource
+        # tests use with_resources() which does not fetch association child resources
+        if not endpoints:
+            mock_responses.add(
                 mock_responses.GET,
-                BASE_URL + "/engagements/v1/engagements/paged",
-                callback=engagement_callback,
-                content_type="application/json",
+                re.compile(BASE_URL + r"/crm/v4/objects/\w+/\d+/associations/\w+"),
+                json={"results": []},
+                status=200,
             )
-        if not endpoints or "contacts" in endpoints:
-            mock_responses.add_callback(
-                mock_responses.POST,
-                BASE_URL + "/crm/v3/objects/contacts/search",
-                callback=lambda r: search_callback(r, "contacts"),
-                content_type="application/json",
-            )
-        if not endpoints or "companies" in endpoints:
-            mock_responses.add_callback(
-                mock_responses.POST,
-                BASE_URL + "/crm/v3/objects/companies/search",
-                callback=lambda r: search_callback(r, "companies"),
-                content_type="application/json",
-            )
+
+        # Mock CRM search endpoints
+        for obj in CRM_OBJECTS:
+            if not endpoints or obj in endpoints:
+                mock_responses.add_callback(
+                    mock_responses.POST,
+                    BASE_URL + f"/crm/v3/objects/{obj}/search",
+                    callback=lambda r, o=obj: search_callback(r, o),
+                    content_type="application/json",
+                )
+
         if not endpoints or "schemas_contacts" in endpoints:
             mock_responses.add(
                 mock_responses.GET,
@@ -98,7 +112,8 @@ def mock_hs_apis(monkeypatch: MonkeyPatch, mock_responses) -> Callable:
     (
         ("contacts", 1, {}),
         ("companies", 1, {}),
-        ("engagements", 1, {"max_table_nesting": 1}),
+        ("meetings", 1, {}),
+        ("calls", 1, {}),
         (
             "schemas_contacts",
             1,
@@ -204,7 +219,7 @@ class TestHubspotPhases:
         ("companies", True),
         ("contacts", False),
         ("companies", False),
-        ("engagements", False),
+        ("meetings", False),
         ("schemas_contacts", False),
     ),
 )
@@ -276,23 +291,22 @@ def test_hubspot_pipeline(mock_hs_apis, duckdb_pipeline):
     with duckdb_pipeline.sql_client() as client:
         # Check schemas table
         schema_table = client.execute_sql(f"SELECT 1 FROM {dataset}.hubspot__schemas")
-
         assert len(schema_table) == 1
 
         # Check contacts table
         contacts_table = client.execute_sql(
-            f"SELECT 1 FROM {dataset}.hubspot__contacts"
+            f"SELECT 1 FROM {dataset}.hubspot__contacts",
         )
         assert len(contacts_table) == 5
 
         # Check companies table
         companies_table = client.execute_sql(
-            f"SELECT 1 FROM {dataset}.hubspot__companies"
+            f"SELECT 1 FROM {dataset}.hubspot__companies",
         )
         assert len(companies_table) == 5
 
-        # Check engagements table
-        engagements_table = client.execute_sql(
-            f"""SELECT 1 FROM {dataset}.hubspot__engagements"""
+        # Check meetings table
+        meetings_table = client.execute_sql(
+            f"SELECT 1 FROM {dataset}.hubspot__meetings",
         )
-        assert len(engagements_table) == 5
+        assert len(meetings_table) == 5

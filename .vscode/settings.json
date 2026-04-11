@@ -3,6 +3,7 @@
         "tests",
         // Coverage of source code
         "--cov=pipelines/",
+        "--log-cli-level=INFO",
     ],
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,

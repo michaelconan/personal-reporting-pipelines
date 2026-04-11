@@ -17,35 +17,45 @@ jobs:
   run-pipeline:
     runs-on: ubuntu-latest
     steps:
-      - name: set environment variables
-        run: |
-          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/sa_key.json" >> $GITHUB_ENV
-          
       - name: checkout code
         uses: actions/checkout@v4
-        
-      - name: set up python 3.12
-        uses: actions/setup-python@v4
+
+      - name: set up python 3.13
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
-          
+          python-version: '3.13'
+
       - name: install pipenv and dependencies
         run: |
           make install
-          
+
+      - name: set environment variables
+        run: |
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/sa_key.json" >> $GITHUB_ENV
+
       - name: write keyfile
         run: |
           cat << 'EOF' > $GOOGLE_APPLICATION_CREDENTIALS
           ${{ secrets.GCP_SVC_KEY }}
           EOF
 
+      - name: install 1password cli
+        uses: 1password/install-cli-action@v2
+
+      - name: inject secrets using service account
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+        run: |
+          make inject
+
       - name: run hubspot pipeline
         env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
           FORCE_FULL_REFRESH: ${{ inputs.force_full_refresh }}
           RUNTIME__LOG_LEVEL: "INFO"
         run: |
           pipenv run python -m pipelines.hubspot
-          
+
       - name: Remove keyfile
         if: always()
         run: |

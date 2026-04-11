@@ -66,7 +66,7 @@ def bigquery_pipeline() -> dlt.Pipeline:
         dev_mode=True,
     )
     logging.info(
-        f"Running pipeline: {pipeline.pipeline_name} with dataset: {pipeline.dataset_name}"
+        f"Running pipeline: {pipeline.pipeline_name} with dataset: {pipeline.dataset_name}",
     )
     yield pipeline
 

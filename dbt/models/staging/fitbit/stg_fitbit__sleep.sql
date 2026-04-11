@@ -29,8 +29,8 @@ with sleep as (
         cast(date_of_sleep as date) as date_of_sleep,  -- Date of sleep (not when logged)
         duration as duration_ms,  -- Sleep duration in milliseconds
         duration / 3600000 as duration_hr,  -- Sleep duration in hours (calculated)
-        start_time as started_at,  -- Timestamp when sleep started
-        end_time as ended_at,  -- Timestamp when sleep ended
+        cast(start_time as timestamp) as started_at,  -- Timestamp when sleep started
+        cast(end_time as timestamp) as ended_at,  -- Timestamp when sleep ended
         type as sleep_type,  -- Type of sleep (classic, stages)
         log_type,  -- Log type classification
         -- Check if sleep duration met or exceeded the goal
@@ -45,16 +45,12 @@ unique_sleep as (
     -- CTE: Deduplicated Sleep Logs
     -- Purpose: Remove duplicate records for the same log_id, keeping only
     --          the most recent version (by date_of_sleep).
-    -- Method: Uses dbt_utils.deduplicate macro with ROW_NUMBER() window function
     -- Output: One row per unique log_id (most recent version)
-
     {{ dbt_utils.deduplicate(
         relation='sleep',
         partition_by='log_id',
-        order_by='date_of_sleep desc',
-        )
-    }}
-
+        order_by='date_of_sleep desc'
+    ) }}
 )
 
 -- Final output: Clean, deduplicated sleep data with duration metrics and goal status

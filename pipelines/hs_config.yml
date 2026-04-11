@@ -1,0 +1,116 @@
+objects:
+  - name: contacts
+    filter: lastmodifieddate
+    properties:
+      - updatedAt
+      - email
+      - associatedcompanyid
+      - firstname
+      - lastname
+  - name: companies
+    filter: hs_lastmodifieddate
+    properties:
+      - updatedAt
+      - name
+      - hs_ideal_customer_profile
+  - name: meetings
+    filter: hs_lastmodifieddate
+    associations:
+      - contacts
+    properties:
+      - hs_meeting_start_time
+      - hs_meeting_end_time
+      - hs_meeting_title
+      - hs_meeting_body
+      - hs_internal_meeting_notes
+      - hs_meeting_location_type
+      - hs_meeting_outcome
+      - hs_meeting_source
+      - hs_engagement_source
+  - name: calls
+    filter: hs_lastmodifieddate
+    associations:
+      - contacts
+    properties:
+      - hs_timestamp
+      - hs_call_body
+      - hs_call_direction
+      - hs_call_duration
+      - hs_call_disposition
+      - hs_call_source
+      - hs_call_status
+      - hs_call_title
+      - hs_engagement_source
+  - name: communications
+    filter: hs_lastmodifieddate
+    associations:
+      - contacts
+    properties:
+      - hs_timestamp
+      - hs_communication_channel_type
+      - hs_communication_body
+      - hs_engagement_source
+  - name: tasks
+    filter: hs_lastmodifieddate
+    associations:
+      - contacts
+    properties:
+      - hs_task_body
+      - hs_task_status
+      - hs_task_priority
+      - hs_task_parent_task_id
+      - hs_task_for_object_type
+      - hs_task_family
+      - hs_task_completion_date
+      - hs_start_date
+      - hs_engagement_source
+  - name: notes
+    filter: hs_lastmodifieddate
+    associations:
+      - contacts
+    properties:
+      - hs_note_body
+      - hs_engagement_source
+  - name: deals
+    filter: hs_lastmodifieddate
+    associations:
+      - contacts
+    properties:
+      - dealname
+      - dealstage
+      - pipeline
+      - dealtype
+      - amount
+      - deal_currency_code
+      - createdate
+      - closedate
+      - hs_forecast_probability
+      - hs_deal_stage_probability
+      - closed_lost_reason
+      - closed_won_reason
+      - hs_lastmodifieddate
+  - name: tickets
+    filter: hs_lastmodifieddate
+    associations:
+      - contacts
+    properties:
+      - subject
+      - content
+      - hs_ticket_priority
+      - hs_pipeline
+      - hs_pipeline_stage
+      - hs_ticket_category
+      - hs_resolution
+      - hs_engagement_source
+  #  Requires an additional scope
+  # - name: emails
+  #   filter: hs_lastmodifieddate
+  #   associations:
+  #     - contacts
+  #   properties:
+  #     - hs_email_direction
+  #     - hs_email_html
+  #     - hs_email_text
+  #     - hs_email_status
+  #     - hs_email_subject
+  #     - hs_engagement_source

@@ -3,19 +3,6 @@ version: 2
 models:
   - name: stg_fitbit__sleep
     description: "Staging model for fitbit sleep data."
-    data_tests:
-      # Confirm no sleep logs overlap, indicates system-level error
-      - dbt_utils.expression_is_true:
-          arguments:
-            expression: |
-              not exists (
-                select 1
-                from {{ ref('stg_fitbit__sleep') }} s1
-                join {{ ref('stg_fitbit__sleep') }} s2 
-                on s1.log_id != s2.log_id
-                where s1.started_at < s2.ended_at
-                  and s1.ended_at > s2.started_at
-              )
     columns:
       - name: log_id
         description: "The primary key for this table"

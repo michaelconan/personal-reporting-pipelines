@@ -1,12 +1,12 @@
 """
 notion.py
 
-Pipeline to load databases from Notion API into BigQuery.
+Pipeline to load data sources from Notion API into BigQuery.
 
 API Resources:
 
 - `Search Pages <https://developers.notion.com/reference/post-search>`_
-- `Query Database <https://developers.notion.com/reference/post-database-query>`_
+- `Query Data Source <https://developers.notion.com/reference/query-a-data-source>`_
 """
 
 # Baes imports
@@ -22,35 +22,37 @@ from dlt.sources import DltResource
 from dlt.common.pipeline import LoadInfo
 
 # Common custom tasks
-from pipelines import RAW_SCHEMA, BASE_DATE
+from pipelines import RAW_SCHEMA, BASE_DATE, SECRET_STORE
 from pipelines.common.utils import (
     get_refresh_mode,
     get_write_disposition,
     log_refresh_mode,
     filter_fields,
+    validate_required_secrets,
 )
 
 # list[str]: JSONPath expressions to exclude attributes from the Notion source records
 EXCLUDE_PATHS = [
-    # Exclude standard database metadata fields (object, type)
-    # e.g., parent__type ("database_id"), created_by__object ("user")
-    # and database property metadata fields (id, type)
+    # Exclude standard data source metadata fields (object, type)
+    # e.g., parent__type ("data_source_id"), created_by__object ("user")
+    # and data source property metadata fields (id, type)
     # e.g., properties__name__type ("title"), properties__date__id ("abZq")
     # This does not exclude relation property IDs (e.g., "$.properties.relation[*].id")
     "$..object",
     "$..type",
     "$.properties.*.id",
-    # Exclude database property list paginator flags (boolean)
+    # Exclude data source property list paginator flags (boolean)
     # If longer lists were expected, would need transformer for additional API calls
     "$.properties.*.has_more",
-    # Exclude database property annotations (rich text)
+    # Exclude data source property annotations (rich text)
     "$.properties..annotations",
 ]
 
-DATABASE_MAP = {
-    "10140b50-0f0d-43d2-905a-7ed714ef7f2c": "daily_habits",
-    "11e09eb8-3f76-80e7-8fac-e8d0bb538fb0": "weekly_habits",
-    "18f09eb8-3f76-805c-a567-dde667374441": "monthly_habits",
+DATA_SOURCE_MAP = {
+    "17b04335-b725-4511-ae86-594ef725706c": "daily_habits",
+    "3042e681-b85e-494e-b287-9aa80827cd81": "weekly_habits",
+    "18f09eb8-3f76-809f-8140-000bbccd5616": "monthly_habits",
+    "2ec09eb8-3f76-80de-85f4-000b2cd39a1f": "habit_reference",
 }
 
 
@@ -58,17 +60,17 @@ logger: Logger = getLogger(__name__)
 
 
 def name_db_table(row: dict) -> str:
-    """Generate a table name for Notion database rows based on database ID.
+    """Generate a table name for Notion data source rows based on data source ID.
 
     Args:
-        row (dict): A database row containing parent database information.
+        row (dict): A data source row containing parent data source information.
 
     Returns:
-        str: Formatted table name using the database mapping or ID.
+        str: Formatted table name using the data source mapping or ID.
     """
-    db_id = row["parent"]["database_id"]
-    suffix = DATABASE_MAP.get(db_id, db_id)
-    return f"notion__database_{suffix}"
+    db_id = row["parent"]["data_source_id"]
+    suffix = DATA_SOURCE_MAP.get(db_id, db_id)
+    return f"notion__data_source_{suffix}"
 
 
 @dlt.source
@@ -78,13 +80,13 @@ def notion_source(
     end_date: str | None = None,
     session: requests.Session | None = None,
 ) -> Generator[DltResource, None, None]:
-    """Create a DLT source for Notion database data.
+    """Create a DLT source for Notion data source data.
 
-    This function configures and returns a DLT source for extracting database
+    This function configures and returns a DLT source for extracting data source
     metadata and row data from the Notion API.
 
     Args:
-        db_name (str): Name of the database to search for and extract data from.
+        db_name (str): Name of the data source to search for and extract data from.
         initial_date (str, optional): Start date for data extraction in
             YYYY-MM-DD format. Defaults to `BASE_DATE`.
         end_date (str, optional): Optional end date for data extraction in
@@ -106,7 +108,7 @@ def notion_source(
                 "token": api_key,
             },
             "headers": {
-                "Notion-Version": "2022-06-28",
+                "Notion-Version": "2025-09-03",
                 "Content-Type": "application/json",
             },
             "paginator": JSONResponseCursorPaginator(
@@ -122,16 +124,19 @@ def notion_source(
         },
         "resources": [
             {
-                "name": "notion__databases",
+                "name": "notion__data_sources",
                 "max_table_nesting": 1,
-                "columns": {"title": {"data_type": "json"}},
+                "columns": {
+                    "title": {"data_type": "json"},
+                    "description": {"data_type": "json"},
+                },
                 "processing_steps": [
-                    # Exclude database property metadata details entirely
+                    # Exclude data source property metadata details entirely
                     {
                         "map": lambda r: filter_fields(
                             r,
                             EXCLUDE_PATHS + ["$.properties"],
-                        )
+                        ),
                     },
                 ],
                 "endpoint": {
@@ -141,7 +146,7 @@ def notion_source(
                         "query": db_name,
                         "filter": {
                             "property": "object",
-                            "value": "database",
+                            "value": "data_source",
                         },
                     },
                 },
@@ -150,16 +155,17 @@ def notion_source(
     }
 
     rows_resource = {
-        "name": "notion__database_rows",
-        # Add dynamic table name for the database rows resource
+        "name": "notion__data_source_rows",
+        # Add dynamic table name for the data source rows resource
         "table_name": name_db_table,
         # Prevent nested tables for multi-value properties
         "max_table_nesting": 2,
+        "columns": {"title": {"data_type": "json"}},
         "processing_steps": [
             {"map": lambda r: filter_fields(r, EXCLUDE_PATHS)},
         ],
         "endpoint": {
-            "path": "databases/{resources.notion__databases.id}/query",
+            "path": "data_sources/{resources.notion__data_sources.id}/query",
             "data_selector": "results",
             "json": {
                 "filter": {
@@ -184,7 +190,7 @@ def notion_source(
                     "property": "Last edited time",
                     "date": {"before": "{incremental.end_value}"},
                 },
-            ]
+            ],
         }
         # Add end date to incremental load range
         # rows_resource["endpoint"]["incremental"]["end_value"] = end_date
@@ -218,6 +224,11 @@ def refresh_notion(
     Returns:
         dlt.common.pipeline.LoadInfo: Pipeline run information and status.
     """
+    validate_required_secrets(
+        secret_store=SECRET_STORE,
+        required_secret_keys=["sources.notion.api_key"],
+        pipeline_name="Notion Habits",
+    )
 
     # Determine refresh mode if not explicitly provided
     if is_incremental is None:
@@ -226,7 +237,7 @@ def refresh_notion(
     # Log the refresh mode being used
     log_refresh_mode("Notion Habits", is_incremental, RAW_SCHEMA)
 
-    # create notion databases dlt source
+    # create notion data sources dlt source
     pipeline_name = "notion_habits_pipeline"
     nt_source = notion_source(
         db_name="Disciplines",
