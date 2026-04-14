@@ -14,8 +14,10 @@ API Resources:
 """
 
 # Base
+import logging
 from logging import getLogger, Logger
 import subprocess  # nosec B404
+import sys
 
 # PyPI
 import requests
@@ -90,17 +92,20 @@ def get_fitbit_token() -> str:
 
     else:
         # Update refresh token in 1Password
+        refresh_token = result["refresh_token"]
         edit_result = subprocess.run(  # nosec B603 B607
             [
                 "op",
                 "item",
                 "edit",
                 "fitbit",
-                f"refresh_token={result['refresh_token']}",
+                f"'refresh_token={refresh_token}'",
                 "--vault",
                 "reporting",
             ],
             capture_output=True,
+            text=True,
+            check=True,
         )
         logger.info(f"Updated 1password item: {edit_result.stdout}")
 
@@ -275,5 +280,6 @@ def refresh_fitbit(
 
 
 if __name__ == "__main__":
+    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
     info = refresh_fitbit()
     logger.info(info)
