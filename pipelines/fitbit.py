@@ -93,20 +93,29 @@ def get_fitbit_token() -> str:
     else:
         # Update refresh token in 1Password
         refresh_token = result["refresh_token"]
-        edit_result = subprocess.run(  # nosec B603 B607
-            [
-                "op",
-                "item",
-                "edit",
-                "fitbit",
-                f"'refresh_token={refresh_token}'",
-                "--vault",
-                "reporting",
-            ],
-            capture_output=True,
-            text=True,
-            check=True,
-        )
+        try:
+            edit_result = subprocess.run(  # nosec B603 B607
+                [
+                    "op",
+                    "item",
+                    "edit",
+                    "fitbit",
+                    f"refresh_token={refresh_token}",
+                    "--vault",
+                    "reporting",
+                ],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+        except subprocess.CalledProcessError as e:
+            masked_cmd = [
+                "***" if refresh_token in part else part for part in e.cmd
+            ]
+            raise RuntimeError(
+                f"Failed to update 1Password item (exit code {e.returncode}): "
+                f"cmd={masked_cmd}, stderr={e.stderr}"
+            ) from None
         logger.info(f"Updated 1password item: {edit_result.stdout}")
 
     return result["access_token"]
