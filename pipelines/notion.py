@@ -10,7 +10,9 @@ API Resources:
 """
 
 # Baes imports
+import logging
 from logging import getLogger, Logger
+import sys
 from typing import Generator
 
 # PyPI imports
@@ -270,4 +272,5 @@ def refresh_notion(
 
 
 if __name__ == "__main__":
+    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
     info = refresh_notion()
