@@ -2,16 +2,16 @@
 name: Weekly Documentation Updater
 description: Reviews PRs merged in the past week and updates project documentation to reflect code changes
 on:
-  schedule:
-    - cron: '0 8 * * 1'
+  schedule: weekly on monday around 8:00
   workflow_dispatch:
 
 permissions:
   contents: read
+  issues: read
   pull-requests: read
 
 tracker-id: weekly-doc-updater
-engine: claude
+engine: copilot
 strict: true
 
 network:
