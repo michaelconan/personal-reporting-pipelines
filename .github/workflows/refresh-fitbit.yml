@@ -53,8 +53,9 @@ jobs:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
           FORCE_FULL_REFRESH: ${{ inputs.force_full_refresh }}
           RUNTIME__LOG_LEVEL: "INFO"
+          PYTHONUNBUFFERED: "1"
         run: |
-          pipenv run python -m pipelines.fitbit
+          make refresh-fitbit
 
       - name: remove keyfile
         if: always()
