@@ -98,7 +98,7 @@ def update_onepassword_item(
 
     def _run(cmd: list[str], **kwargs) -> subprocess.CompletedProcess:
         try:
-            return subprocess.run(cmd, capture_output=True, text=True, check=True, **kwargs)  # nosec B603
+            return subprocess.run(cmd, capture_output=True, text=True, check=True, stdin=subprocess.DEVNULL, **kwargs)  # nosec B603
         except subprocess.CalledProcessError as e:
             masked_cmd = [_mask(part) for part in e.cmd]
             raise RuntimeError(
