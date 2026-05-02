@@ -9,7 +9,7 @@ API Resources:
 - `Query Data Source <https://developers.notion.com/reference/query-a-data-source>`_
 """
 
-# Baes imports
+# Base imports
 import logging
 from logging import getLogger, Logger
 import sys
