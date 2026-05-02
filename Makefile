@@ -67,15 +67,15 @@ test-coverage: ## Generate coverage reports only
 
 .PHONY: refresh-fitbit
 refresh-fitbit: ## Run Fitbit dlt pipeline refresh
-	$(PIPENV) python -m pipelines.fitbit
+	PYTHONUNBUFFERED=1 $(PIPENV) python -m pipelines.fitbit
 
 .PHONY: refresh-notion
 refresh-notion: ## Run Notion dlt pipeline refresh
-	$(PIPENV) python -m pipelines.notion
+	PYTHONUNBUFFERED=1 $(PIPENV) python -m pipelines.notion
 
 .PHONY: refresh-hubspot
 refresh-hubspot: ## Run HubSpot dlt pipeline refresh
-	$(PIPENV) python -m pipelines.hubspot
+	PYTHONUNBUFFERED=1 $(PIPENV) python -m pipelines.hubspot
 
 .PHONY: refresh-all
 refresh-all: refresh-fitbit refresh-notion refresh-hubspot ## Run all dlt pipeline refreshes

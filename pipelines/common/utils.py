@@ -3,7 +3,10 @@ Common utilities for pipeline operations.
 """
 
 # Base imports
+import json
 import os
+import subprocess  # nosec B404
+import tempfile
 from logging import getLogger
 
 # PyPI imports
@@ -64,6 +67,62 @@ def validate_required_secrets(
             f"Missing required secrets for {pipeline_name} "
             f"(SECRET_STORE={secret_store}): {missing}",
         )
+
+
+def update_onepassword_item(
+    item_name: str,
+    vault: str,
+    field_updates: dict[str, str],
+) -> None:
+    """Update fields on a 1Password item using the JSON template flow.
+
+    Exports the item as JSON, updates the specified fields by label, writes
+    the result to a temp file, and calls ``op item edit --template``. Any
+    field value that appears in error output is masked so tokens are not
+    leaked in logs.
+
+    Args:
+        item_name: Name (or ID) of the 1Password item to update.
+        vault: Vault containing the item.
+        field_updates: Mapping of field label to new value.
+
+    Raises:
+        RuntimeError: If any ``op`` subprocess call fails.
+    """
+    sensitive_values = list(field_updates.values())
+
+    def _mask(text: str) -> str:
+        for val in sensitive_values:
+            text = text.replace(val, "***")
+        return text
+
+    def _run(cmd: list[str], **kwargs) -> subprocess.CompletedProcess:
+        try:
+            return subprocess.run(cmd, capture_output=True, text=True, check=True, **kwargs)  # nosec B603
+        except subprocess.CalledProcessError as e:
+            masked_cmd = [_mask(part) for part in e.cmd]
+            raise RuntimeError(
+                f"op command failed (exit code {e.returncode}): "
+                f"cmd={masked_cmd}, stderr={_mask(e.stderr)}"
+            ) from None
+
+    # Export existing item as JSON
+    export = _run(["op", "item", "get", item_name, "--vault", vault, "--format", "json"])  # nosec B607
+    item = json.loads(export.stdout)
+
+    # Update fields by label
+    for field in item.get("fields", []):
+        label = field.get("label")
+        if label in field_updates:
+            field["value"] = field_updates[label]
+
+    # Write template and apply update
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=True) as tmp:
+        json.dump(item, tmp)
+        tmp.flush()
+        _run(["op", "item", "edit", item_name, "--vault", vault, f"--template={tmp.name}"])  # nosec B607
+
+    logger.info("Updated 1Password item '%s' fields: %s", item_name, list(field_updates.keys()))
 
 
 def filter_fields(item: dict, paths: list[str]) -> dict:

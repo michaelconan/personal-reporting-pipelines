@@ -21,7 +21,9 @@ API Resources:
 """
 
 # Base
+import logging
 from logging import getLogger, Logger
+import sys
 from typing import Generator
 
 # PyPI
@@ -285,4 +287,5 @@ def refresh_hubspot(
 
 
 if __name__ == "__main__":
+    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
     info = refresh_hubspot()
