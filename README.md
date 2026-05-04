@@ -135,7 +135,36 @@ The project follows modern data engineering best practices with clear separation
 
 3. **Gemini workflows** are leveraged from [run-gemini-cli](https://github.com/google-github-actions/run-gemini-cli)
 
-4. **Weekly Documentation Updater** — an [Agentic Workflow](https://github.com/github/gh-aw) (`.github/workflows/weekly-doc-updater.md`) that runs every Monday and automatically opens a PR to keep `AGENTS.md`, `README.md`, dbt property files, and other docs in sync with merged code changes. The workflow uses the **Gemini engine**. To regenerate the compiled lock file after editing the `.md` source, run `gh aw compile` with the GitHub Agentic Workflows extension installed.
+4. **Agentic workflows** use [GitHub Agentic Workflows (gh-aw)](https://github.com/github/gh-aw) — see setup steps below.
+
+### GitHub Agentic Workflows (gh-aw) Setup
+
+Agentic workflows (`.github/workflows/*.md` + compiled `.lock.yml`) are managed via the [gh-aw](https://github.com/github/gh-aw) extension.
+
+**Install the extension:**
+```bash
+gh extension install github/gh-aw
+```
+
+**Add the engine secret** (this project uses Gemini):
+```bash
+gh secret set GEMINI_API_KEY
+```
+
+**Author or edit a workflow** — modify the `.md` source file in `.github/workflows/`. Frontmatter controls engine, triggers, permissions, and safe outputs; the Markdown body is the agent prompt.
+
+**Compile after frontmatter changes:**
+```bash
+gh aw compile                  # recompile all workflows
+gh aw compile my-workflow      # recompile one workflow
+```
+
+Commit both the `.md` source and the generated `.lock.yml`. The `.md` body is loaded at runtime so prompt-only changes don't require recompilation.
+
+**Run a workflow manually:**
+```bash
+gh aw run my-workflow
+```
 
 ### Integrations
 
