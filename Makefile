@@ -43,8 +43,9 @@ inject:
 ## Testing
 .PHONY: test-e2e
 test-e2e: ## Run tests with coverage
+	# coverage source configured in pyproject.toml [tool.coverage.run]
 	$(PIPENV) pytest tests/dlt_e2e \
-		--cov=pipelines \
+		--cov \
 		--cov-append \
 		--cov-report=xml \
 		--junitxml=test-results-e2e.xml \
@@ -52,8 +53,9 @@ test-e2e: ## Run tests with coverage
 
 .PHONY: test-local
 test-local: ## Run offline local tests only
+	# coverage source configured in pyproject.toml [tool.coverage.run]
 	$(PIPENV) pytest tests/dlt_unit \
-		--cov=pipelines \
+		--cov \
 		--cov-append \
 		--cov-report=xml \
 		--junitxml=test-results-local.xml \
