@@ -44,6 +44,7 @@ inject:
 .PHONY: test-e2e
 test-e2e: ## Run tests with coverage
 	$(PIPENV) pytest tests/dlt_e2e \
+		--cov=pipelines \
 		--cov-append \
 		--cov-report=xml \
 		--junitxml=test-results-e2e.xml \
@@ -52,6 +53,7 @@ test-e2e: ## Run tests with coverage
 .PHONY: test-local
 test-local: ## Run offline local tests only
 	$(PIPENV) pytest tests/dlt_unit \
+		--cov=pipelines \
 		--cov-append \
 		--cov-report=xml \
 		--junitxml=test-results-local.xml \
