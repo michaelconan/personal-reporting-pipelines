@@ -11,6 +11,9 @@ dbt Staging (views) → dbt Intermediate → dbt Marts (tables)
     ↓ MetricFlow semantic layer
 ```
 
+## Weekly Documentation Updater
+`.github/workflows/weekly-doc-updater.md` is a [GitHub Agentic Workflow](https://github.com/github/gh-aw) that runs every Monday and opens a PR to keep documentation accurate after merged changes. Engine: **Gemini**. The compiled lock file (`weekly-doc-updater.lock.yml`) is auto-generated — edit the `.md` source and run `gh aw compile` to regenerate it.
+
 ## Key Files
 - `pipelines/notion.py` — Notion API extraction (data sources, not databases)
 - `pipelines/hubspot.py` — HubSpot CRM extraction (per-object: meetings, calls, etc.)

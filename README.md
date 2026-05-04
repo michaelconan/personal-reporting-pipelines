@@ -135,6 +135,8 @@ The project follows modern data engineering best practices with clear separation
 
 3. **Gemini workflows** are leveraged from [run-gemini-cli](https://github.com/google-github-actions/run-gemini-cli)
 
+4. **Weekly Documentation Updater** — an [Agentic Workflow](https://github.com/github/gh-aw) (`.github/workflows/weekly-doc-updater.md`) that runs every Monday and automatically opens a PR to keep `AGENTS.md`, `README.md`, dbt property files, and other docs in sync with merged code changes. The workflow uses the **Gemini engine**. To regenerate the compiled lock file after editing the `.md` source, run `gh aw compile` with the GitHub Agentic Workflows extension installed.
+
 ### Integrations
 
 1. **Google Cloud BigQuery** - Data warehouse using [dbt BigQuery adapter](https://docs.getdbt.com/reference/warehouse-profiles/bigquery-profile)
