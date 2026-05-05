@@ -11,6 +11,16 @@ dbt Staging (views) → dbt Intermediate → dbt Marts (tables)
     ↓ MetricFlow semantic layer
 ```
 
+## GitHub Agentic Workflows (gh-aw)
+Scheduled AI-driven automation uses [gh-aw](https://github.com/github/gh-aw). Each workflow is a `.md` source file (frontmatter + agent prompt) compiled to a `.lock.yml` GitHub Actions file. Engine for this project: **Gemini** (`GEMINI_API_KEY` secret required).
+
+- **Install extension**: `gh extension install github/gh-aw`
+- **Compile after frontmatter edits**: `gh aw compile` (prompt-only edits don't need recompilation)
+- **Commit both** the `.md` and the generated `.lock.yml`
+- **Run manually**: `gh aw run <workflow-name>`
+
+Current agentic workflow: `weekly-doc-updater` — runs every Monday, opens a PR to keep docs in sync with merged code changes.
+
 ## Key Files
 - `pipelines/notion.py` — Notion API extraction (data sources, not databases)
 - `pipelines/hubspot.py` — HubSpot CRM extraction (per-object: meetings, calls, etc.)

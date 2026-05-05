@@ -11,7 +11,7 @@ permissions:
   pull-requests: read
 
 tracker-id: weekly-doc-updater
-engine: copilot
+engine: gemini
 strict: true
 
 network:
