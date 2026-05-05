@@ -110,3 +110,39 @@ HubSpot: `met_1to1` (>=2/week goal), `met_group` (>=2/week goal)
 - `make dbt-build target=dev` — local dbt build with DuckDB + mock seeds
 - `make dbt-run target=dev select="model"` — run specific model
 - SQL linting: `sqlfluff lint --dialect duckdb`
+
+## Tech Stack
+- **Data Ingestion**: dlt (Python)
+- **Data Transformation**: dbt core
+- **Data Warehouse**: Google BigQuery
+- **Orchestration**: GitHub Actions
+- **Secret Management**: GCP Secret Manager or 1Password (configured via `SECRET_STORE` env var)
+- **Development**: Python 3.12, pipenv, VSCode Dev Containers
+
+## Code Standards
+
+### Python
+- **Black** formatting (line length: 100)
+- **flake8** linting (max-line-length: 100)
+- **mypy** type checking; **bandit** security scanning; **pre-commit** hooks
+- Import order: stdlib → PyPI → local
+- All pipeline functions accept `is_incremental: Optional[bool] = None`; use `get_refresh_mode()` when `None`
+
+### SQL (SQLFluff)
+- Dialect: BigQuery (prod), DuckDB (dev)
+- Keywords: lowercase; identifiers: lowercase with underscores
+- Line length: 80; indentation: 4 spaces; trailing commas; explicit aliasing
+
+## Naming Conventions
+- **dlt tables**: `{source}__{entity}` (e.g., `hubspot__contacts`)
+- **Pipeline functions**: `refresh_{source}()` (e.g., `refresh_hubspot()`)
+- **dbt staging**: `stg_{source}__{entity}`; intermediate: `int_{domain}_{description}`
+- **GitHub Actions workflows**: `{action}-{frequency}` (e.g., `dlt-daily`)
+- **Env vars**: `FORCE_FULL_REFRESH` (global), `{PIPELINE_NAME}_FULL_REFRESH` (per-pipeline)
+
+## GitHub Actions Schedule
+- **HubSpot**: Daily at 2 AM UTC
+- **Fitbit**: Daily at 3 AM UTC
+- **Notion**: Weekly on Sundays at 9 AM UTC
+- **dbt Transform**: Daily at 4 AM UTC (after ingestion)
+- **Weekly doc updater**: Every Monday (gh-aw agentic workflow)
