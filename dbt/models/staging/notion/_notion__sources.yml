@@ -147,7 +147,7 @@ sources:
             data_type: numeric
           - name: properties__threshold__number
             data_type: numeric
-          - name: properties__below_threshold__checkbox
+          - name: properties__below_thresholdx__checkbox
             data_type: boolean
           - name: properties__active__formula
             data_type: varchar

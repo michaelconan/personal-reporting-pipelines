@@ -1,23 +1,30 @@
+anchors:
+  # reuse bigquery authentication and project across different schemas for targets
+  - &bigquery_config
+      type: bigquery
+      method: service-account
+      project: "{{ env_var('GCP_PROJECT_ID') }}"
+      keyfile: "{{ env_var('GOOGLE_APPLICATION_CREDENTIALS') }}"
+
 personal:
   target: "{{ env_var('DBT_TARGET', 'dev') }}"
   outputs:
-    dev:
+    mock:
       type: duckdb
       path: 'dbt.duckdb'
       schema: "{{ env_var('DBT_SCHEMA', 'reporting') }}"
 
+    dev:
+      <<: *bigquery_config
+      dataset: "dev_{{ env_var('DBT_SCHEMA', 'reporting') }}"
+      threads: 4
+
     test:
-      type: bigquery
-      method: service-account
-      project: "{{ env_var('GCP_PROJECT_ID') }}"
+      <<: *bigquery_config
       dataset: "test_{{ env_var('DBT_SCHEMA', 'reporting') }}"
       threads: 4
-      keyfile: "{{ env_var('GOOGLE_APPLICATION_CREDENTIALS') }}"
 
     prod:
-      type: bigquery
-      method: service-account
-      project: "{{ env_var('GCP_PROJECT_ID') }}"
+      <<: *bigquery_config
       dataset: "{{ env_var('DBT_SCHEMA', 'reporting') }}"
       threads: 4
-      keyfile: "{{ env_var('GOOGLE_APPLICATION_CREDENTIALS') }}"

@@ -21,9 +21,9 @@ with habit_reference as (
         lower({{ json_extract_value('properties__type__select', "'$.name'") }}) as habit_type,
         {{ json_extract_value('properties__source__select', "'$.name'") }} as source,
         -- Target is stored as a percentage integer (e.g. 80 = 80%)
-        properties__target__number / 100.0 as target_pct,
+        properties__target__number as target_pct,
         properties__threshold__number as threshold,
-        properties__below_threshold__checkbox as below_threshold,
+        properties__below_thresholdx__checkbox as below_threshold,
         -- Active is a formula returning JSON {"checkbox": true/false}
         {{ json_extract_value('properties__active__formula', "'$.checkbox'") }} = 'true' as active,
         cast(

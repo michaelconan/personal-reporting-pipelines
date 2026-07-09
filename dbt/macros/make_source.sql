@@ -3,7 +3,7 @@
 --
 {% macro make_source(source_name, relation_name) -%}
     {% set ref_name = source_name ~ '__' ~ relation_name %}
-    {% if target.name == 'dev' %}
+    {% if target.name == 'mock' %}
         {{ ref(ref_name) }}
     {% else %}
         {{ source(source_name, relation_name) }}

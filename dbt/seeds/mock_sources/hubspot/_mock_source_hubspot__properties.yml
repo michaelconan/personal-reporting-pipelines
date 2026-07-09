@@ -1,0 +1,129 @@
+version: 2
+
+seeds:
+  - name: hubspot__companies
+    config:
+      column_types:
+        id: bigint
+        properties__hs_object_id: bigint
+        created_at: timestamptz
+        updated_at: timestamptz
+        properties__createdate: timestamptz
+        properties__hs_lastmodifieddate: timestamptz
+  - name: hubspot__contacts
+    config:
+      column_types:
+        id: bigint
+        properties__hs_object_id: bigint
+        properties__associatedcompanyid: bigint
+        created_at: timestamptz
+        updated_at: timestamptz
+        properties__createdate: timestamptz
+        properties__lastmodifieddate: timestamptz
+  - name: hubspot__calls
+    config:
+      column_types:
+        id: bigint
+        properties__hs_object_id: bigint
+        created_at: timestamptz
+        updated_at: timestamptz
+        properties__hs_createdate: timestamptz
+        properties__hs_lastmodifieddate: timestamptz
+  - name: hubspot__calls_to_contacts
+    config:
+      column_types:
+        to_object_id: bigint
+        _hubspot__calls_id: bigint
+        _hubspot__calls_updated_at: timestamptz
+  - name: hubspot__communications
+    config:
+      column_types:
+        id: bigint
+        properties__hs_object_id: bigint
+        created_at: timestamptz
+        updated_at: timestamptz
+        properties__hs_createdate: timestamptz
+        properties__hs_lastmodifieddate: timestamptz
+  - name: hubspot__communications_to_contacts
+    config:
+      column_types:
+        to_object_id: bigint
+        _hubspot__communications_id: bigint
+        _hubspot__communications_updated_at: timestamptz
+  - name: hubspot__deals
+    config:
+      column_types:
+        id: bigint
+        properties__hs_object_id: bigint
+        created_at: timestamptz
+        updated_at: timestamptz
+        properties__createdate: timestamptz
+        properties__hs_lastmodifieddate: timestamptz
+        properties__closedate: timestamptz
+  - name: hubspot__deals_to_contacts
+    config:
+      column_types:
+        to_object_id: bigint
+        _hubspot__deals_id: bigint
+        _hubspot__deals_updated_at: timestamptz
+  - name: hubspot__meetings
+    config:
+      column_types:
+        id: bigint
+        properties__hs_object_id: bigint
+        created_at: timestamptz
+        updated_at: timestamptz
+        properties__hs_createdate: timestamptz
+        properties__hs_lastmodifieddate: timestamptz
+  - name: hubspot__meetings_to_contacts
+    config:
+      column_types:
+        to_object_id: bigint
+        _hubspot__meetings_id: bigint
+        _hubspot__meetings_updated_at: timestamptz
+  - name: hubspot__notes
+    config:
+      column_types:
+        id: bigint
+        properties__hs_object_id: bigint
+        created_at: timestamptz
+        updated_at: timestamptz
+        properties__hs_createdate: timestamptz
+        properties__hs_lastmodifieddate: timestamptz
+  - name: hubspot__notes_to_contacts
+    config:
+      column_types:
+        to_object_id: bigint
+        _hubspot__notes_id: bigint   # TODO: Review, missing from seed, also source?
+        _hubspot__notes_updated_at: timestamptz
+  - name: hubspot__tasks
+    config:
+      column_types:
+        id: bigint
+        properties__hs_object_id: bigint
+        created_at: timestamptz
+        updated_at: timestamptz
+        properties__hs_createdate: timestamptz
+        properties__hs_lastmodifieddate: timestamptz
+        properties__hs_task_completion_date: timestamptz
+  - name: hubspot__tasks_to_contacts
+    config:
+      column_types:
+        to_object_id: bigint
+        _hubspot__tasks_id: bigint   # TODO: Review, missing from seed, also source?
+        _hubspot__tasks_updated_at: timestamptz
+  - name: hubspot__tickets
+    config:
+      column_types:
+        id: bigint
+        properties__hs_object_id: bigint
+        created_at: timestamptz
+        updated_at: timestamptz
+        properties__createdate: timestamptz
+        properties__hs_lastmodifieddate: timestamptz
+  - name: hubspot__tickets_to_contacts
+    config:
+      column_types:
+        to_object_id: bigint
+        _hubspot__tickets_id: bigint
+        _hubspot__tickets_updated_at: timestamptz

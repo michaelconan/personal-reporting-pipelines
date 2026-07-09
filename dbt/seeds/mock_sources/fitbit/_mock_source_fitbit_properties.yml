@@ -1,0 +1,18 @@
+version: 2
+
+seeds:
+  - name: fitbit__activities
+    config:
+      column_types:
+        log_id: bigint
+        last_modified: timestamptz
+        start_time: timestamptz
+        original_start_time: timestamptz
+
+  - name: fitbit__sleep
+    config:
+      column_types:
+        log_id: bigint
+        date_of_sleep: date
+        start_time: timestamptz
+        end_time: timestamptz
