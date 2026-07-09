@@ -7,7 +7,7 @@ PYTEST = $(PIPENV) pytest \
 	--cov-append \
 	-v -s
 DBTARGS = --project-dir dbt --profiles-dir dbt
-target ?= dev
+target ?= mock
 select ?= "*"
 
 # dbt exclude logic for dev environment

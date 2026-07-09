@@ -43,8 +43,8 @@ jobs:
 
       - name: run local tests and docs
         run: |
-          make dbt-build target=dev
-          make dbt-docs target=dev
+          make dbt-build target=mock
+          make dbt-docs target=mock
 
       - name: compute coverage
         id: coverage
