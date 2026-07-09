@@ -1,7 +1,5 @@
 """
-notion.py
-
-Pipeline to load data sources from Notion API into BigQuery.
+Notion API source factory fror dlt pipelines.
 
 API Resources:
 
@@ -9,29 +7,20 @@ API Resources:
 - `Query Data Source <https://developers.notion.com/reference/query-a-data-source>`_
 """
 
-# Base imports
-import logging
-from logging import getLogger, Logger
-import sys
 from typing import Generator
-
-# PyPI imports
-import dlt
 import requests
+import logging
+from logging import getLogger
+
+import dlt
 from dlt.sources.rest_api import rest_api_resources
 from dlt.sources.helpers.rest_client.paginators import JSONResponseCursorPaginator
 from dlt.sources import DltResource
-from dlt.common.pipeline import LoadInfo
 
-# Common custom tasks
-from pipelines import RAW_SCHEMA, BASE_DATE, SECRET_STORE
-from pipelines.common.utils import (
-    get_refresh_mode,
-    get_write_disposition,
-    log_refresh_mode,
-    filter_fields,
-    validate_required_secrets,
-)
+from pipelines.common.utils import filter_fields
+from pipelines import BASE_DATE
+
+logger = getLogger(__name__)
 
 # list[str]: JSONPath expressions to exclude attributes from the Notion source records
 EXCLUDE_PATHS = [
@@ -56,9 +45,6 @@ DATA_SOURCE_MAP = {
     "18f09eb8-3f76-809f-8140-000bbccd5616": "monthly_habits",
     "2ec09eb8-3f76-80de-85f4-000b2cd39a1f": "habit_reference",
 }
-
-
-logger: Logger = getLogger(__name__)
 
 
 def name_db_table(row: dict) -> str:
@@ -105,24 +91,18 @@ def notion_source(
     api_config = {
         "client": {
             "base_url": "https://api.notion.com/v1",
-            "auth": {
-                "type": "bearer",
-                "token": api_key,
-            },
+            "auth": {"type": "bearer", "token": api_key},
             "headers": {
                 "Notion-Version": "2025-09-03",
                 "Content-Type": "application/json",
             },
             "paginator": JSONResponseCursorPaginator(
-                cursor_path="next_cursor",
-                cursor_body_path="start_cursor",
+                cursor_path="next_cursor", cursor_body_path="start_cursor"
             ),
         },
         "resource_defaults": {
             "write_disposition": "append",
-            "endpoint": {
-                "method": "POST",
-            },
+            "endpoint": {"method": "POST"},
         },
         "resources": [
             {
@@ -133,39 +113,30 @@ def notion_source(
                     "description": {"data_type": "json"},
                 },
                 "processing_steps": [
-                    # Exclude data source property metadata details entirely
                     {
                         "map": lambda r: filter_fields(
-                            r,
-                            EXCLUDE_PATHS + ["$.properties"],
-                        ),
-                    },
+                            r, EXCLUDE_PATHS + ["$.properties"]
+                        )
+                    }
                 ],
                 "endpoint": {
                     "path": "search",
                     "data_selector": "results",
                     "json": {
                         "query": db_name,
-                        "filter": {
-                            "property": "object",
-                            "value": "data_source",
-                        },
+                        "filter": {"property": "object", "value": "data_source"},
                     },
                 },
-            },
+            }
         ],
     }
 
     rows_resource = {
         "name": "notion__data_source_rows",
-        # Add dynamic table name for the data source rows resource
         "table_name": name_db_table,
-        # Prevent nested tables for multi-value properties
         "max_table_nesting": 2,
         "columns": {"title": {"data_type": "json"}},
-        "processing_steps": [
-            {"map": lambda r: filter_fields(r, EXCLUDE_PATHS)},
-        ],
+        "processing_steps": [{"map": lambda r: filter_fields(r, EXCLUDE_PATHS)}],
         "endpoint": {
             "path": "data_sources/{resources.notion__data_sources.id}/query",
             "data_selector": "results",
@@ -173,7 +144,7 @@ def notion_source(
                 "filter": {
                     "property": "Last edited time",
                     "date": {"after": "{incremental.start_value}"},
-                },
+                }
             },
             "incremental": {
                 "cursor_path": "last_edited_time",
@@ -184,7 +155,6 @@ def notion_source(
     }
 
     if end_date:
-        # Add end date to filters
         rows_resource["endpoint"]["json"]["filter"] = {
             "and": [
                 rows_resource["endpoint"]["json"]["filter"],
@@ -203,74 +173,3 @@ def notion_source(
         api_config["client"]["session"] = session
 
     yield from rest_api_resources(api_config)
-
-
-def refresh_notion(
-    is_incremental: bool | None = None,
-    pipeline: dlt.Pipeline | None = None,
-    initial_date: str | None = BASE_DATE,
-    end_date: str | None = None,
-) -> LoadInfo:
-    """Refresh Notion habits data pipeline.
-
-    Args:
-        is_incremental (bool, optional): Override incremental mode.
-            If None, uses environment-based detection. Defaults to None.
-        pipeline (dlt.Pipeline, optional): dlt pipeline object.
-            If None, a new one is created. Defaults to None.
-        initial_date (str, optional): The start date for the data extraction.
-            Defaults to `BASE_DATE`.
-        end_date (str, optional): The end date for the data extraction.
-            Defaults to None.
-
-    Returns:
-        dlt.common.pipeline.LoadInfo: Pipeline run information and status.
-    """
-    validate_required_secrets(
-        secret_store=SECRET_STORE,
-        required_secret_keys=["sources.notion.api_key"],
-        pipeline_name="Notion Habits",
-    )
-
-    # Determine refresh mode if not explicitly provided
-    if is_incremental is None:
-        is_incremental = get_refresh_mode(default_incremental=True)
-
-    # Log the refresh mode being used
-    log_refresh_mode("Notion Habits", is_incremental, RAW_SCHEMA)
-
-    # create notion data sources dlt source
-    pipeline_name = "notion_habits_pipeline"
-    nt_source = notion_source(
-        db_name="Disciplines",
-        initial_date=initial_date,
-        end_date=end_date,
-    )
-
-    if not pipeline:
-        # Modify the pipeline parameters
-        pipeline = dlt.pipeline(
-            pipeline_name=pipeline_name,
-            # TODO: Sort out how to define schema using params
-            dataset_name=RAW_SCHEMA,
-            destination="bigquery",
-            progress="log",
-        )
-
-    # Get appropriate write disposition
-    write_disposition = get_write_disposition(is_incremental)
-
-    # Run pipeline from source
-    info = pipeline.run(
-        nt_source,
-        write_disposition=write_disposition,
-        loader_file_format="jsonl",
-    )
-    logger.info(info)
-
-    return info
-
-
-if __name__ == "__main__":
-    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-    info = refresh_notion()

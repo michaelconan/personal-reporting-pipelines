@@ -11,7 +11,7 @@ sources:
         columns:
           - name: id
             description: "Primary key for the raw HubSpot company table."
-            data_type: integer
+            data_type: bigint
             data_tests:
               - not_null
           - name: properties__name
@@ -27,12 +27,12 @@ sources:
         columns:
           - name: id
             description: "Primary key for the raw HubSpot contact table."
-            data_type: integer
+            data_type: bigint
             data_tests:
               - not_null
           - name: properties__associatedcompanyid
             description: "The ID of the company associated with a contact."
-            data_type: integer
+            data_type: bigint
           - name: properties__email
             description: "The email address of the contact."
             data_type: varchar
@@ -55,7 +55,7 @@ sources:
         columns:
           - name: id
             description: "Primary key for the HubSpot meeting."
-            data_type: integer
+            data_type: bigint
             data_tests:
               - not_null
           - name: properties__hs_meeting_start_time
@@ -81,10 +81,10 @@ sources:
         columns:
           - name: to_object_id
             description: "The contact ID."
-            data_type: integer
+            data_type: bigint
           - name: _hubspot__meetings_id
             description: "The parent meeting ID."
-            data_type: integer
+            data_type: bigint
 
       - name: calls
         identifier: hubspot__calls
@@ -92,7 +92,7 @@ sources:
         columns:
           - name: id
             description: "Primary key for the HubSpot call."
-            data_type: integer
+            data_type: bigint
             data_tests:
               - not_null
           - name: properties__hs_timestamp
@@ -115,10 +115,10 @@ sources:
         columns:
           - name: to_object_id
             description: "The contact ID."
-            data_type: integer
+            data_type: bigint
           - name: _hubspot__calls_id
             description: "The parent call ID."
-            data_type: integer
+            data_type: bigint
 
       - name: communications
         identifier: hubspot__communications
@@ -126,7 +126,7 @@ sources:
         columns:
           - name: id
             description: "Primary key for the HubSpot communication."
-            data_type: integer
+            data_type: bigint
             data_tests:
               - not_null
           - name: properties__hs_timestamp
@@ -149,10 +149,10 @@ sources:
         columns:
           - name: to_object_id
             description: "The contact ID."
-            data_type: integer
+            data_type: bigint
           - name: _hubspot__communications_id
             description: "The parent communication ID."
-            data_type: integer
+            data_type: bigint
 
       - name: deals
         identifier: hubspot__deals
@@ -160,7 +160,7 @@ sources:
         columns:
           - name: id
             description: "Primary key for the HubSpot deal."
-            data_type: integer
+            data_type: bigint
             data_tests:
               - not_null
           - name: properties__dealname
@@ -192,10 +192,10 @@ sources:
         columns:
           - name: to_object_id
             description: "The contact ID."
-            data_type: integer
+            data_type: bigint
           - name: _hubspot__deals_id
             description: "The parent deal ID."
-            data_type: integer
+            data_type: bigint
 
       - name: tickets
         identifier: hubspot__tickets
@@ -203,7 +203,7 @@ sources:
         columns:
           - name: id
             description: "Primary key for the HubSpot ticket."
-            data_type: integer
+            data_type: bigint
             data_tests:
               - not_null
           - name: properties__subject
@@ -229,7 +229,7 @@ sources:
         columns:
           - name: to_object_id
             description: "The contact ID."
-            data_type: integer
+            data_type: bigint
           - name: _hubspot__tickets_id
             description: "The parent ticket ID."
-            data_type: integer
+            data_type: bigint

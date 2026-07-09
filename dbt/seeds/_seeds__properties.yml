@@ -1,14 +1,3 @@
 version: 2
 
-seeds:
-  - name: habit_categories
-    config:
-      quote_columns: false
-      delimiter: ","
-    columns:
-      - name: habit
-        data_type: varchar
-      - name: frequency
-        data_type: varchar
-      - name: category
-        data_type: varchar
+seeds: []

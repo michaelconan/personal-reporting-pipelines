@@ -28,6 +28,7 @@ with sleep as (
         log_id,  -- Fitbit sleep log ID
         cast(date_of_sleep as date) as date_of_sleep,  -- Date of sleep (not when logged)
         duration as duration_ms,  -- Sleep duration in milliseconds
+        duration / 60000.0 as sleep_minutes,  -- Sleep duration in minutes (calculated)
         duration / 3600000 as duration_hr,  -- Sleep duration in hours (calculated)
         cast(start_time as timestamp) as started_at,  -- Timestamp when sleep started
         cast(end_time as timestamp) as ended_at,  -- Timestamp when sleep ended
