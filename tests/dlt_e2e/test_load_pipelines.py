@@ -36,13 +36,11 @@ class TestPipelines:
             bigquery_pipeline: BigQuery pipeline fixture for E2E testing.
         """
         # Delayed import to capture DBT target variable
-        from pipelines.notion import refresh_notion
-
-        # GIVEN
+        from pipelines.runner import refresh_pipeline
 
         # WHEN
         # Run the pipeline
-        info = refresh_notion(**self.REFRESH_ARGS, pipeline=bigquery_pipeline)
+        info = refresh_pipeline("notion", **self.REFRESH_ARGS, pipeline=bigquery_pipeline)
 
         # THEN
         # Validate jobs were successful
@@ -54,10 +52,10 @@ class TestPipelines:
         Args:
             bigquery_pipeline: BigQuery pipeline fixture for E2E testing.
         """
-        from pipelines.hubspot import refresh_hubspot
+        from pipelines.runner import refresh_pipeline
 
         # WHEN
-        info = refresh_hubspot(**self.REFRESH_ARGS, pipeline=bigquery_pipeline)
+        info = refresh_pipeline("hubspot", **self.REFRESH_ARGS, pipeline=bigquery_pipeline)
 
         # THEN
         # Validate jobs were successful
@@ -70,7 +68,7 @@ class TestPipelines:
             bigquery_pipeline: BigQuery pipeline fixture for E2E testing.
         """
         # Delayed import to capture DBT target variable
-        from pipelines.fitbit import refresh_fitbit
+        from pipelines.runner import refresh_pipeline
 
         # GIVEN
         secrets = dlt.secrets
@@ -79,7 +77,7 @@ class TestPipelines:
 
         # WHEN
         # Run the pipeline
-        info = refresh_fitbit(**self.REFRESH_ARGS, pipeline=bigquery_pipeline)
+        info = refresh_pipeline("fitbit", **self.REFRESH_ARGS, pipeline=bigquery_pipeline)
 
         # THEN
         # Validate jobs were successful

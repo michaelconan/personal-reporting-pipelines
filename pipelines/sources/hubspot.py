@@ -20,6 +20,7 @@ API Resources:
 
 # Base
 from typing import Generator
+from datetime import datetime, timezone
 
 # PyPI
 import yaml
@@ -30,6 +31,15 @@ import dlt
 from dlt.sources.rest_api import rest_api_resources
 from dlt.sources.helpers.rest_client.paginators import JSONResponseCursorPaginator
 from dlt.sources import DltResource
+
+
+def iso_to_unix(iso_date: str) -> int:
+    """Convert ISO date string to Unix timestamp in milliseconds."""
+    if len(iso_date) == 10:
+        dt = datetime.strptime(iso_date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+    else:
+        dt = datetime.fromisoformat(iso_date.replace("Z", "+00:00"))
+    return int(dt.timestamp() * 1000)
 
 
 @dlt.source
@@ -124,6 +134,7 @@ def hubspot_source(
                     "cursor_path": "updatedAt",
                     "initial_value": initial_date,
                     "end_value": end_date,
+                    "convert": iso_to_unix,
                 },
             },
         }

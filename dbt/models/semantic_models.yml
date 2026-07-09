@@ -25,7 +25,7 @@ semantic_models:
         description: "Count of completed habits"
         agg: sum
         expr: |
-          case when is_complete then 1 else 0 end
+          case when habit_value > 0 then 1 else 0 end
       - name: total_habits
         description: "Total count of habit records"
         agg: count
@@ -34,7 +34,7 @@ semantic_models:
         description: "Percentage of habits completed"
         agg: average
         expr: |
-          case when is_complete then 1.0 else 0.0 end
+          case when habit_value > 0 then 1.0 else 0.0 end
 
   - name: engagement_contacts
     description: "Semantic model for HubSpot engagements joined with contact and company information. Grain: engagement + contact."
