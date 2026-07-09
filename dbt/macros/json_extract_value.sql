@@ -10,5 +10,5 @@
 {%- endmacro %}
 
 {% macro duckdb__json_extract_value(column_name, json_path) -%}
-    json_extract_string({{ column_name }}, {{ json_path }})
+    json_extract_string(replace({{ column_name }}, '""', '"'), {{ json_path }})
 {%- endmacro %}

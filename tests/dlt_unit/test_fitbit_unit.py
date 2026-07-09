@@ -9,7 +9,7 @@ from pytest import MonkeyPatch
 import dlt
 
 # local imports
-from pipelines.fitbit import fitbit_source
+from pipelines.sources.fitbit import fitbit_source
 from tests.dlt_unit.conftest import sample_response, sample_resource
 
 
@@ -34,7 +34,7 @@ def mock_fitbit_apis(monkeypatch: MonkeyPatch, mock_responses) -> Callable:
         after_date = params.get("afterDate", [""])[0]
 
         if "2024-06-05" in after_date and offset == 0:
-            # Incremental run with newer date
+            # Subsequent run page
             return sample_response(f"fitbit_{resource}_run2.json")
         else:
             if offset == 0:

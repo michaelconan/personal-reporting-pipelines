@@ -9,7 +9,7 @@ from pytest import MonkeyPatch
 import dlt
 
 # local imports
-from pipelines.notion import notion_source
+from pipelines.sources.notion import notion_source
 from tests.dlt_unit.conftest import sample_response, sample_resource
 
 

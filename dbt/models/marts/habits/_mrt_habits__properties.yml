@@ -34,8 +34,8 @@ models:
         data_type: varchar
         data_tests:
           - not_null
-      - name: is_complete
-        description: "Whether the habit was completed on the given date"
-        data_type: boolean
+      - name: habit_value
+        description: "The value of the habit tracked (e.g., 1.0/0.0 for tickbox, minutes for sleep, steps count for activity)"
+        data_type: double
         data_tests:
           - not_null
