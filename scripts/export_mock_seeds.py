@@ -115,6 +115,9 @@ def export_table(client: bigquery.Client, source_name: str, identifier: str) -> 
         for col, val in row.items():
             if isinstance(val, (dict, list)):
                 row[col] = json.dumps(val, default=json_serial, ensure_ascii=False)
+            elif isinstance(val, str) and (val.startswith('{') or val.startswith('[')):
+                # Normalize repeated quotes in stringified JSON fields
+                row[col] = val.replace('""', '"')
 
     out_dir = OUTPUT_DIR / source_name
     out_dir.mkdir(parents=True, exist_ok=True)

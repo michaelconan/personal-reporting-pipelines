@@ -10,17 +10,8 @@ from pytest import MonkeyPatch
 import dlt
 
 # local imports
-from pipelines.sources.hubspot import hubspot_source
+from pipelines.sources.hubspot import hubspot_source, iso_to_unix
 from tests.dlt_unit.conftest import sample_data, sample_response, sample_resource
-from datetime import datetime, timezone
-
-def iso_to_unix(iso_str: str) -> int:
-    """Convert ISO-8601 date string to Unix epoch milliseconds."""
-    if len(iso_str) == 10:
-        dt = datetime.strptime(iso_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
-    else:
-        dt = datetime.fromisoformat(iso_str.replace("Z", "+00:00"))
-    return int(dt.timestamp() * 1000)
 
 
 pytestmark = pytest.mark.local
