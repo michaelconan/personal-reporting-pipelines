@@ -47,9 +47,13 @@ The project follows modern data engineering best practices with clear separation
 
 ```
 ├── pipelines/          # dlt data extraction pipelines
-│   ├── hubspot.py      # HubSpot CRM data pipeline
-│   ├── fitbit.py       # Fitbit health data pipeline
-│   ├── notion.py       # Notion habits data pipeline
+│   ├── sources/        # Source factory modules for each pipeline
+│   │   ├── hubspot.py
+│   │   ├── fitbit.py
+│   │   └── notion.py
+│   ├── hubspot.py      # Thin orchestration wrappers that delegate to central runner
+│   ├── fitbit.py       # Thin orchestration wrappers that delegate to central runner
+│   ├── notion.py       # Thin orchestration wrappers that delegate to central runner
 │   └── common/         # Shared utilities and helpers
 ├── dbt/                # dbt transformation models
 │   ├── models/         # personal dbt models (staging, intermediate, marts)
@@ -191,6 +195,26 @@ pipenv run python -m pipelines.hubspot
 # Force full refresh for HubSpot only
 export HUBSPOT_FULL_REFRESH=true
 pipenv run python -m pipelines.hubspot
+```
+
+#### Method 5: Central CLI entrypoint
+
+Use the central runner `pipelines.run_pipeline` to run any pipeline and
+optionally select resources:
+
+```bash
+# Full refresh for Notion via central runner
+pipenv run python -m pipelines.run_pipeline notion --full
+
+# Incremental with resource selection
+pipenv run python -m pipelines.run_pipeline hubspot --incremental --select hubspot__contacts,hubspot__companies
+```
+
+You can also use the `Makefile` convenience targets (now consolidated as `refresh-*`):
+
+```bash
+make refresh-notion ARGS="--full --debug"
+make refresh-hubspot ARGS="--select hubspot__contacts"
 ```
 
 #### Method 3: Direct Function Parameter

@@ -4,13 +4,6 @@ version: '1.0.0'
 
 profile: 'personal'
 
-
-flags:
-  warn_error_options:
-    # This will not actually disable the error, no clear way to disable all source tests
-    # Message: "Test 'test' depends on a source named 'source' which is disabled"
-    silence: ["NodeNotFoundOrDisabled", "InvalidDisabledTargetInTestNode"]
-
 model-paths: ["models"]
 analysis-paths: ["analyses"]
 test-paths: ["tests"]
@@ -22,13 +15,19 @@ clean-targets:         # directories to be removed by `dbt clean`
   - "target"
   - "dbt_packages"
 
+flags:
+  warn_error_options:
+    # This will not actually disable the error, no clear way to disable all source tests
+    # Message: "Test 'test' depends on a source named 'source' which is disabled"
+    silence: ["NodeNotFoundOrDisabled", "InvalidDisabledTargetInTestNode"]
+  indirect_selection: cautious
+
 # Override configuration for dbt_utils macros to add duckdb support
 dispatch:
   - macro_namespace: dbt_utils
     search_order:
       - personal
       - dbt_utils
-
 
 # Configuring models
 # Full documentation: https://docs.getdbt.com/docs/configuring-models
@@ -47,14 +46,14 @@ models:
 sources:
   personal:
     staging:
-      +enabled: "{{ target.name != 'dev' }}"
+      +enabled: "{{ target.name != 'mock' }}"
 
 seeds:
   personal:
     mock_sources:
       +schema: mock
       +tags: ["local"]
-      +enabled: "{{ target.name == 'dev' }}"
+      +enabled: "{{ target.name == 'mock' }}"
 
 vars:
   'dbt_date:time_zone': 'UTC'

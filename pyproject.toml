@@ -1,3 +1,41 @@
+[project]
+name = "personal-reporting-pipelines"
+version = "1.0.0"
+description = "Personal data integration and analytics platform tracking personal disciplines/habits"
+requires-python = ">=3.12"
+dependencies = [
+    "dlt[bigquery,parquet,duckdb]",
+    "google-cloud-bigquery-storage",
+    "google-cloud-secret-manager",
+    "google-api-python-client",
+    "psutil",
+    "dbt-duckdb~=1.10.0",
+    "dbt-bigquery~=1.10.0",
+    "dbt-core~=1.10.0",
+    "google-api-core>=2.15.0",
+    "google-cloud-dataproc~=5.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "pytest-dotenv",
+    "pytest-mock",
+    "pre-commit",
+    "responses",
+    "sqlfluff",
+    "sqlfluff-templater-dbt",
+    "black",
+    "faker",
+    "marimo",
+    "sphinx",
+    "sphinx-rtd-theme",
+    "myst-parser",
+    "sphinx-autoapi",
+    "dbt-coverage",
+]
+
 [tool.pytest.ini_options]
 markers = [
     "e2e: marks tests as end-to-end tests",

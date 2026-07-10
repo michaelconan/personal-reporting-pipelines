@@ -17,6 +17,12 @@ jobs:
       - name: "Check out repository"
         uses: actions/checkout@v5
 
+      - name: set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: 'latest'
+          enable-cache: true
+
       - name: "Set up Python"
         uses: actions/setup-python@v6
         with:

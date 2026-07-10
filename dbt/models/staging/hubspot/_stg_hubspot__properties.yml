@@ -57,6 +57,8 @@ models:
         data_type: integer
         data_tests:
           - relationships:
+              config:
+                enabled: "{{ target.name != 'mock' }}"
               arguments:
                 to: ref('stg_hubspot__companies')
                 field: company_id
@@ -156,6 +158,8 @@ models:
         data_type: integer
         data_tests:
           - relationships:
+              config:
+                enabled: "{{ target.name != 'mock' }}"
               arguments:
                 to: ref('stg_hubspot__engagements')
                 field: engagement_id
@@ -164,6 +168,8 @@ models:
         data_type: integer
         data_tests:
           - relationships:
+              config:
+                enabled: "{{ target.name != 'mock' }}"
               arguments:
                 to: ref('stg_hubspot__contacts')
                 field: contact_id
@@ -182,6 +188,8 @@ models:
         data_type: integer
         data_tests:
           - relationships:
+              config:
+                enabled: "{{ target.name != 'mock' }}"
               arguments:
                 to: ref('stg_hubspot__engagements')
                 field: engagement_id
@@ -190,6 +198,8 @@ models:
         data_type: integer
         data_tests:
           - relationships:
+              config:
+                enabled: "{{ target.name != 'mock' }}"
               arguments:
                 to: ref('stg_hubspot__companies')
                 field: company_id
