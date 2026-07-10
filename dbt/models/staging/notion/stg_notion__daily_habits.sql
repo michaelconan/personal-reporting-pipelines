@@ -5,7 +5,7 @@ with daily_habits as (
         id as page_id,
         cast(left({{ json_extract_value('properties__date__date', "'$.start'") }}, 10) as date)
           as page_date,
-        properties__name__title as page_name,
+        {{ extract_notion_title('properties__name__title') }} as page_name,
         properties__devotional__checkbox as did_devotional,
         properties__journal__checkbox as did_journal,
         properties__prayer__checkbox as did_prayer,

@@ -10,7 +10,7 @@ from pytest import MonkeyPatch
 import dlt
 
 # local imports
-from pipelines.hubspot import hubspot_source, iso_to_unix
+from pipelines.sources.hubspot import hubspot_source, iso_to_unix
 from tests.dlt_unit.conftest import sample_data, sample_response, sample_resource
 
 

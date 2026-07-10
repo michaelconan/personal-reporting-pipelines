@@ -1,0 +1,33 @@
+version: 2
+
+seeds:
+  - name: notion__data_source_habit_reference
+    config:
+      column_types:
+        created_time: timestamptz
+        last_edited_time: timestamptz
+        properties__name__title: json
+  - name: notion__data_source_daily_habits
+    config:
+      column_types:
+        created_time: timestamptz
+        last_edited_time: timestamptz
+        properties__name__title: json
+        properties__date__date: json
+        properties__last_edited_time__last_edited_time: timestamptz
+  - name: notion__data_source_weekly_habits
+    config:
+      column_types:
+        created_time: timestamptz
+        last_edited_time: timestamptz
+        properties__name__title: json
+        properties__date__date: json
+        properties__last_edited_time__last_edited_time: timestamptz
+  - name: notion__data_source_monthly_habits
+    config:
+      column_types:
+        created_time: timestamptz
+        last_edited_time: timestamptz
+        properties__name__title: json
+        properties__date__date: json
+        properties__last_edited_time__last_edited_time: timestamptz

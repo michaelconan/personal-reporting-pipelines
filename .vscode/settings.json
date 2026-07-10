@@ -11,5 +11,6 @@
     "editor.formatOnSave": true,
     "[json]": {
         "editor.defaultFormatter": "vscode.json-language-features"
-    }
+    },
+    "python-envs.defaultEnvManager": "ms-python.python:pipenv"
 }

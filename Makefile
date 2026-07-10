@@ -2,19 +2,26 @@
 # Makefile for development workflows and operations
 
 # Python environment
-PIPENV = pipenv run
+PIPENV = uv run
 PYTEST = $(PIPENV) pytest \
 	--cov-append \
 	-v -s
 DBTARGS = --project-dir dbt --profiles-dir dbt
-target ?= dev
+target ?= mock
 select ?= "*"
 
 # dbt exclude logic for dev environment
 # mock seeds are used in place of sources
 DBT_EXCLUDE :=
-ifeq ($(target),dev)
+ifeq ($(target),mock)
 	DBT_EXCLUDE := --exclude "source:*"
+endif
+
+# Optional full-refresh support for dbt commands
+full ?= false
+DBT_FULL_REFRESH :=
+ifeq ($(full),true)
+	DBT_FULL_REFRESH := --full-refresh
 endif
 
 # Default target
@@ -30,11 +37,9 @@ help: ## Show this help message
 
 ## Environment Setup
 .PHONY: install
-install: ## Install Python dependencies using pipenv
-	@pip install --upgrade pip
-	@pip install --upgrade pipenv
-	@pipenv lock
-	@pipenv install --dev
+install: ## Install Python dependencies using uv
+	@pip install --upgrade uv
+	@uv sync
 
 .PHONY: inject
 inject:
@@ -69,17 +74,22 @@ test-coverage: ## Generate coverage reports only
 	$(PIPENV) coverage report --show-missing
 	$(PIPENV) coverage html
 
+.PHONY: run-pipeline
+run-pipeline: ## Run a pipeline via the new CLI. Usage: make run-pipeline PIPELINE=notion ARGS="--select name --full"
+	@if [ -z "$(PIPELINE)" ]; then echo "Please set PIPELINE=<name>"; exit 2; fi
+	PYTHONUNBUFFERED=1 $(PIPENV) python -m pipelines.run_pipeline $(PIPELINE) $(ARGS)
+
 .PHONY: refresh-fitbit
 refresh-fitbit: ## Run Fitbit dlt pipeline refresh
-	PYTHONUNBUFFERED=1 $(PIPENV) python -m pipelines.fitbit
+	$(MAKE) run-pipeline PIPELINE=fitbit ARGS="$(ARGS)"
 
 .PHONY: refresh-notion
 refresh-notion: ## Run Notion dlt pipeline refresh
-	PYTHONUNBUFFERED=1 $(PIPENV) python -m pipelines.notion
+	$(MAKE) run-pipeline PIPELINE=notion ARGS="$(ARGS)"
 
 .PHONY: refresh-hubspot
 refresh-hubspot: ## Run HubSpot dlt pipeline refresh
-	PYTHONUNBUFFERED=1 $(PIPENV) python -m pipelines.hubspot
+	$(MAKE) run-pipeline PIPELINE=hubspot ARGS="$(ARGS)"
 
 .PHONY: refresh-all
 refresh-all: refresh-fitbit refresh-notion refresh-hubspot ## Run all dlt pipeline refreshes
@@ -111,10 +121,15 @@ dbt-deps:
 	@echo "Installing dbt dependencies..."
 	$(PIPENV) dbt deps $(DBTARGS)
 
+.PHONY: dbt-seed
+dbt-seed:
+	@echo "Seeding dbt project with $(target) target..."
+	$(PIPENV) dbt seed $(DBTARGS) --target $(target) --select $(select) $(DBT_EXCLUDE) $(DBT_FULL_REFRESH)
+
 .PHONY: dbt-run
 dbt-run:
 	@echo "Running dbt project with $(target) target..."
-	$(PIPENV) dbt run $(DBTARGS) --target $(target) --select $(select) $(DBT_EXCLUDE)
+	$(PIPENV) dbt run $(DBTARGS) --target $(target) --select $(select) $(DBT_EXCLUDE) $(DBT_FULL_REFRESH)
 
 .PHONY: dbt-test
 dbt-test:
@@ -124,7 +139,7 @@ dbt-test:
 .PHONY: dbt-build
 dbt-build:
 	@echo "Building dbt project with $(target) target..."
-	$(PIPENV) dbt build $(DBTARGS) --target $(target) --select $(select) $(DBT_EXCLUDE)
+	$(PIPENV) dbt build $(DBTARGS) --target $(target) --select $(select) $(DBT_EXCLUDE) $(DBT_FULL_REFRESH)
 
 .PHONY: dbt-docs
 dbt-docs:
@@ -141,6 +156,13 @@ dbt-test-coverage:
 	$(PIPENV) dbt-coverage compute test --model-path-filter models/ \
 		--run-artifacts-dir dbt/target --output-format markdown
 
+.PHONY: dbt-fix-lint
+dbt-fix-lint: ## Auto-fix and lint SQL files
+	@echo "Auto-fixing SQL files..."
+	( cd dbt && $(PIPENV) sqlfluff fix )
+	@echo "Linting SQL files..."
+	( cd dbt && $(PIPENV) sqlfluff lint )
+
 ## Generate dbt and Sphinx documentation
 .PHONY: docs
 docs: dbt-deps dbt-docs
@@ -152,10 +174,3 @@ docs: dbt-deps dbt-docs
 	@mkdir -p docs/_build/html/dbt
 	@cp dbt/target/static_index.html docs/_build/html/dbt.html
 	@echo "Documentation available at docs/_build/html/index.html"
-
-.PHONY: dbt-fix-lint
-dbt-fix-lint: ## Auto-fix and lint SQL files
-	@echo "Auto-fixing SQL files..."
-	( cd dbt && $(PIPENV) sqlfluff fix )
-	@echo "Linting SQL files..."
-	( cd dbt && $(PIPENV) sqlfluff lint )
