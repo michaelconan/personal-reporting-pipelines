@@ -1,0 +1,32 @@
+{
+  "dataPoints": [
+    {
+      "name": "users/me/dataTypes/sleep/dataPoints/dp1",
+      "sleep": {
+        "interval": {
+          "startTime": "2024-06-01T00:00:00Z",
+          "endTime": "2024-06-01T08:00:00Z"
+        }
+      }
+    },
+    {
+      "name": "users/me/dataTypes/sleep/dataPoints/dp2",
+      "sleep": {
+        "interval": {
+          "startTime": "2024-06-02T00:00:00Z",
+          "endTime": "2024-06-02T08:05:00Z"
+        }
+      }
+    },
+    {
+      "name": "users/me/dataTypes/sleep/dataPoints/dp3",
+      "sleep": {
+        "interval": {
+          "startTime": "2024-06-03T00:30:00Z",
+          "endTime": "2024-06-03T08:15:00Z"
+        }
+      }
+    }
+  ],
+  "nextPageToken": "token-page2"
+}

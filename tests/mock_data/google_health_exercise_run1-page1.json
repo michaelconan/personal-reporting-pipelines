@@ -1,0 +1,32 @@
+{
+  "dataPoints": [
+    {
+      "name": "users/me/dataTypes/exercise/dataPoints/dp1",
+      "exercise": {
+        "interval": {
+          "startTime": "2024-06-01T10:00:00Z"
+        },
+        "exerciseType": "WALKING"
+      }
+    },
+    {
+      "name": "users/me/dataTypes/exercise/dataPoints/dp2",
+      "exercise": {
+        "interval": {
+          "startTime": "2024-06-02T08:30:00Z"
+        },
+        "exerciseType": "RUNNING"
+      }
+    },
+    {
+      "name": "users/me/dataTypes/exercise/dataPoints/dp3",
+      "exercise": {
+        "interval": {
+          "startTime": "2024-06-03T17:00:00Z"
+        },
+        "exerciseType": "CYCLING"
+      }
+    }
+  ],
+  "nextPageToken": "token-page2"
+}

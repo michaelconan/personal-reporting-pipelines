@@ -1,0 +1,22 @@
+{
+  "dataPoints": [
+    {
+      "name": "users/me/dataTypes/exercise/dataPoints/dp4",
+      "exercise": {
+        "interval": {
+          "startTime": "2024-06-04T10:00:00Z"
+        },
+        "exerciseType": "WALKING"
+      }
+    },
+    {
+      "name": "users/me/dataTypes/exercise/dataPoints/dp5",
+      "exercise": {
+        "interval": {
+          "startTime": "2024-06-05T08:30:00Z"
+        },
+        "exerciseType": "RUNNING"
+      }
+    }
+  ]
+}

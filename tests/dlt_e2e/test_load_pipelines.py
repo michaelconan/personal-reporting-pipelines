@@ -46,6 +46,27 @@ class TestPipelines:
         # Validate jobs were successful
         assert info.has_failed_jobs is False
 
+    def test_google_health_refresh(self, bigquery_pipeline):
+        """Test end-to-end refresh of the Google Health pipeline.
+
+        Args:
+            bigquery_pipeline: BigQuery pipeline fixture for E2E testing.
+        """
+        # Delayed import to capture DBT target variable
+        from pipelines.runner import refresh_pipeline
+
+        # GIVEN
+        secrets = dlt.secrets
+        secrets["sources.google_health.refresh_token"]
+
+        # WHEN
+        # Run the pipeline
+        info = refresh_pipeline("google_health", **self.REFRESH_ARGS, pipeline=bigquery_pipeline)
+
+        # THEN
+        # Validate jobs were successful
+        assert info.has_failed_jobs is False
+
     def test_hubspot_refresh(self, bigquery_pipeline):
         """Test end-to-end refresh of the HubSpot CRM pipeline.
 

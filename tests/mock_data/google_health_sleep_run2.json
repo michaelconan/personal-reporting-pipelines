@@ -1,0 +1,13 @@
+{
+  "dataPoints": [
+    {
+      "name": "users/me/dataTypes/sleep/dataPoints/dp6",
+      "sleep": {
+        "interval": {
+          "startTime": "2024-06-06T00:30:00Z",
+          "endTime": "2024-06-06T08:15:00Z"
+        }
+      }
+    }
+  ]
+}

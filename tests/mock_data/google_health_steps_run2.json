@@ -1,0 +1,13 @@
+{
+  "dataPoints": [
+    {
+      "name": "users/me/dataTypes/steps/dataPoints/dp6",
+      "steps": {
+        "interval": {
+          "startTime": "2024-06-06T17:00:00Z"
+        },
+        "count": "2000"
+      }
+    }
+  ]
+}

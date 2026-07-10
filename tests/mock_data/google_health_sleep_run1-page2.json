@@ -1,0 +1,22 @@
+{
+  "dataPoints": [
+    {
+      "name": "users/me/dataTypes/sleep/dataPoints/dp4",
+      "sleep": {
+        "interval": {
+          "startTime": "2024-06-04T00:00:00Z",
+          "endTime": "2024-06-04T08:00:00Z"
+        }
+      }
+    },
+    {
+      "name": "users/me/dataTypes/sleep/dataPoints/dp5",
+      "sleep": {
+        "interval": {
+          "startTime": "2024-06-05T00:00:00Z",
+          "endTime": "2024-06-05T08:05:00Z"
+        }
+      }
+    }
+  ]
+}

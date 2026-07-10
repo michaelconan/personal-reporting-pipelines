@@ -1,0 +1,13 @@
+{
+  "dataPoints": [
+    {
+      "name": "users/me/dataTypes/exercise/dataPoints/dp6",
+      "exercise": {
+        "interval": {
+          "startTime": "2024-06-06T17:00:00Z"
+        },
+        "exerciseType": "CYCLING"
+      }
+    }
+  ]
+}
