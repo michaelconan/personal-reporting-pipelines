@@ -2,7 +2,7 @@
 # Makefile for development workflows and operations
 
 # Python environment
-PIPENV = pipenv run
+PIPENV = uv run
 PYTEST = $(PIPENV) pytest \
 	--cov-append \
 	-v -s
@@ -37,11 +37,9 @@ help: ## Show this help message
 
 ## Environment Setup
 .PHONY: install
-install: ## Install Python dependencies using pipenv
-	@pip install --upgrade pip
-	@pip install --upgrade pipenv
-	@pipenv lock
-	@pipenv install --dev
+install: ## Install Python dependencies using uv
+	@pip install --upgrade uv
+	@uv sync
 
 .PHONY: inject
 inject:
