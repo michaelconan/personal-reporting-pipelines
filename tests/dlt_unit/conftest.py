@@ -109,13 +109,37 @@ def duckdb_pipeline() -> dlt.Pipeline:
     Yields:
         dlt.Pipeline: Configured DLT pipeline for testing.
     """
-    # Test pipeline
-    pipeline = dlt.pipeline(
-        pipeline_name="local_unit_test",
-        destination="duckdb",
-        dataset_name="local_data",
-        dev_mode=True,
-    )
-    yield pipeline
-    # Cleanup
-    pipeline.drop()
+    import tempfile
+
+    # Use an isolated temporary HOME to avoid touching user's ~/.dlt files
+    tmp_home = tempfile.TemporaryDirectory()
+    old_home = os.environ.get("HOME")
+    old_userprofile = os.environ.get("USERPROFILE")
+    try:
+        os.environ["HOME"] = tmp_home.name
+        os.environ["USERPROFILE"] = tmp_home.name
+
+        # Test pipeline
+        pipeline = dlt.pipeline(
+            pipeline_name="local_unit_test",
+            destination="duckdb",
+            dataset_name="local_data",
+            dev_mode=True,
+        )
+        yield pipeline
+    finally:
+        # Cleanup pipeline and temporary HOME
+        try:
+            pipeline.drop()
+        except Exception:
+            pass
+        tmp_home.cleanup()
+        # restore env
+        if old_home is None:
+            os.environ.pop("HOME", None)
+        else:
+            os.environ["HOME"] = old_home
+        if old_userprofile is None:
+            os.environ.pop("USERPROFILE", None)
+        else:
+            os.environ["USERPROFILE"] = old_userprofile
