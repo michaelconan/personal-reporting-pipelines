@@ -97,7 +97,7 @@ def google_health_source(
             },
             {
                 "name": "google_health__steps",
-                "max_table_nesting": 1,
+                "max_table_nesting": 4,
                 "endpoint": {
                     "path": "users/me/dataTypes/steps/dataPoints",
                     "params": {
@@ -112,7 +112,7 @@ def google_health_source(
             },
             {
                 "name": "google_health__exercise",
-                "max_table_nesting": 1,
+                "max_table_nesting": 2,
                 "endpoint": {
                     "path": "users/me/dataTypes/exercise/dataPoints",
                     "params": {
@@ -120,8 +120,8 @@ def google_health_source(
                     },
                     "incremental": {
                         "cursor_path": "exercise.interval.startTime",
-                        "initial_value": initial_ts,
-                        "end_value": end_ts,
+                        "initial_value": initial_ts[:-1],
+                        "end_value": end_ts[:-1],
                     },
                 },
             },

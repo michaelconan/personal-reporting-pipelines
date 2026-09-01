@@ -4,6 +4,7 @@
 # Python environment
 PIPENV = uv run
 PYTEST = $(PIPENV) pytest \
+	--log-cli-level=INFO \
 	--cov-append \
 	-v -s
 DBTARGS = --project-dir dbt --profiles-dir dbt
@@ -50,6 +51,7 @@ inject:
 test-e2e: ## Run tests with coverage
 	# coverage source configured in pyproject.toml [tool.coverage.run]
 	$(PIPENV) pytest tests/dlt_e2e \
+		--log-cli-level=INFO \
 		--cov \
 		--cov-append \
 		--cov-report=xml \
@@ -60,6 +62,7 @@ test-e2e: ## Run tests with coverage
 test-local: ## Run offline local tests only
 	# coverage source configured in pyproject.toml [tool.coverage.run]
 	$(PIPENV) pytest tests/dlt_unit \
+		--log-cli-level=INFO \
 		--cov \
 		--cov-append \
 		--cov-report=xml \
@@ -87,12 +90,16 @@ refresh-fitbit: ## Run Fitbit dlt pipeline refresh
 refresh-notion: ## Run Notion dlt pipeline refresh
 	$(MAKE) run-pipeline PIPELINE=notion ARGS="$(ARGS)"
 
+.PHONY: refresh-google-health
+refresh-google-health: ## Run Google Health dlt pipeline refresh
+	$(MAKE) run-pipeline PIPELINE=google_health ARGS="$(ARGS)"
+
 .PHONY: refresh-hubspot
 refresh-hubspot: ## Run HubSpot dlt pipeline refresh
 	$(MAKE) run-pipeline PIPELINE=hubspot ARGS="$(ARGS)"
 
 .PHONY: refresh-all
-refresh-all: refresh-fitbit refresh-notion refresh-hubspot ## Run all dlt pipeline refreshes
+refresh-all: refresh-notion refresh-hubspot refresh-google-health ## Run all dlt pipeline refreshes
 
 .PHONY: clean
 clean: ## Remove Python cache files and temporary artifacts
