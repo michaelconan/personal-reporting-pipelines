@@ -1,0 +1,78 @@
+name: run google health pipeline
+on:
+  schedule:
+    - cron: '0 5 * * 1'  # monday at 5 AM UTC
+  workflow_dispatch:
+    inputs:
+      force_full_refresh:
+        description: 'Force full refresh'
+        required: false
+        default: 'false'
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v5
+
+      - name: set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: 'latest'
+          enable-cache: true
+
+      - name: set up python 3.13
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: install uv and dependencies
+        run: |
+          make install
+
+      - name: set environment variables
+        run: |
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/sa_key.json" >> $GITHUB_ENV
+
+      - name: write keyfile
+        run: |
+          cat << 'EOF' > $GOOGLE_APPLICATION_CREDENTIALS
+          ${{ secrets.GCP_SVC_KEY }}
+          EOF
+
+      - name: install 1password cli
+        uses: 1password/install-cli-action@v3
+
+      - name: inject secrets using service account
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+        run: |
+          make inject
+
+      - name: run google health pipeline
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          FORCE_FULL_REFRESH: ${{ inputs.force_full_refresh }}
+          RUNTIME__LOG_LEVEL: "INFO"
+          PYTHONUNBUFFERED: "1"
+        run: |
+          make refresh-google-health
+
+      - name: Remove keyfile
+        if: always()
+        run: |
+          rm $GOOGLE_APPLICATION_CREDENTIALS
+
+      - name: upload dlt state files
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: google-health-pipeline-state
+          path: |
+            ~/.dlt/**/state.json
+          retention-days: 7
