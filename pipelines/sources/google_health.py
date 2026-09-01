@@ -1,12 +1,71 @@
-"""Google Health source factory moved to pipelines.sources.google_health"""
+"""
+Google Health source factory moved to pipelines.sources.google_health
+
+API Resources:
+
+- `List DataPoints <https://developers.google.com/health/reference/rest/v4/users.dataTypes.dataPoints/list>`_
+- `Daily Roll Up DataPoints <https://developers.google.com/health/reference/rest/v4/users.dataTypes.dataPoints/dailyRollUp>`_
+"""
 
 import dlt
 from dlt.sources.rest_api import rest_api_source
 from dlt.sources.helpers.rest_client.paginators import JSONResponseCursorPaginator
+from google.cloud import secretmanager_v1
+import google.auth
+from google.oauth2.credentials import Credentials
+from google.auth.transport.requests import Request
+
+
+from pipelines import SECRET_STORE
 
 
 def get_google_health_token() -> str:
-    return dlt.secrets["sources.google_health.access_token"]
+    """Get a fresh Google Health API access token using the stored refresh token.
+
+    This function requests a new access token from Google's OAuth2 endpoint
+    using the refresh token stored in DLT secrets. It also updates the
+    refresh token in Google Secret Manager or 1Password for future use if
+    a new refresh token is returned by the endpoint.
+
+    Returns:
+        str: The new access token for Google Health API requests.
+
+    Raises:
+        requests.HTTPError: If the token refresh request fails.
+    """
+    creds = Credentials(
+        token=None,
+        refresh_token=dlt.secrets["sources.google_health.refresh_token"],
+        token_uri="https://oauth2.googleapis.com/token",
+        client_id=dlt.secrets["sources.google_health.client_id"],
+        client_secret=dlt.secrets["sources.google_health.client_secret"],
+    )
+
+    request = Request()
+    creds.refresh(request)
+
+    new_refresh = creds.refresh_token
+    if new_refresh and new_refresh != dlt.secrets.get("sources.google_health.refresh_token"):
+        if SECRET_STORE == "google":
+            _, project_id = google.auth.default()
+            client = secretmanager_v1.SecretManagerServiceClient()
+            parent = client.secret_path(project_id, "sources-google-health-refresh_token")
+            client.add_secret_version(
+                request={
+                    "parent": parent,
+                    "payload": {"data": new_refresh.encode("UTF-8")},
+                }
+            )
+        else:
+            from pipelines.common.utils import update_onepassword_item
+
+            update_onepassword_item(
+                item_name="google-health",
+                vault="reporting",
+                field_updates={"refresh_token": new_refresh},
+            )
+
+    return creds.token
 
 
 def google_health_source(
@@ -34,10 +93,10 @@ def google_health_source(
                 "endpoint": {
                     "path": "users/me/dataTypes/sleep/dataPoints",
                     "params": {
-                        "filter": "sleep.interval.end_time >= {incremental.start_value} sleep.interval.end_time < {incremental.end_value}"
+                        "filter": 'sleep.interval.end_time >= "{incremental.start_value}" AND sleep.interval.end_time < "{incremental.end_value}"'
                     },
                     "incremental": {
-                        "cursor_path": "sleep.interval.startTime",
+                        "cursor_path": "sleep.interval.endTime",
                         "initial_value": initial_ts,
                         "end_value": end_ts,
                     },
@@ -45,11 +104,11 @@ def google_health_source(
             },
             {
                 "name": "google_health__steps",
-                "max_table_nesting": 1,
+                "max_table_nesting": 4,
                 "endpoint": {
                     "path": "users/me/dataTypes/steps/dataPoints",
                     "params": {
-                        "filter": "steps.interval.start_time >= {incremental.start_value} steps.interval.start_time < {incremental.end_value}"
+                        "filter": 'steps.interval.start_time >= "{incremental.start_value}" AND steps.interval.start_time < "{incremental.end_value}"'
                     },
                     "incremental": {
                         "cursor_path": "steps.interval.startTime",
@@ -60,16 +119,16 @@ def google_health_source(
             },
             {
                 "name": "google_health__exercise",
-                "max_table_nesting": 1,
+                "max_table_nesting": 2,
                 "endpoint": {
                     "path": "users/me/dataTypes/exercise/dataPoints",
                     "params": {
-                        "filter": "exercise.interval.civil_start_time >= {incremental.start_value} exercise.interval.civil_start_time < {incremental.end_value}"
+                        "filter": 'exercise.interval.civil_start_time >= "{incremental.start_value}" AND exercise.interval.civil_start_time < "{incremental.end_value}"'
                     },
                     "incremental": {
                         "cursor_path": "exercise.interval.startTime",
-                        "initial_value": initial_date,
-                        "end_value": end_date,
+                        "initial_value": initial_ts[:-1],
+                        "end_value": end_ts[:-1] if end_ts else None,
                     },
                 },
             },

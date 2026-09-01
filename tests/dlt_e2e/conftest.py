@@ -7,6 +7,7 @@ services like Google Cloud and BigQuery.
 # base imports
 import os
 import logging
+from typing import Generator
 
 # PyPI imports
 import pytest
@@ -48,7 +49,7 @@ def check_config():
 
 
 @pytest.fixture(scope="class")
-def bigquery_pipeline() -> dlt.Pipeline:
+def bigquery_pipeline() -> Generator[dlt.Pipeline, None, None]:
     """Pytest fixture providing a BigQuery pipeline for E2E testing.
 
     Creates a DLT pipeline configured to use BigQuery as the destination
