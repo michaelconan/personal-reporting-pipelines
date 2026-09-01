@@ -121,7 +121,7 @@ def google_health_source(
                     "incremental": {
                         "cursor_path": "exercise.interval.startTime",
                         "initial_value": initial_ts[:-1],
-                        "end_value": end_ts[:-1],
+                        "end_value": end_ts[:-1] if end_ts else None,
                     },
                 },
             },
