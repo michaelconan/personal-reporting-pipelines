@@ -8,6 +8,7 @@ dependencies = [
     "google-cloud-bigquery-storage",
     "google-cloud-secret-manager",
     "google-api-python-client",
+    "oauth2client<4",
     "psutil",
     "dbt-duckdb~=1.10.0",
     "dbt-bigquery~=1.10.0",
@@ -42,7 +43,9 @@ markers = [
     "local: marks executable offline",
 ]
 # Disable responses plugin by default to prevent interference with e2e tests
-addopts = "-s -p no:pytest-responses"
+addopts = "-s -p no:pytest-responses --log-cli-level=INFO"
+log_cli = true
+log_cli_level = "INFO"
 # Test discovery patterns
 testpaths = ["tests"]
 python_files = ["test_*.py"]

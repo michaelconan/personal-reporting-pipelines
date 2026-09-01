@@ -72,7 +72,11 @@ PIPELINE_CONFIG: dict[str, PipelineConfig] = {
         source_factory=google_health_source,
         pipeline_name="google_health_v4_pipeline",
         display_name="Google Health v4",
-        required_secret_keys=["sources.google_health.access_token"],
+        required_secret_keys=[
+            "sources.google_health.client_id",
+            "sources.google_health.client_secret",
+            "sources.google_health.refresh_token"
+        ],
         token_getter=get_google_health_token,
     ),
 }
