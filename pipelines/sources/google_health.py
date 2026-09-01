@@ -1,4 +1,11 @@
-"""Google Health source factory moved to pipelines.sources.google_health"""
+"""
+Google Health source factory moved to pipelines.sources.google_health
+
+API Resources:
+
+- `List DataPoints <https://developers.google.com/health/reference/rest/v4/users.dataTypes.dataPoints/list>`_
+- `Daily Roll Up DataPoints <https://developers.google.com/health/reference/rest/v4/users.dataTypes.dataPoints/dailyRollUp>`_
+"""
 
 import dlt
 from dlt.sources.rest_api import rest_api_source
