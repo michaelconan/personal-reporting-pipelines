@@ -23,11 +23,13 @@ dev = [
     "pytest-cov",
     "pytest-dotenv",
     "pytest-mock",
-    "pre-commit",
+    "prek",
+    "ruff",
+    "types-PyYAML",
+    "types-requests",
     "responses",
     "sqlfluff",
     "sqlfluff-templater-dbt",
-    "black",
     "faker",
     "marimo",
     "sphinx",
@@ -35,6 +37,15 @@ dev = [
     "myst-parser",
     "sphinx-autoapi",
     "dbt-coverage",
+]
+
+[tool.ruff]
+line-length = 100
+exclude = [
+    ".git",
+    "__pycache__",
+    "dbt/dbt_packages",
+    "docs",
 ]
 
 [tool.pytest.ini_options]
@@ -114,3 +125,4 @@ ignore_errors = true
 [tool.bandit]
 # B101 (assert) and B608 (SQL) are expected patterns in pytest test files
 exclude_dirs = ["tests"]
+skips = ["B105", "B106", "B608"]

@@ -24,7 +24,7 @@ The following context is provided as a JSON object containing the keys: `availab
 
 2. Based on the issue context, classify the issue and choose all appropriate labels from the list of available labels.
 
-3. Output the appropriate labels as a comma-separated list (CSV). 
+3. Output the appropriate labels as a comma-separated list (CSV).
 
 ## Output Specification
 

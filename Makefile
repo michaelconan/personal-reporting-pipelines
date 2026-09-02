@@ -72,6 +72,10 @@ test-local: ## Run offline local tests only
 .PHONY: test-all
 test-all: test-local test-e2e ## Run all tests with coverage
 
+.PHONY: lint
+lint: ## Run prek checks on all files
+	$(PIPENV) prek run -c prek.yml --all-files
+
 .PHONY: test-coverage
 test-coverage: ## Generate coverage reports only
 	$(PIPENV) coverage report --show-missing

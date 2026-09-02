@@ -7,9 +7,8 @@ API Resources:
 - `Query Data Source <https://developers.notion.com/reference/query-a-data-source>`_
 """
 
-from typing import Generator
+from typing import Any, Generator
 import requests
-import logging
 from logging import getLogger
 
 import dlt
@@ -88,7 +87,7 @@ def notion_source(
     """
     api_key = dlt.secrets["sources.notion.api_key"]
 
-    api_config = {
+    api_config: dict[str, Any] = {
         "client": {
             "base_url": "https://api.notion.com/v1",
             "auth": {"type": "bearer", "token": api_key},
@@ -113,11 +112,7 @@ def notion_source(
                     "description": {"data_type": "json"},
                 },
                 "processing_steps": [
-                    {
-                        "map": lambda r: filter_fields(
-                            r, EXCLUDE_PATHS + ["$.properties"]
-                        )
-                    }
+                    {"map": lambda r: filter_fields(r, EXCLUDE_PATHS + ["$.properties"])}
                 ],
                 "endpoint": {
                     "path": "search",
@@ -131,7 +126,7 @@ def notion_source(
         ],
     }
 
-    rows_resource = {
+    rows_resource: dict[str, Any] = {
         "name": "notion__data_source_rows",
         "table_name": name_db_table,
         "max_table_nesting": 2,

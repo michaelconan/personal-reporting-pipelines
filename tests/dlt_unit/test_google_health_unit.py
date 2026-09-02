@@ -1,5 +1,4 @@
 # base imports
-import json
 from typing import Callable
 from urllib.parse import parse_qs, urlparse
 
@@ -18,7 +17,6 @@ pytestmark = pytest.mark.local
 
 @pytest.fixture
 def mock_google_health_apis(monkeypatch: MonkeyPatch, mock_responses) -> Callable:
-
     BASE_URL = "https://health.googleapis.com/v4"
 
     # Mock the token to prevent credential errors
@@ -30,9 +28,11 @@ def mock_google_health_apis(monkeypatch: MonkeyPatch, mock_responses) -> Callabl
         # (debug prints removed)
         # Track per-resource call counts so we can fall back to returning run2
         # when a second full run occurs but the filter detection didn't match.
-        if not hasattr(cursor_callback, "call_counts"):
-            cursor_callback.call_counts = {"sleep": 0, "steps": 0, "exercise": 0}
-        cursor_callback.call_counts[resource] += 1
+        counts = getattr(cursor_callback, "call_counts", None)
+        if counts is None:
+            counts = {"sleep": 0, "steps": 0, "exercise": 0}
+            setattr(cursor_callback, "call_counts", counts)
+        counts[resource] += 1
         # Inspect filter param to detect incremental refreshes. The pipeline
         # passes a filter containing an ISO date (YYYY-MM-DD). If the filter's
         # start date is on/after 2026-08-31, return the run2 data for the
@@ -64,7 +64,7 @@ def mock_google_health_apis(monkeypatch: MonkeyPatch, mock_responses) -> Callabl
         # Fallback: if we've been called enough times for this resource,
         # return run2 to simulate a subsequent run. Use a slightly higher
         # threshold to avoid returning run2 during a single-run pagination.
-        if cursor_callback.call_counts[resource] >= 4:
+        if counts[resource] >= 4:
             return sample_response(f"google_health_{resource}_run2.json")
 
         # Default: first page of run1
@@ -111,7 +111,6 @@ def mock_google_health_apis(monkeypatch: MonkeyPatch, mock_responses) -> Callabl
     ),
 )
 class TestGoogleHealthPhases:
-
     def test_extract(
         self,
         mock_google_health_apis,
@@ -120,7 +119,6 @@ class TestGoogleHealthPhases:
         expected_tables: int,
         configs: dict | None,
     ):
-
         # GIVEN
         # Mocked APIs
         mock_google_health_apis(endpoints=[resource])
@@ -141,7 +139,6 @@ class TestGoogleHealthPhases:
         expected_tables: int,
         configs: dict | None,
     ):
-
         # GIVEN
         expected_rows = 2
         file_name = f"google_health_{resource}_run1-page1.json"
@@ -156,10 +153,7 @@ class TestGoogleHealthPhases:
         info = duckdb_pipeline.normalize()
 
         # THEN
-        assert (
-            len([r for r in info.row_counts if r.startswith(resource)])
-            == expected_tables
-        )
+        assert len([r for r in info.row_counts if r.startswith(resource)]) == expected_tables
         assert info.row_counts[resource] == expected_rows
 
     def test_load(
@@ -256,7 +250,5 @@ def test_google_health_pipeline(mock_google_health_apis, duckdb_pipeline):
 
     dataset = duckdb_pipeline.dataset_name
     with duckdb_pipeline.sql_client() as client:
-        sleep_table = client.execute_sql(
-            f"SELECT COUNT(*) FROM {dataset}.google_health__sleep"
-        )
+        sleep_table = client.execute_sql(f"SELECT COUNT(*) FROM {dataset}.google_health__sleep")
         assert sleep_table[0][0] >= 2

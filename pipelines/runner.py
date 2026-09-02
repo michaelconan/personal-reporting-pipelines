@@ -6,10 +6,9 @@ and refresh execution are centralized.
 
 from __future__ import annotations
 
-import logging
 from dataclasses import dataclass
 from logging import getLogger
-from typing import Callable
+from typing import Any, Callable
 
 import dlt
 
@@ -75,7 +74,7 @@ PIPELINE_CONFIG: dict[str, PipelineConfig] = {
         required_secret_keys=[
             "sources.google_health.client_id",
             "sources.google_health.client_secret",
-            "sources.google_health.refresh_token"
+            "sources.google_health.refresh_token",
         ],
         token_getter=get_google_health_token,
     ),
@@ -89,7 +88,7 @@ def run_refresh(
     display_name: str,
     required_secret_keys: list[str] | None = None,
     is_incremental: bool | None = None,
-    pipeline: object | None = None,
+    pipeline: Any = None,
     initial_date: str | None = None,
     end_date: str | None = None,
     select: list[str] | None = None,

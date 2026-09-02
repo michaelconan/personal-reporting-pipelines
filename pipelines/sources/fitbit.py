@@ -12,6 +12,7 @@ API Resources:
 """
 
 # Base
+from typing import Any
 from logging import getLogger
 
 # PyPI
@@ -23,7 +24,6 @@ import google.auth
 import dlt
 from dlt.sources.rest_api import rest_api_source
 from dlt.sources.helpers.rest_client.paginators import OffsetPaginator
-from dlt.common.pipeline import LoadInfo
 
 logger = getLogger(__name__)
 
@@ -104,7 +104,7 @@ def fitbit_source(
         dlt.sources.rest_api.rest_api_source: dlt source configured for Fitbit
             data extraction.
     """
-    api_config = {
+    api_config: dict[str, Any] = {
         "client": {
             "base_url": "https://api.fitbit.com/",
             "auth": {"type": "bearer", "token": api_key},
