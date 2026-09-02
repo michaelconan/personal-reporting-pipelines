@@ -35,11 +35,11 @@ with contacts as (
 ),
 
 unique_contacts as (
-    -- CTE: Deduplicated Contacts
-    -- Purpose: Remove duplicate records for the same contact_id, keeping only
-    --          the most recently updated version.
-    -- Method: Uses dbt_utils.deduplicate macro with ROW_NUMBER() window function
-    -- Output: One row per unique contact_id (most recent version)
+-- CTE: Deduplicated Contacts
+-- Purpose: Remove duplicate records for the same contact_id, keeping only
+--          the most recently updated version.
+-- Method: Uses dbt_utils.deduplicate macro with ROW_NUMBER() window function
+-- Output: One row per unique contact_id (most recent version)
 
     {{ dbt_utils.deduplicate(
         relation='contacts',

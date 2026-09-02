@@ -36,7 +36,7 @@ dev = [
     "sphinx-rtd-theme",
     "myst-parser",
     "sphinx-autoapi",
-    "dbt-coverage",
+    "dbt-bouncer",
 ]
 
 [tool.ruff]

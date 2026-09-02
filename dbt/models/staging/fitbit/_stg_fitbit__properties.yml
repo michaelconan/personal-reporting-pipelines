@@ -1,6 +1,16 @@
 version: 2
 
 models:
+  - name: stg_fitbit__activities
+    description: "Staging model for fitbit activity log data."
+    columns:
+      - name: log_id
+        description: "The primary key for this table"
+        data_type: integer
+        data_tests:
+          - not_null
+          - unique
+
   - name: stg_fitbit__sleep
     description: "Staging model for fitbit sleep data."
     columns:

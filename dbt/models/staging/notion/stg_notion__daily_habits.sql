@@ -4,7 +4,7 @@ with daily_habits as (
         parent__data_source_id as database_id,
         id as page_id,
         cast(left({{ json_extract_value('properties__date__date', "'$.start'") }}, 10) as date)
-          as page_date,
+            as page_date,
         {{ extract_notion_title('properties__name__title') }} as page_name,
         properties__devotional__checkbox as did_devotional,
         properties__journal__checkbox as did_journal,
@@ -14,8 +14,8 @@ with daily_habits as (
         properties__language__checkbox as did_language,
         created_time as created_at,
         last_edited_time as updated_at
-        from
-            {{ make_source('notion', 'data_source_daily_habits') }}
+    from
+        {{ make_source('notion', 'data_source_daily_habits') }}
 
 ),
 

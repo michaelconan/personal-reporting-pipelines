@@ -157,15 +157,9 @@ dbt-docs:
 	@echo "Generating dbt documentation..."
 	$(PIPENV) dbt docs generate $(DBTARGS) --static --target $(target)
 
-.PHONY: dbt-doc-coverage
-dbt-doc-coverage:
-	$(PIPENV) dbt-coverage compute doc --model-path-filter models/ \
-		--run-artifacts-dir dbt/target --output-format markdown
-
-.PHONY: dbt-test-coverage
-dbt-test-coverage:
-	$(PIPENV) dbt-coverage compute test --model-path-filter models/ \
-		--run-artifacts-dir dbt/target --output-format markdown
+.PHONY: dbt-bouncer
+dbt-bouncer: ## Run dbt-bouncer checks
+	$(PIPENV) dbt-bouncer --config-file dbt/dbt-bouncer.yml
 
 .PHONY: dbt-fix-lint
 dbt-fix-lint: ## Auto-fix and lint SQL files

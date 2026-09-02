@@ -35,19 +35,19 @@ select
     -- Metadata
     e.updated_at  -- Timestamp when engagement was last updated
 from
-    {{ ref('stg_hubspot__engagements') }} e
+    {{ ref('stg_hubspot__engagements') }} as e
     -- Join to junction table to get engagement-contact relationships
     -- Left join allows engagements without contacts to be included
 left join
-    {{ ref('stg_hubspot__engagement_contacts') }} ec
+    {{ ref('stg_hubspot__engagement_contacts') }} as ec
     on e.engagement_id = ec.engagement_id
     -- Join to contacts to get contact details
     -- Left join allows engagements with contacts not in our contact table
 left join
-    {{ ref('stg_hubspot__contacts') }} c
+    {{ ref('stg_hubspot__contacts') }} as c
     on ec.contact_id = c.contact_id
     -- Join to companies to get company details via contact
     -- Left join allows contacts without associated companies
 left join
-    {{ ref('stg_hubspot__companies') }} a
+    {{ ref('stg_hubspot__companies') }} as a
     on c.company_id = a.company_id
