@@ -45,15 +45,13 @@ def validate_required_secrets(
         credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
         if not credentials_path:
             raise EnvironmentError(
-                "SECRET_STORE is 'google' but "
-                "GOOGLE_APPLICATION_CREDENTIALS is not set.",
+                "SECRET_STORE is 'google' but GOOGLE_APPLICATION_CREDENTIALS is not set.",
             )
     elif secret_store == "1password":
         op_token = os.getenv("OP_SERVICE_ACCOUNT_TOKEN")
         if not op_token:
             raise EnvironmentError(
-                "SECRET_STORE is '1password' but "
-                "OP_SERVICE_ACCOUNT_TOKEN is not set.",
+                "SECRET_STORE is '1password' but OP_SERVICE_ACCOUNT_TOKEN is not set.",
             )
 
     missing_keys: list[str] = []
@@ -98,7 +96,9 @@ def update_onepassword_item(
 
     def _run(cmd: list[str], **kwargs) -> subprocess.CompletedProcess:
         try:
-            return subprocess.run(cmd, capture_output=True, text=True, check=True, stdin=subprocess.DEVNULL, **kwargs)  # nosec B603
+            return subprocess.run(
+                cmd, capture_output=True, text=True, check=True, stdin=subprocess.DEVNULL, **kwargs
+            )  # nosec B603
         except subprocess.CalledProcessError as e:
             masked_cmd = [_mask(part) for part in e.cmd]
             raise RuntimeError(
@@ -174,8 +174,7 @@ def get_refresh_mode(default_incremental: bool = True) -> bool:
         full_refresh_var = f"{pipeline_name}_FULL_REFRESH"
         if os.getenv(full_refresh_var, "").lower() in ("true", "1", "yes"):
             logger.info(
-                f"Full refresh forced for {pipeline_name} "
-                f"via {full_refresh_var}",
+                f"Full refresh forced for {pipeline_name} via {full_refresh_var}",
             )
             return False
 

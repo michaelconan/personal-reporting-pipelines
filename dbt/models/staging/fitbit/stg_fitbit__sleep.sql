@@ -28,12 +28,12 @@ with sleep as (
         log_id,  -- Fitbit sleep log ID
         cast(date_of_sleep as date) as date_of_sleep,  -- Date of sleep (not when logged)
         duration as duration_ms,  -- Sleep duration in milliseconds
-        duration / 60000.0 as sleep_minutes,  -- Sleep duration in minutes (calculated)
-        duration / 3600000 as duration_hr,  -- Sleep duration in hours (calculated)
         cast(start_time as timestamp) as started_at,  -- Timestamp when sleep started
         cast(end_time as timestamp) as ended_at,  -- Timestamp when sleep ended
         type as sleep_type,  -- Type of sleep (classic, stages)
         log_type,  -- Log type classification
+        duration / 60000.0 as sleep_minutes,  -- Sleep duration in minutes (calculated)
+        duration / 3600000 as duration_hr,  -- Sleep duration in hours (calculated)
         -- Check if sleep duration met or exceeded the goal
         -- sleep_goal variable: default 25,200,000 ms = 7 hours
         duration >= {{ var('sleep_goal') }} as sleep_goal_met
@@ -43,10 +43,10 @@ with sleep as (
 ),
 
 unique_sleep as (
-    -- CTE: Deduplicated Sleep Logs
-    -- Purpose: Remove duplicate records for the same log_id, keeping only
-    --          the most recent version (by date_of_sleep).
-    -- Output: One row per unique log_id (most recent version)
+-- CTE: Deduplicated Sleep Logs
+-- Purpose: Remove duplicate records for the same log_id, keeping only
+--          the most recent version (by date_of_sleep).
+-- Output: One row per unique log_id (most recent version)
     {{ dbt_utils.deduplicate(
         relation='sleep',
         partition_by='log_id',

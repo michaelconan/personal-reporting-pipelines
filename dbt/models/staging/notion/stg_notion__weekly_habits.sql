@@ -6,7 +6,8 @@ with weekly_habits as (
         cast(left({{ json_extract_value('properties__date__date', "'$.start'") }}, 10) as date) as page_date,
         {{ extract_notion_title('properties__name__title') }} as page_name,
         properties__fast__checkbox as did_fast,
-        cast({{ json_extract_value('properties__prayer_minutes__formula', "'$.number'") }} as integer) as prayer_minutes,
+        cast({{ json_extract_value('properties__prayer_minutes__formula', "'$.number'") }} as integer)
+            as prayer_minutes,
         properties__screen_minutes__number as screen_minutes,
         properties__church__checkbox as did_church,
         properties__community__checkbox as did_community,

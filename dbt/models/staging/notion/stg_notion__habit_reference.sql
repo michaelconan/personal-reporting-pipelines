@@ -48,13 +48,6 @@ with_habit_key as (
         --   Tickbox habits → did_{snake_case_name}
         --   HubSpot meeting habits → met_{kind}
         --   Number habits (Notion/Fitbit) → snake_case_name
-        case
-            when habit_type = 'tickbox'
-                then 'did_' || lower(replace(habit_name, ' ', '_'))
-            when habit_name in ('Meet 1to1', 'Meet Group')
-                then 'met_' || lower(replace(replace(habit_name, 'Meet ', ''), ' ', '_'))
-            else lower(replace(habit_name, ' ', '_'))
-        end as habit_key,
         category,
         frequency,
         habit_type,
@@ -65,7 +58,14 @@ with_habit_key as (
         active,
         start_date,
         created_at,
-        updated_at
+        updated_at,
+        case
+            when habit_type = 'tickbox'
+                then 'did_' || lower(replace(habit_name, ' ', '_'))
+            when habit_name in ('Meet 1to1', 'Meet Group')
+                then 'met_' || lower(replace(replace(habit_name, 'Meet ', ''), ' ', '_'))
+            else lower(replace(habit_name, ' ', '_'))
+        end as habit_key
     from habit_reference
 
 )

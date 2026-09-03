@@ -6,6 +6,7 @@ models:
     versions:
       - v: 1
         defined_in: habits_v1
+        description: "Mart table combining life habits, health habits (sleep), and community engagement habits. Grain: one row per habit per date."
     columns:
       - name: habit_key
         description: "Surrogate key uniquely identifying each habit record"

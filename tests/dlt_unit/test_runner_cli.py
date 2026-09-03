@@ -1,11 +1,10 @@
-"""Unit tests for the central pipeline runner and CLI interface.
-"""
+"""Unit tests for the central pipeline runner and CLI interface."""
 
 from unittest.mock import MagicMock, patch
 import pytest
 
 from pipelines.run_pipeline import parse_select, main
-from pipelines.runner import refresh_pipeline, run_refresh, PIPELINE_CONFIG
+from pipelines.runner import refresh_pipeline, PIPELINE_CONFIG
 from pipelines import RAW_SCHEMA
 
 
@@ -25,7 +24,9 @@ def test_parse_select():
     ]
 
     # Repeated list items with whitespace
-    assert parse_select([" hubspot__contacts ,  hubspot__companies ", "  notion__daily_habits  "]) == [
+    assert parse_select(
+        [" hubspot__contacts ,  hubspot__companies ", "  notion__daily_habits  "]
+    ) == [
         "hubspot__contacts",
         "hubspot__companies",
         "notion__daily_habits",
@@ -51,14 +52,16 @@ def test_cli_main_success(mock_refresh):
     mock_refresh.reset_mock()
 
     # Test HubSpot incremental refresh with custom date ranges
-    code = main([
-        "hubspot",
-        "--incremental",
-        "--initial-date",
-        "2023-01-01",
-        "--end-date",
-        "2023-12-31",
-    ])
+    code = main(
+        [
+            "hubspot",
+            "--incremental",
+            "--initial-date",
+            "2023-01-01",
+            "--end-date",
+            "2023-12-31",
+        ]
+    )
     assert code == 0
     mock_refresh.assert_called_once_with(
         "hubspot",
@@ -96,15 +99,18 @@ def test_runner_refresh_pipeline(mock_validate, mock_dlt_pipeline):
     mock_notion_source = MagicMock()
     mock_notion_source.with_resources.return_value = mock_notion_source
 
-    with patch.dict(PIPELINE_CONFIG, {
-        "notion": PIPELINE_CONFIG["notion"].__class__(
-            source_factory=MagicMock(return_value=mock_notion_source),
-            pipeline_name="notion_habits_pipeline",
-            display_name="Notion Habits",
-            required_secret_keys=["sources.notion.api_key"],
-            source_kwargs={"db_name": "Disciplines"},
-        )
-    }):
+    with patch.dict(
+        PIPELINE_CONFIG,
+        {
+            "notion": PIPELINE_CONFIG["notion"].__class__(
+                source_factory=MagicMock(return_value=mock_notion_source),
+                pipeline_name="notion_habits_pipeline",
+                display_name="Notion Habits",
+                required_secret_keys=["sources.notion.api_key"],
+                source_kwargs={"db_name": "Disciplines"},
+            )
+        },
+    ):
         config = PIPELINE_CONFIG["notion"]
 
         # Run refresh

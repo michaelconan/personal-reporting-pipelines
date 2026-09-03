@@ -45,7 +45,6 @@ OBJECTS_WITH_ASSOCIATIONS = {
 
 @pytest.fixture
 def mock_hs_apis(monkeypatch: MonkeyPatch, mock_responses) -> Callable:
-
     BASE_URL = "https://api.hubapi.com"
 
     # mock the dlt.secrets.value to prevent credential errors
@@ -128,7 +127,6 @@ def mock_hs_apis(monkeypatch: MonkeyPatch, mock_responses) -> Callable:
     ),
 )
 class TestHubspotPhases:
-
     def test_extract(
         self,
         mock_hs_apis,
@@ -137,7 +135,6 @@ class TestHubspotPhases:
         expected_tables: int,
         configs: dict,
     ):
-
         # GIVEN
         # Mocked APIs
         mock_hs_apis(endpoints=[resource])
@@ -156,7 +153,6 @@ class TestHubspotPhases:
         expected_tables: int,
         configs: dict,
     ):
-
         # GIVEN
         # Includes nested table rows for schemas
         expected_rows = 17 if "schemas" in resource else 3
@@ -175,10 +171,7 @@ class TestHubspotPhases:
 
         # THEN
         # _dlt_state table, source table, and any child tables
-        assert (
-            len([r for r in info.row_counts if r.startswith(resource)])
-            == expected_tables
-        )
+        assert len([r for r in info.row_counts if r.startswith(resource)]) == expected_tables
         # first page record count
         assert info.row_counts[resource] == expected_rows
 

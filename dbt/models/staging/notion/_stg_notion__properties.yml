@@ -158,6 +158,9 @@ models:
                 min_value: "timestamp '2020-01-01'"
                 max_value: "timestamp '2030-12-31'"
 
+  - name: stg_notion__habit_reference
+    description: "Staging model for habit metadata and reference categories."
+
   - name: stg_notion__monthly_habits
     description: "Unique monthly habits from the Notion habit tracker."
     columns:

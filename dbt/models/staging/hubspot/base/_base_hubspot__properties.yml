@@ -3,6 +3,9 @@ version: 2
 models:
   - name: base_hubspot__engagements
     description: "Base model for HubSpot engagements with deduplication applied. Removes duplicate engagements before creating junction tables."
+
+  - name: base_hubspot__engagement_contacts
+    description: "Base junction table connecting HubSpot engagements to associated contacts with deduplication."
     columns:
       - name: engagement_id
         description: "The unique identifier for the engagement."

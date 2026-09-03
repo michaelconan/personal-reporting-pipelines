@@ -4,7 +4,7 @@ with monthly_habits as (
         parent__data_source_id as database_id,
         id as page_id,
         cast(left({{ json_extract_value('properties__date__date', "'$.start'") }}, 10) as date)
-          as page_date,
+            as page_date,
         {{ extract_notion_title('properties__name__title') }} as page_name,
         properties__budget__checkbox as did_budget,
         properties__serve__checkbox as did_serve,
