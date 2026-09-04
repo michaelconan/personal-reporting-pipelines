@@ -46,6 +46,6 @@ jobs:
           uv run dbt docs generate --project-dir dbt --profiles-dir dbt --static --target mock
 
       - name: Run dbt-bouncer checks
-        uses: dbt-bouncer/dbt-bouncer-action@v1
+        uses: godatadriven/dbt-bouncer@v3.8
         with:
           config-file: dbt/dbt-bouncer.yml
