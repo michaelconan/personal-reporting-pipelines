@@ -18,7 +18,6 @@ pytestmark = pytest.mark.local
 
 @pytest.fixture
 def mock_notion_apis(monkeypatch: MonkeyPatch, mock_responses) -> Callable:
-
     BASE_URL = "https://api.notion.com/v1"
 
     # Mock the API key to prevent credential errors
@@ -84,7 +83,6 @@ def mock_notion_apis(monkeypatch: MonkeyPatch, mock_responses) -> Callable:
 
 
 class TestNotionPhases:
-
     TEST_PARAMS = (
         ("resource", "expected_tables", "configs"),
         (
@@ -103,7 +101,6 @@ class TestNotionPhases:
         mock_notion_apis,
         duckdb_pipeline: dlt.Pipeline,
     ):
-
         # GIVEN
         # Mocked APIs
         mock_notion_apis()
@@ -124,7 +121,6 @@ class TestNotionPhases:
         expected_tables: int,
         configs: dict,
     ):
-
         # GIVEN
         expected_rows = 3 if "rows" in resource else 1
         file_name = f"notion_{resource}_run1-page1.json"
@@ -142,10 +138,7 @@ class TestNotionPhases:
 
         # THEN
         # _dlt_state table, source table, and any child tables
-        assert (
-            len([r for r in info.row_counts if r.startswith(resource)])
-            == expected_tables
-        )
+        assert len([r for r in info.row_counts if r.startswith(resource)]) == expected_tables
         # record count from sample data
         assert info.row_counts[resource] == expected_rows
 

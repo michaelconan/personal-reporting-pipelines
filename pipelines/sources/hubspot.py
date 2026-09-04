@@ -19,7 +19,7 @@ API Resources:
 """
 
 # Base
-from typing import Generator
+from typing import Any, Generator
 from datetime import datetime, timezone
 
 # PyPI
@@ -71,7 +71,7 @@ def hubspot_source(
         hs_config = yaml.safe_load(fp)
     crm_objects = hs_config["objects"]
 
-    api_config = {
+    api_config: dict[str, Any] = {
         "client": {
             "base_url": "https://api.hubapi.com/",
             "auth": {"type": "bearer", "token": api_key},
@@ -85,7 +85,7 @@ def hubspot_source(
 
     for hs_object in crm_objects:
         object_name = hs_object["name"]
-        schema_resource = {
+        schema_resource: dict[str, Any] = {
             "name": f"hubspot__schemas_{object_name}",
             "max_table_nesting": 1,
             "columns": {
@@ -106,7 +106,7 @@ def hubspot_source(
 
     for hs_object in crm_objects:
         resource_name = f"hubspot__{hs_object['name']}"
-        object_resource = {
+        object_resource: dict[str, Any] = {
             "name": resource_name,
             "endpoint": {
                 "path": f"crm/v3/objects/{hs_object['name']}/search",

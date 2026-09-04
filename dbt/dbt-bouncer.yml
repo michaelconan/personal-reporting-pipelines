@@ -1,0 +1,15 @@
+dbt_artifacts_dir: target
+
+manifest_checks:
+  - name: check_model_description_populated
+    min_description_length: 1
+    exclude: ".*habits_metrics.*"
+
+  - name: check_source_description_populated
+    min_description_length: 1
+
+  - name: check_model_names
+    model_name_pattern: "^(stg_|int_|fct_|dim_|map_|time_spine_|base_|habits|engagement_contacts)"
+
+  - name: check_model_test_coverage
+    min_model_test_coverage_pct: 70

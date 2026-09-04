@@ -72,6 +72,10 @@ test-local: ## Run offline local tests only
 .PHONY: test-all
 test-all: test-local test-e2e ## Run all tests with coverage
 
+.PHONY: lint
+lint: ## Run prek checks on all files
+	$(PIPENV) prek run -c prek.yml --all-files
+
 .PHONY: test-coverage
 test-coverage: ## Generate coverage reports only
 	$(PIPENV) coverage report --show-missing
@@ -153,15 +157,9 @@ dbt-docs:
 	@echo "Generating dbt documentation..."
 	$(PIPENV) dbt docs generate $(DBTARGS) --static --target $(target)
 
-.PHONY: dbt-doc-coverage
-dbt-doc-coverage:
-	$(PIPENV) dbt-coverage compute doc --model-path-filter models/ \
-		--run-artifacts-dir dbt/target --output-format markdown
-
-.PHONY: dbt-test-coverage
-dbt-test-coverage:
-	$(PIPENV) dbt-coverage compute test --model-path-filter models/ \
-		--run-artifacts-dir dbt/target --output-format markdown
+.PHONY: dbt-bouncer
+dbt-bouncer: ## Run dbt-bouncer checks
+	$(PIPENV) dbt-bouncer --config-file dbt/dbt-bouncer.yml
 
 .PHONY: dbt-fix-lint
 dbt-fix-lint: ## Auto-fix and lint SQL files

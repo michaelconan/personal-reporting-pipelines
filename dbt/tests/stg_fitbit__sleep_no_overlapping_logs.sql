@@ -11,6 +11,7 @@ with sleep_typed as (
         cast(end_time as timestamp) as sleep_ended_at
     from {{ make_source('fitbit', 'sleep') }}
 ),
+
 sleep_ordered as (
     select
         sleep_started_at,
@@ -20,7 +21,9 @@ sleep_ordered as (
         ) as next_sleep_started_at
     from sleep_typed
 )
+
 select 1
 from sleep_ordered
-where next_sleep_started_at is not null
-  and sleep_ended_at > next_sleep_started_at
+where
+    next_sleep_started_at is not null
+    and sleep_ended_at > next_sleep_started_at

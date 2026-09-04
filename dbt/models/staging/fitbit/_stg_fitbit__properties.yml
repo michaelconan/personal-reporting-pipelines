@@ -1,6 +1,26 @@
 version: 2
 
 models:
+  - name: stg_fitbit__activities
+    description: "Staging model for fitbit activity log data."
+    columns:
+      - name: date_of_activity
+        description: "The date of activity"
+        data_type: date
+        data_tests:
+          - not_null
+          - unique
+      - name: steps
+        description: "Total steps recorded on date_of_activity"
+        data_type: integer
+        data_tests:
+          - not_null
+      - name: steps_goal_met
+        description: "Boolean indicating if step goal was met"
+        data_type: boolean
+        data_tests:
+          - not_null
+
   - name: stg_fitbit__sleep
     description: "Staging model for fitbit sleep data."
     columns:

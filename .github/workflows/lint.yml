@@ -1,0 +1,54 @@
+name: Lint and Code Quality
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d
+        with:
+          version: 'latest'
+          enable-cache: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          uv sync
+
+      - name: Run prek checks
+        run: |
+          uv run prek run -c prek.yml --all-files
+
+      - name: Install dbt dependencies
+        run: |
+          uv run dbt deps --project-dir dbt --profiles-dir dbt
+
+      - name: Run SQLFluff linting
+        run: |
+          cd dbt && DBT_TARGET=mock uv run sqlfluff lint
+
+      - name: Generate dbt artifacts
+        run: |
+          uv run dbt parse --project-dir dbt --profiles-dir dbt --target mock
+          uv run dbt docs generate --project-dir dbt --profiles-dir dbt --static --target mock
+
+      - name: Run dbt-bouncer checks
+        uses: godatadriven/dbt-bouncer@v3.8
+        with:
+          config-file: dbt/dbt-bouncer.yml

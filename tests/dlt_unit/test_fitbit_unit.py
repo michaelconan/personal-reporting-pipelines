@@ -18,7 +18,6 @@ pytestmark = pytest.mark.local
 
 @pytest.fixture
 def mock_fitbit_apis(monkeypatch: MonkeyPatch, mock_responses) -> Callable:
-
     BASE_URL = "https://api.fitbit.com"
 
     # Mock the token to prevent credential errors
@@ -79,7 +78,6 @@ def mock_fitbit_apis(monkeypatch: MonkeyPatch, mock_responses) -> Callable:
     ),
 )
 class TestFitbitPhases:
-
     def test_extract(
         self,
         mock_fitbit_apis,
@@ -88,7 +86,6 @@ class TestFitbitPhases:
         expected_tables: int,
         configs: dict | None,
     ):
-
         # GIVEN
         # Mocked APIs
         mock_fitbit_apis(endpoints=[resource])
@@ -109,7 +106,6 @@ class TestFitbitPhases:
         expected_tables: int,
         configs: dict | None,
     ):
-
         # GIVEN
         expected_rows = 3
         file_name = f"fitbit_{resource}_run1-page1.json"
@@ -125,10 +121,7 @@ class TestFitbitPhases:
 
         # THEN
         # _dlt_state table, source table, and any child tables
-        assert (
-            len([r for r in info.row_counts if r.startswith(resource)])
-            == expected_tables
-        )
+        assert len([r for r in info.row_counts if r.startswith(resource)]) == expected_tables
         # first page record count
         assert info.row_counts[resource] == expected_rows
 
@@ -235,9 +228,7 @@ def test_fitbit_pipeline(mock_fitbit_apis, duckdb_pipeline):
     with duckdb_pipeline.sql_client() as client:
         # Check sleep table — use DISTINCT log_id to guard against dlt loading
         # records more than once when multiple resources run together (dlt>=1.23)
-        sleep_table = client.execute_sql(
-            f"SELECT DISTINCT log_id FROM {dataset}.fitbit__sleep"
-        )
+        sleep_table = client.execute_sql(f"SELECT DISTINCT log_id FROM {dataset}.fitbit__sleep")
         assert len(sleep_table) == 5
 
         activities_table = client.execute_sql(

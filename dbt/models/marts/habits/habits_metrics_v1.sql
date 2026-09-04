@@ -58,8 +58,8 @@ habit_occurrences as (
             when hr.habit_type = 'number' and hr.below_threshold
                 then h.habit_value <= hr.threshold
         end as is_complete
-    from habits h
-    left join habit_ref hr on h.habit = hr.habit_key
+    from habits as h
+    left join habit_ref as hr on h.habit = hr.habit_key
 
 ),
 
@@ -73,8 +73,9 @@ daily_by_week as (
         count(*) as total_periods,
         sum(case when is_complete then 1 else 0 end) as completed_periods
     from habit_occurrences
-    where habit_period = 'day'
-      and habit_type in ('tickbox', 'number')
+    where
+        habit_period = 'day'
+        and habit_type in ('tickbox', 'number')
     group by habit, {{ trunc_date('week', 'habit_date') }}
 
 ),
@@ -89,8 +90,9 @@ weekly_by_week as (
         1 as total_periods,
         case when is_complete then 1 else 0 end as completed_periods
     from habit_occurrences
-    where habit_period = 'week'
-      and habit_type in ('tickbox', 'number')
+    where
+        habit_period = 'week'
+        and habit_type in ('tickbox', 'number')
 
 ),
 
@@ -104,8 +106,9 @@ monthly_by_month as (
         1 as total_periods,
         case when is_complete then 1 else 0 end as completed_periods
     from habit_occurrences
-    where habit_period = 'month'
-      and habit_type in ('tickbox', 'number')
+    where
+        habit_period = 'month'
+        and habit_type in ('tickbox', 'number')
 
 ),
 
@@ -133,8 +136,8 @@ community_by_week as (
             when c.engagement_count >= coalesce(hr.threshold, 1) then 1
             else 0
         end as completed_periods
-    from community_counts c
-    left join habit_ref hr on c.habit = hr.habit_key
+    from community_counts as c
+    left join habit_ref as hr on c.habit = hr.habit_key
 
 ),
 
@@ -161,17 +164,17 @@ select
     ap.report_period,
     ap.total_periods,
     ap.completed_periods,
+    hr.target_pct,
+    hr.threshold,
+    hr.below_threshold,
+    hr.active,
     round(
         cast(ap.completed_periods as double) / nullif(ap.total_periods, 0),
         4
     ) as completion_rate,
-    hr.target_pct,
     round(
         cast(ap.completed_periods as double) / nullif(ap.total_periods, 0),
         4
-    ) >= hr.target_pct as target_met,
-    hr.threshold,
-    hr.below_threshold,
-    hr.active
-from all_periods ap
-left join habit_ref hr on ap.habit = hr.habit_key
+    ) >= hr.target_pct as target_met
+from all_periods as ap
+left join habit_ref as hr on ap.habit = hr.habit_key

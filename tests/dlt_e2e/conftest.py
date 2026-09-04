@@ -42,9 +42,7 @@ def check_config():
         # Environment, Secrets.toml, Google Secrets
         assert len(providers) == 3
         # Allow direct value secrets (like Fitbit refresh token)
-        google_providers = [
-            p for p in providers if isinstance(p, GoogleSecretsProvider)
-        ]
+        google_providers = [p for p in providers if isinstance(p, GoogleSecretsProvider)]
         assert google_providers[0].only_toml_fragments is False
 
 

@@ -77,9 +77,9 @@ community_meetings as (
         e.occurred_at,
         count(ec.contact_id) as contact_count
     from
-        {{ ref('stg_hubspot__engagements') }} e
+        {{ ref('stg_hubspot__engagements') }} as e
     left join
-        {{ ref('stg_hubspot__engagement_contacts') }} ec
+        {{ ref('stg_hubspot__engagement_contacts') }} as ec
         on e.engagement_id = ec.engagement_id
     where
         e.is_synchronous

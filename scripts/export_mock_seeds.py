@@ -44,9 +44,7 @@ RAW_DATASET = os.getenv("DBT_RAW_DATASET")  # e.g. "raw_reporting"
 OUTPUT_DIR = Path(__file__).parents[1] / "dbt" / "seeds" / "mock_sources"
 
 if not PROJECT_ID or not RAW_DATASET:
-    raise RuntimeError(
-        "Environment variables GCP_PROJECT_ID and DBT_RAW_DATASET must be set."
-    )
+    raise RuntimeError("Environment variables GCP_PROJECT_ID and DBT_RAW_DATASET must be set.")
 
 # ---------------------------------------------------------------------------
 # Helper functions
@@ -107,7 +105,7 @@ def export_table(client: bigquery.Client, source_name: str, identifier: str) -> 
         if isinstance(obj, Decimal):
             return float(obj)
         if isinstance(obj, bytes):
-            return obj.decode('utf-8', errors='ignore')
+            return obj.decode("utf-8", errors="ignore")
         raise TypeError(f"Type {type(obj)} not serializable")
 
     # Ensure JSON columns are exported as valid JSON strings
@@ -115,7 +113,7 @@ def export_table(client: bigquery.Client, source_name: str, identifier: str) -> 
         for col, val in row.items():
             if isinstance(val, (dict, list)):
                 row[col] = json.dumps(val, default=json_serial, ensure_ascii=False)
-            elif isinstance(val, str) and (val.startswith('{') or val.startswith('[')):
+            elif isinstance(val, str) and (val.startswith("{") or val.startswith("[")):
                 # Normalize repeated quotes in stringified JSON fields
                 row[col] = val.replace('""', '"')
 
