@@ -1,0 +1,15 @@
+{
+    "mcp": {
+        "dlt-workspace-mcp": {
+            "type": "local",
+            "command": [
+                "uv",
+                "run",
+                "dlthub",
+                "ai",
+                "mcp",
+                "--stdio"
+            ]
+        }
+    }
+}

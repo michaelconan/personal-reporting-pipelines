@@ -1,0 +1,59 @@
+init:
+  version: 0.1.1
+  description: Shared rules, secrets handling, and workspace MCP for dlthub
+  tags:
+  - dlthub
+  - init
+  - rules
+  - secrets
+  - mcp
+  installed_at: '2026-09-07T21:02:57.117608+00:00'
+  agent: codex
+  files:
+    .agents\skills\dlthub-router\SKILL.md:
+      sha3_256: e55ff46ffc958bf13911bac80f1e817f6a33c2cb68559a097f1f661f0eea9673
+    .agents\skills\improve-skills\SKILL.md:
+      sha3_256: bf41f86f63b0bc8e7209a96c4ba38fb5d954f43ee9800855d4ff675acbaed861
+    .agents\skills\setup-secrets\cli-reference.md:
+      sha3_256: 8b972813409b5609aa6fbaaa7a060def42ad9da9a10a4ca18ca4ce801518fd11
+    .agents\skills\setup-secrets\SKILL.md:
+      sha3_256: 3dfee343aa9a421867634ef2c36956987421bc30474d9d6c8fe3e14198d294b8
+    .codexignore:
+      sha3_256: 57cef6343d5f0f1c8a8659fcfb909f7eedfdb2d8c6fdd054014327ef4568b3f6
+    .agents\skills\init-dlthub-workspace\SKILL.md:
+      sha3_256: 988390d9947d8e03397f20e33cfde1c08548fc647357e4f4398dac541b069fbc
+  mcp_servers:
+  - dlt-workspace-mcp
+  name: init
+rest-api-pipeline:
+  version: 0.1.1
+  description: 'Build REST API pipelines with dlt: scope, debug and validate data'
+  tags:
+  - dlthub
+  - etl
+  - data-pipeline
+  - python
+  dependencies:
+  - init
+  workflow_entry_skill: find-source
+  installed_at: '2026-09-07T21:02:57.465467+00:00'
+  agent: codex
+  files:
+    .agents\skills\adjust-endpoint\SKILL.md:
+      sha3_256: d7fa9fc0c08a4baf339b7be725db6cb2e2cca7bf31fadc683c541fa85d585c3a
+    .agents\skills\create-rest-api-pipeline\SKILL.md:
+      sha3_256: 123745b998b8ae5aff13edb18f8f9d9f83f3b6cc63b976b8d2118e5d373ccddd
+    .agents\skills\debug-pipeline\SKILL.md:
+      sha3_256: 83fad0d25317e9d51ef8ac5fd743a9379ef17f5018e7329d719b65c66ac76d87
+    .agents\skills\find-source\SKILL.md:
+      sha3_256: 445d98d1b649158b40bc08c3a8a7f7a5c0027f73ebd3cb5ea5b8bdac71107d5a
+    .agents\skills\new-endpoint\SKILL.md:
+      sha3_256: ae07dea39ea22f31e4bed474295a0f86d0fdd5b8fe3049f75d4a9f6f536ad0a3
+    .agents\skills\optimize-rest-api-performance\SKILL.md:
+      sha3_256: 637b0c16edc1910ea158255b20b9faa688c24e14cf99eeba9b31be2adc26b323
+    .agents\skills\validate-data\SKILL.md:
+      sha3_256: d7162793c323038d439e6d65f10ffcab14d0616200883fbec23038e9c765c24e
+    .agents\skills\view-data\SKILL.md:
+      sha3_256: abc665bce9b9056fbfc3e66d2b0ea1269f7bd078aa4985a9e01dd4d22146a295
+    .agents\skills\rest-api-pipeline-workflow\SKILL.md:
+      sha3_256: a1046863425ca3e64c3801ff6c1e9e3f0ddf2dd30448e3b56daf482ad3cf8b88
