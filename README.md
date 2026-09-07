@@ -12,7 +12,6 @@
 #### Data Refresh Workflows
 
 [![Refresh HubSpot](https://github.com/michaelconan/personal-reporting-pipelines/actions/workflows/refresh-hubspot.yml/badge.svg)](https://github.com/michaelconan/personal-reporting-pipelines/actions/workflows/refresh-hubspot.yml)
-[![Refresh Fitbit](https://github.com/michaelconan/personal-reporting-pipelines/actions/workflows/refresh-fitbit.yml/badge.svg)](https://github.com/michaelconan/personal-reporting-pipelines/actions/workflows/refresh-fitbit.yml)
 [![Refresh Notion](https://github.com/michaelconan/personal-reporting-pipelines/actions/workflows/refresh-notion.yml/badge.svg)](https://github.com/michaelconan/personal-reporting-pipelines/actions/workflows/refresh-notion.yml)
 
 [![Run Transformations](https://github.com/michaelconan/personal-reporting-pipelines/actions/workflows/run-transforms.yml/badge.svg)](https://github.com/michaelconan/personal-reporting-pipelines/actions/workflows/run-transforms.yml)
@@ -29,7 +28,7 @@ The following data will be ingested from my personal systems into a BigQuery war
 
 1. Notion
 2. HubSpot
-3. Fitbit
+3. Google Health
 
 ## Architecture
 
@@ -49,10 +48,8 @@ The project follows modern data engineering best practices with clear separation
 ├── pipelines/          # dlt data extraction pipelines
 │   ├── sources/        # Source factory modules for each pipeline
 │   │   ├── hubspot.py
-│   │   ├── fitbit.py
 │   │   └── notion.py
 │   ├── hubspot.py      # Thin orchestration wrappers that delegate to central runner
-│   ├── fitbit.py       # Thin orchestration wrappers that delegate to central runner
 │   ├── notion.py       # Thin orchestration wrappers that delegate to central runner
 │   └── common/         # Shared utilities and helpers
 ├── dbt/                # dbt transformation models
@@ -66,7 +63,7 @@ The project follows modern data engineering best practices with clear separation
 
 ### Naming Conventions
 
-- **dlt pipelines**: `{source}__{entity}` (e.g., `hubspot__contacts`, `fitbit__sleep`)
+- **dlt pipelines**: `{source}__{entity}` (e.g., `hubspot__contacts`, `google_health__steps`)
 - **dbt models** (except marts): `{layer}_{source}__{entity}` (e.g., `stg_hubspot__contacts`, `contacts`)
 
 ## Setup
@@ -96,15 +93,15 @@ The project follows modern data engineering best practices with clear separation
      [sources.hubspot]
      api_key = "your-key"
 
-     [sources.notion]
-     api_key = "your-key"
+      [sources.notion]
+      api_key = "your-key"
 
-     [sources.fitbit]
-     client_id = "your-id"
-     client_secret = "your-secret"
-     ```
-   - After authorising Fitbit OAuth client, store refresh token in dedicated secret
-     - `sources-fitbit-refresh_token`
+      [sources.google_health]
+      client_id = "your-id"
+      client_secret = "your-secret"
+      ```
+    - After authorising the Google Health OAuth client, store refresh token in dedicated secret
+      - `sources-google_health-refresh_token`
 
 4. **Create Service Account**:
    - Service account with BigQuery Admin and Secret Manager Secret Accessor roles
@@ -133,7 +130,7 @@ The project follows modern data engineering best practices with clear separation
    - `GCP_PROJECT_ID`: Google cloud project identifier
 
 2. **Configure workflow schedules** in `.github/workflows/`:
-   - Scheduled pipelines for source refreshes: Notion, HubSpot, Fitbit
+    - Scheduled pipelines for source refreshes: Notion, HubSpot, Google Health
    - Scheduled pipeline for data transformations after source refresh
    - Manual trigger option for full refresh scenarios
 

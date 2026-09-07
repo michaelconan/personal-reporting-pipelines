@@ -21,7 +21,6 @@ from pipelines.common.utils import (
 )
 from pipelines.sources.notion import notion_source
 from pipelines.sources.hubspot import hubspot_source
-from pipelines.sources.fitbit import fitbit_source, get_fitbit_token
 from pipelines.sources.google_health import (
     google_health_source,
     get_google_health_token,
@@ -56,17 +55,6 @@ PIPELINE_CONFIG: dict[str, PipelineConfig] = {
         display_name="HubSpot CRM",
         required_secret_keys=["sources.hubspot.api_key"],
     ),
-    "fitbit": PipelineConfig(
-        source_factory=fitbit_source,
-        pipeline_name="fitbit_health_pipeline",
-        display_name="Fitbit Health",
-        required_secret_keys=[
-            "sources.fitbit.client_id",
-            "sources.fitbit.client_secret",
-            "sources.fitbit.refresh_token",
-        ],
-        token_getter=get_fitbit_token,
-    ),
     "google_health": PipelineConfig(
         source_factory=google_health_source,
         pipeline_name="google_health_v4_pipeline",
@@ -96,6 +84,7 @@ def run_refresh(
     progress: str | None = None,
     token_getter: Callable | None = None,
     source_kwargs: dict | None = None,
+    source_modifier: Callable | None = None,
 ):
     if required_secret_keys:
         validate_required_secrets(
@@ -125,6 +114,9 @@ def run_refresh(
     src = source_factory(**sk)
     if select:
         src = src.with_resources(*select)
+    if source_modifier is not None:
+        # Test hook (e.g. force small page sizes to exercise pagination).
+        src = source_modifier(src) or src
 
     if not pipeline:
         pipeline = dlt.pipeline(
@@ -153,6 +145,7 @@ def refresh_pipeline(
     initial_date: str | None = None,
     end_date: str | None = None,
     select: list[str] | None = None,
+    source_modifier: Callable | None = None,
 ):
     config = PIPELINE_CONFIG[pipeline_key]
     return run_refresh(
@@ -169,4 +162,5 @@ def refresh_pipeline(
         progress=config.progress,
         token_getter=config.token_getter,
         source_kwargs=config.source_kwargs,
+        source_modifier=source_modifier,
     )

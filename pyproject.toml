@@ -115,7 +115,7 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 # dlt config dicts are not well-typed; suppress errors in pipeline source files
-module = ["pipelines.hubspot", "pipelines.fitbit", "pipelines.notion"]
+module = ["pipelines.hubspot", "pipelines.google_health", "pipelines.notion"]
 ignore_errors = true
 
 [[tool.mypy.overrides]]

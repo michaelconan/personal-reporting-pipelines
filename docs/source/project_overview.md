@@ -19,7 +19,6 @@ The project follows modern data engineering best practices with clear separation
 ```
 ├── pipelines/           # dlt data extraction pipelines
 │   ├── hubspot.py      # HubSpot CRM data pipeline
-│   ├── fitbit.py       # Fitbit health data pipeline
 │   ├── notion.py       # Notion habits data pipeline
 │   └── common/         # Shared utilities and helpers
 ├── dbt/                # dbt transformation models
@@ -32,6 +31,6 @@ The project follows modern data engineering best practices with clear separation
 
 ### Naming Conventions
 
-- **dlt pipelines**: `{source}__{entity}` (e.g., `hubspot__contacts`, `fitbit__sleep`)
+- **dlt pipelines**: `{source}__{entity}` (e.g., `hubspot__contacts`, `google_health__steps`)
 - **dbt models**: `{layer}_{source}__{entity}` (e.g., `staging_hubspot__contacts`, `contacts`)
 - **GitHub Actions**: `{actions}-{frequency}` (e.g., `dlt-daily`)

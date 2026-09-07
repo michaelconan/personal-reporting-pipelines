@@ -50,7 +50,7 @@ inject:
 .PHONY: test-e2e
 test-e2e: ## Run tests with coverage
 	# coverage source configured in pyproject.toml [tool.coverage.run]
-	$(PIPENV) pytest tests/dlt_e2e \
+	$(PIPENV) pytest tests/e2e \
 		--log-cli-level=INFO \
 		--cov \
 		--cov-append \
@@ -61,7 +61,7 @@ test-e2e: ## Run tests with coverage
 .PHONY: test-local
 test-local: ## Run offline local tests only
 	# coverage source configured in pyproject.toml [tool.coverage.run]
-	$(PIPENV) pytest tests/dlt_unit \
+	$(PIPENV) pytest tests/unit \
 		--log-cli-level=INFO \
 		--cov \
 		--cov-append \
@@ -85,10 +85,6 @@ test-coverage: ## Generate coverage reports only
 run-pipeline: ## Run a pipeline via the new CLI. Usage: make run-pipeline PIPELINE=notion ARGS="--select name --full"
 	@if [ -z "$(PIPELINE)" ]; then echo "Please set PIPELINE=<name>"; exit 2; fi
 	PYTHONUNBUFFERED=1 $(PIPENV) python -m pipelines.run_pipeline $(PIPELINE) $(ARGS)
-
-.PHONY: refresh-fitbit
-refresh-fitbit: ## Run Fitbit dlt pipeline refresh
-	$(MAKE) run-pipeline PIPELINE=fitbit ARGS="$(ARGS)"
 
 .PHONY: refresh-notion
 refresh-notion: ## Run Notion dlt pipeline refresh

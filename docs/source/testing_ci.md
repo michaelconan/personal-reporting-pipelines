@@ -42,7 +42,7 @@ sqlfluff lint --dialect duckdb
 
 Workflows are in `.github/workflows/` and include:
 
-- `refresh-notion.yml`, `refresh-hubspot.yml`, `refresh-fitbit.yml` — ingestion schedules
+- `refresh-notion.yml`, `refresh-hubspot.yml`, `refresh-google-health.yml` — ingestion schedules
 - `run-transforms.yml` / `test-transforms.yml` — dbt transform runs and dbt tests
 - `docs.yml` — builds and deploys Sphinx docs
 - `weekly-doc-updater.lock.yml` (generated from the gh-aw workflow source) — agentic workflow that opens PRs to keep docs in sync

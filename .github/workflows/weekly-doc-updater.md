@@ -101,7 +101,7 @@ For each merged PR, use `pull_request_read.get_files` and `pull_request_read.get
 
 **Pipeline changes** (`pipelines/*.py`, `pipelines/hs_config.yml`):
 - New or renamed source tables or columns
-- New HubSpot objects or Fitbit endpoints
+- New HubSpot objects or Google Health endpoints
 
 **dbt SQL model changes** (`dbt/models/**/*.sql`):
 - New, renamed, or removed models (staging, intermediate, marts)
