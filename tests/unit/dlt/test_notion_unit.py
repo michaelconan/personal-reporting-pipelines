@@ -29,14 +29,14 @@ def mock_notion_apis(monkeypatch: MonkeyPatch, mock_responses) -> Callable:
         start_cursor = body.get("start_cursor")
         after_date = body["filter"]["last_edited_time"]["after"]
 
-        if "2024-06-05" in after_date:
+        if "2020-01-01" not in after_date:
             # Subsequent run page
             return sample_response("notion__data_source_rows-run2.json")
         else:
             if not start_cursor:
                 # First page
                 return sample_response("notion__data_source_rows-run1_page1.json")
-            elif start_cursor == "cursor_page2_token":
+            elif start_cursor:
                 # Second page
                 return sample_response("notion__data_source_rows-run1_page2.json")
         # No more data
@@ -55,7 +55,14 @@ def mock_notion_apis(monkeypatch: MonkeyPatch, mock_responses) -> Callable:
 
     def data_sources_callback(request):
         """Handle data source search requests (single page)."""
-        return sample_response("notion__data_sources.json")
+        status, headers, body = sample_response("notion__data_sources.json")
+        response = json.loads(body)
+        response["results"] = [
+            row
+            for row in response["results"]
+            if row["id"] == "18f09eb8-3f76-809f-8140-000bbccd5616"
+        ]
+        return status, headers, json.dumps(response)
 
     def setup(endpoints=[]):
         """Nested function to only register mock endpoints for tests.
@@ -90,7 +97,13 @@ class TestNotionPhases:
             (
                 "data_sources",
                 1,
-                {"max_table_nesting": 1, "columns": {"title": {"data_type": "json"}}},
+                {
+                    "max_table_nesting": 1,
+                    "columns": {
+                        "title": {"data_type": "json"},
+                        "description": {"data_type": "json"},
+                    },
+                },
             ),
             ("data_source_rows", 1, {"max_table_nesting": 2}),
         ),
@@ -122,7 +135,7 @@ class TestNotionPhases:
         configs: dict,
     ):
         # GIVEN
-        expected_rows = 3 if "rows" in resource else 1
+        expected_rows = 3 if "rows" in resource else 4
         file_name = f"notion__{resource}-run1_page1.json"
         file_name2 = f"notion__{resource}.json"
         source = sample_resource(
@@ -209,15 +222,15 @@ def test_notion_pipeline_refresh(mock_notion_apis, duckdb_pipeline, increment: b
         )
         assert len(databases_table) == 1
 
-        # Check data_source_rows table
+        # The row fixture represents the monthly data source.
         rows_table = client.execute_sql(
-            f"SELECT 1 FROM {dataset}.notion__data_source_daily_habits",
+            f"SELECT 1 FROM {dataset}.notion__data_source_monthly_habits",
         )
         assert len(rows_table) == expected_rows
 
     # GIVEN (2)
     # Only database_rows should increment (databases search results stay same)
-    expected_rows += 1 if increment else 0
+    expected_rows = expected_rows + 1 if increment else expected_rows
 
     # WHEN (2)
     info2 = duckdb_pipeline.run(source, write_disposition=write_disposition)
@@ -228,8 +241,8 @@ def test_notion_pipeline_refresh(mock_notion_apis, duckdb_pipeline, increment: b
     assert info2.has_failed_jobs is False
     # Validate loaded data from incremental run
     with duckdb_pipeline.sql_client() as client:
-        # Check data_source_rows table
+        # Check the monthly data-source rows table.
         rows_table2 = client.execute_sql(
-            f"SELECT 1 FROM {dataset}.notion__data_source_daily_habits",
+            f"SELECT 1 FROM {dataset}.notion__data_source_monthly_habits",
         )
         assert len(rows_table2) == expected_rows

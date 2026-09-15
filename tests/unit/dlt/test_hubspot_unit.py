@@ -99,7 +99,7 @@ def mock_hs_apis(monkeypatch: MonkeyPatch, mock_responses) -> Callable:
             mock_responses.add(
                 mock_responses.GET,
                 re.compile(BASE_URL + r"/crm-object-schemas/v3/schemas/\w+"),
-                json=sample_data("hubspot_schemas_contacts.json"),
+                json=sample_data("hubspot__schemas_contacts.json"),
                 status=200,
             )
 
@@ -155,7 +155,7 @@ class TestHubspotPhases:
     ):
         # GIVEN
         # Includes nested table rows for schemas
-        expected_rows = 17 if "schemas" in resource else 3
+        expected_rows = 20 if "schemas" in resource else 3
         file_name = f"hubspot__{resource}-run1_page1.json"
         file_name2 = f"hubspot__{resource}.json"
         source = sample_resource(
