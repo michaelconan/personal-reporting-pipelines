@@ -10,7 +10,7 @@ and cloud services.
 import dlt
 import pytest
 
-from tests.live_test_range import LIVE_REFRESH_ARGS
+from tests.test_live_test_range import LIVE_REFRESH_ARGS
 
 # label as end-to-end and disable response mock plugin
 pytestmark = [pytest.mark.e2e]

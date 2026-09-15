@@ -6,12 +6,19 @@ so pagination is exercised while runtime and API quota stay bounded.
 """
 
 from collections.abc import Callable
-from typing import Any
+from typing import Any, TypedDict
 
 LIVE_INITIAL_DATE = "2025-06-01"
 LIVE_END_DATE = "2025-06-22"
 
-LIVE_REFRESH_ARGS = {
+
+class LiveRefreshArgs(TypedDict):
+    is_incremental: bool
+    initial_date: str
+    end_date: str
+
+
+LIVE_REFRESH_ARGS: LiveRefreshArgs = {
     "is_incremental": False,
     "initial_date": LIVE_INITIAL_DATE,
     "end_date": LIVE_END_DATE,

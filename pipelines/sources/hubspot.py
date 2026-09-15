@@ -29,7 +29,7 @@ import requests
 # dlt
 import dlt
 from dlt.sources.rest_api import rest_api_resources
-from dlt.sources.helpers.rest_client.paginators import JSONResponseCursorPaginator, SinglePagePaginator
+from dlt.sources.helpers.rest_client.paginators import JSONResponseCursorPaginator
 from dlt.sources import DltResource
 
 

@@ -8,16 +8,14 @@ jobs:
   triage:
     runs-on: ubuntu-latest
     permissions:
-      id-token: write
-      contents: write
-      pull-requests: write
+      contents: read
       issues: write
     steps:
       - uses: actions/checkout@v6
         with:
           persist-credentials: false
 
-      - uses: anomalyco/opencode/github@latest
+      - uses: anomalyco/opencode/github@2410593023d2c61f05123c9b0faf189a28dfbeee # pinned revision
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
         with:

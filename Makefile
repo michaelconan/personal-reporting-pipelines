@@ -86,6 +86,10 @@ run-pipeline: ## Run a pipeline via the new CLI. Usage: make run-pipeline PIPELI
 	@if [ -z "$(PIPELINE)" ]; then echo "Please set PIPELINE=<name>"; exit 2; fi
 	PYTHONUNBUFFERED=1 $(PIPENV) python -m pipelines.run_pipeline $(PIPELINE) $(ARGS)
 
+.PHONY: refresh-fitbit
+refresh-fitbit: ## Run Fitbit dlt pipeline refresh
+	$(MAKE) run-pipeline PIPELINE=fitbit ARGS="$(ARGS)"
+
 .PHONY: refresh-notion
 refresh-notion: ## Run Notion dlt pipeline refresh
 	$(MAKE) run-pipeline PIPELINE=notion ARGS="$(ARGS)"

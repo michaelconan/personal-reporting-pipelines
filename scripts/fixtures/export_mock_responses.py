@@ -115,7 +115,7 @@ def get_secret(secret_path: str) -> str | None:
             if value:
                 return value
     except Exception:
-        pass
+        logger.debug("Unable to resolve dlt secret", exc_info=True)
 
     env_name = secret_path.upper().replace(".", "__").replace("-", "_")
     return os.getenv(env_name) or os.getenv(env_name.replace("__", "_"))
@@ -142,7 +142,7 @@ class ResponseCaptureSession(requests.Session):
                     (response.url, payload, dict(getattr(response, "headers", {})))
                 )
             except Exception:
-                pass
+                logger.debug("Unable to decode captured response as JSON", exc_info=True)
         return response
 
 
@@ -164,7 +164,7 @@ def get_resource_config_dicts(resource: Any) -> list[dict[str, Any]]:
                 if isinstance(value, dict):
                     configs.append(value)
     except Exception:
-        pass
+        logger.debug("Unable to inspect resource configuration", exc_info=True)
     return configs
 
 
@@ -193,7 +193,7 @@ def get_resource_pagination_metadata(resource: Any) -> dict[str, Any]:
                 incremental, "cursor_transform", None
             )
     except Exception:
-        pass
+        logger.debug("Unable to inspect incremental configuration", exc_info=True)
 
     for config in get_resource_config_dicts(resource):
         paginator = config.get("paginator") or getattr(config.get("client"), "paginator", None)
@@ -728,7 +728,7 @@ def run_source_export(
     try:
         list(source.resources)
     except Exception:
-        pass
+        logger.debug("Unable to enumerate source resources", exc_info=True)
 
 
 def run_hubspot_export(

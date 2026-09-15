@@ -4,7 +4,7 @@ Google Health source factory moved to pipelines.sources.google_health
 Prerequisite: Obtain refresh token through interactive flow.
 
 - `Setup Health <https://developers.google.com/health/setup>`_
-- Scopes: 
+- Scopes:
     - https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly
     - https://www.googleapis.com/auth/googlehealth.sleep.readonly
 
@@ -13,6 +13,8 @@ API Resources:
 - `List DataPoints <https://developers.google.com/health/reference/rest/v4/users.dataTypes.dataPoints/list>`_
 - `Daily Roll Up DataPoints <https://developers.google.com/health/reference/rest/v4/users.dataTypes.dataPoints/dailyRollUp>`_
 """
+
+from typing import Any
 
 import dlt
 from dlt.sources.rest_api import rest_api_source
@@ -94,7 +96,7 @@ def google_health_source(
         steps_filter += ' AND steps.interval.start_time < "{incremental.end_value}"'
         exercise_filter += ' AND exercise.interval.civil_start_time < "{incremental.end_value}"'
 
-    api_config = {
+    api_config: dict[str, Any] = {
         "client": {
             "base_url": "https://health.googleapis.com/v4/",
             "auth": {"type": "bearer", "token": access_token},

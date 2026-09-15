@@ -9,7 +9,7 @@ import os
 import dlt
 import pytest
 
-from tests.live_test_range import (
+from tests.test_live_test_range import (
     LIVE_REFRESH_ARGS,
     live_source_modifier,
     log_live_row_counts,
