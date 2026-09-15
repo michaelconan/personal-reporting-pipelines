@@ -4,17 +4,16 @@ This page describes the dlt-based extraction pipelines, how they map to raw tabl
 
 ## Overview
 
-The repository defines three dlt extraction pipelines (pipelines/):
+The repository defines two dlt extraction pipelines (pipelines/):
 
 - pipelines/notion.py — Notion "habits" extraction
 - pipelines/hubspot.py — HubSpot CRM extraction (per-object)
-- pipelines/fitbit.py — Fitbit activity and sleep extraction
 
 Shared helpers and configuration live under pipelines/common/ and `pipelines/__init__.py`.
 
 ## Raw table naming
 
-dlt writes raw tables with the convention: `{source}__{entity}` (e.g., `hubspot__contacts`, `fitbit__sleep`, `notion__data_source_daily_habits`).
+dlt writes raw tables with the convention: `{source}__{entity}` (e.g., `hubspot__contacts`, `google_health__steps`, `notion__data_source_daily_habits`).
 
 - Notion pipelines use `data_source` identifiers. Key columns:
   - `parent__data_source_id` (Notion parent id)
@@ -22,7 +21,7 @@ dlt writes raw tables with the convention: `{source}__{entity}` (e.g., `hubspot_
 
 - HubSpot uses per-object tables (meetings, calls, tasks, notes, etc.) and association tables with `_to_contacts` style names.
 
-- Fitbit uses `fitbit__sleep` (sleep events) and `fitbit__activities` (steps, durations).
+- Google Health uses `google_health__sleep`, `google_health__steps`, and `google_health__exercise` (health data points).
 
 ## Running pipelines
 
@@ -55,7 +54,7 @@ Examples:
 
 ```bash
 export FORCE_FULL_REFRESH=true
-pipenv run python -m pipelines.fitbit
+pipenv run python -m pipelines.run_pipeline notion --full
 
 # Or pipeline specific
 export PIPELINE_NAME=HUBSPOT

@@ -1,11 +1,20 @@
 """
 Google Health source factory moved to pipelines.sources.google_health
 
+Prerequisite: Obtain refresh token through interactive flow.
+
+- `Setup Health <https://developers.google.com/health/setup>`_
+- Scopes:
+    - https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly
+    - https://www.googleapis.com/auth/googlehealth.sleep.readonly
+
 API Resources:
 
 - `List DataPoints <https://developers.google.com/health/reference/rest/v4/users.dataTypes.dataPoints/list>`_
 - `Daily Roll Up DataPoints <https://developers.google.com/health/reference/rest/v4/users.dataTypes.dataPoints/dailyRollUp>`_
 """
+
+from typing import Any
 
 import dlt
 from dlt.sources.rest_api import rest_api_source
@@ -15,6 +24,8 @@ import google.auth
 from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
 
+
+import requests
 
 from pipelines import SECRET_STORE
 
@@ -69,11 +80,23 @@ def get_google_health_token() -> str:
 
 
 def google_health_source(
-    access_token: str, initial_date: str = "1970-01-01", end_date: str | None = None
+    access_token: str,
+    initial_date: str = "1970-01-01",
+    end_date: str | None = None,
+    session: requests.Session | None = None,
 ):
     initial_ts = f"{initial_date}T00:00:00Z"
     end_ts = f"{end_date}T00:00:00Z" if end_date else None
-    api_config = {
+    sleep_filter = 'sleep.interval.end_time >= "{incremental.start_value}"'
+    steps_filter = 'steps.interval.start_time >= "{incremental.start_value}"'
+    exercise_filter = 'exercise.interval.civil_start_time >= "{incremental.start_value}"'
+
+    if end_date:
+        sleep_filter += ' AND sleep.interval.end_time < "{incremental.end_value}"'
+        steps_filter += ' AND steps.interval.start_time < "{incremental.end_value}"'
+        exercise_filter += ' AND exercise.interval.civil_start_time < "{incremental.end_value}"'
+
+    api_config: dict[str, Any] = {
         "client": {
             "base_url": "https://health.googleapis.com/v4/",
             "auth": {"type": "bearer", "token": access_token},
@@ -92,9 +115,7 @@ def google_health_source(
                 "max_table_nesting": 2,
                 "endpoint": {
                     "path": "users/me/dataTypes/sleep/dataPoints",
-                    "params": {
-                        "filter": 'sleep.interval.end_time >= "{incremental.start_value}" AND sleep.interval.end_time < "{incremental.end_value}"'
-                    },
+                    "params": {"filter": sleep_filter, "pageSize": 25},
                     "incremental": {
                         "cursor_path": "sleep.interval.endTime",
                         "initial_value": initial_ts,
@@ -107,9 +128,7 @@ def google_health_source(
                 "max_table_nesting": 4,
                 "endpoint": {
                     "path": "users/me/dataTypes/steps/dataPoints",
-                    "params": {
-                        "filter": 'steps.interval.start_time >= "{incremental.start_value}" AND steps.interval.start_time < "{incremental.end_value}"'
-                    },
+                    "params": {"filter": steps_filter, "pageSize": 1000},
                     "incremental": {
                         "cursor_path": "steps.interval.startTime",
                         "initial_value": initial_ts,
@@ -122,9 +141,7 @@ def google_health_source(
                 "max_table_nesting": 2,
                 "endpoint": {
                     "path": "users/me/dataTypes/exercise/dataPoints",
-                    "params": {
-                        "filter": 'exercise.interval.civil_start_time >= "{incremental.start_value}" AND exercise.interval.civil_start_time < "{incremental.end_value}"'
-                    },
+                    "params": {"filter": exercise_filter, "pageSize": 25},
                     "incremental": {
                         "cursor_path": "exercise.interval.startTime",
                         "initial_value": initial_ts[:-1],
@@ -134,4 +151,7 @@ def google_health_source(
             },
         ],
     }
+    if session:
+        api_config["client"]["session"] = session
+
     return rest_api_source(api_config)

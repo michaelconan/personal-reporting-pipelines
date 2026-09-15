@@ -1,0 +1,16 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+    "mcp": {
+        "dlt-workspace-mcp": {
+            "type": "local",
+            "command": [
+                "uv",
+                "run",
+                "dlthub",
+                "ai",
+                "mcp",
+                "--stdio"
+            ]
+        }
+    }
+}

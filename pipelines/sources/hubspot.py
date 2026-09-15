@@ -97,6 +97,7 @@ def hubspot_source(
             "endpoint": {
                 "path": f"crm-object-schemas/v3/schemas/{object_name}",
                 "method": "GET",
+                "paginator": {"type": "single_page"},
                 "data_selector": "$",
             },
             "write_disposition": "merge",
