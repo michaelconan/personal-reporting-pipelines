@@ -101,7 +101,7 @@ def resolve_project_root(start: Path | None = None) -> Path:
 
 def _leaf(key: str) -> str:
     """Return the final segment of a dlt ``__``-joined or dotted key path."""
-    return re.split(r"(?:__|\\.)", key)[-1].lower()
+    return re.split(r"(?:__|\.)", key)[-1].lower()
 
 
 def _is_free_text_key(key: str) -> bool:

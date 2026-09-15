@@ -394,6 +394,7 @@ def test_scrub_api_response_detects_dynamic_pii_keys():
     payload = {
         "order_title": "my secret deal",
         "contact_email_address": "boss@example.com",
+        "contact.name": "Jane Doe",
         "id": 99,
         "nested": {"internal_notes": "call back tomorrow"},
     }
@@ -402,6 +403,7 @@ def test_scrub_api_response_detects_dynamic_pii_keys():
 
     assert scrubbed["order_title"] != "my secret deal"
     assert scrubbed["contact_email_address"] != "boss@example.com"
+    assert scrubbed["contact.name"] != "Jane Doe"
     assert scrubbed["id"] == 99
     assert scrubbed["nested"]["internal_notes"] != "call back tomorrow"
 
