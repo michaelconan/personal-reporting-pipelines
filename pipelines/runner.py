@@ -21,7 +21,6 @@ from pipelines.common.utils import (
 )
 from pipelines.sources.notion import notion_source
 from pipelines.sources.hubspot import hubspot_source
-from pipelines.sources.fitbit import fitbit_source, get_fitbit_token
 from pipelines.sources.google_health import (
     google_health_source,
     get_google_health_token,
@@ -55,17 +54,6 @@ PIPELINE_CONFIG: dict[str, PipelineConfig] = {
         pipeline_name="hubspot_crm_pipeline",
         display_name="HubSpot CRM",
         required_secret_keys=["sources.hubspot.api_key"],
-    ),
-    "fitbit": PipelineConfig(
-        source_factory=fitbit_source,
-        pipeline_name="fitbit_health_pipeline",
-        display_name="Fitbit Health",
-        required_secret_keys=[
-            "sources.fitbit.client_id",
-            "sources.fitbit.client_secret",
-            "sources.fitbit.refresh_token",
-        ],
-        token_getter=get_fitbit_token,
     ),
     "google_health": PipelineConfig(
         source_factory=google_health_source,

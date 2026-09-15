@@ -700,7 +700,7 @@ def run_source_export(
     config = SOURCE_REGISTRY[source_key]
     display = config.get("display_name", source_key)
     if not get_secret(config["secret_key"]):
-        logger.warning(f"Skipping {display}: {config['secret_key']} secret is not configured.")
+        logger.warning("Skipping %s: required secret is not configured.", display)
         return
 
     logger.info("Executing %s source to capture API responses...", display)
