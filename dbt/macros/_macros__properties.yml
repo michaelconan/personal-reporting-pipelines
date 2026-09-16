@@ -1,82 +1,86 @@
+---
 version: 2
-
 macros:
   - name: json_extract_value
-    description: "Cross-database macro to extract scalar values from JSON columns. Uses json_extract_scalar for BigQuery and json_extract_string for DuckDB."
+    description: Cross-database macro to extract scalar values from JSON columns.
+      Uses json_extract_scalar for BigQuery and json_extract_string for DuckDB.
     arguments:
       - name: column_name
-        description: "The name of the JSON column to extract from"
+        description: The name of the JSON column to extract from
         type: string
       - name: json_path
-        description: "The JSONPath expression to extract the value (e.g., '$.property_name')"
+        description: The JSONPath expression to extract the value (e.g., '$.property_name')
         type: string
-
   - name: trunc_date
-    description: "Adapter-aware macro that truncates timestamps/dates to a specified part (e.g., 'month', 'year'). Pass the part as a quoted literal (for example: 'month'). BigQuery and DuckDB implementations are handled via adapter dispatch."
+    description: "Adapter-aware macro that truncates timestamps/dates to a specified\
+      \ part (e.g., 'month', 'year'). Pass the part as a quoted literal (for example:\
+      \ 'month'). BigQuery and DuckDB implementations are handled via adapter dispatch."
     arguments:
       - name: part
-        description: "The part to truncate to (e.g., 'year', 'month', 'day'). Must be passed as a quoted literal."
+        description: The part to truncate to (e.g., 'year', 'month', 'day'). Must
+          be passed as a quoted literal.
         type: string
       - name: column_name
-        description: "The timestamp or date column/expression to truncate."
+        description: The timestamp or date column/expression to truncate.
         type: string
-
   - name: cast_safe
-    description: "Adapter-aware macro to safely cast columns to a specified type. Uses SAFE_CAST for BigQuery and TRY_CAST for DuckDB."
+    description: Adapter-aware macro to safely cast columns to a specified type. Uses
+      SAFE_CAST for BigQuery and TRY_CAST for DuckDB.
     arguments:
       - name: column_name
-        description: "The column or expression to cast."
+        description: The column or expression to cast.
         type: string
       - name: data_type
-        description: "The target type to cast to (e.g., 'INT64', 'STRING')."
+        description: The target type to cast to (e.g., 'INT64', 'STRING').
         type: string
-
   - name: seconds_between
-    description: "Adapter-aware macro computing seconds between two timestamp expressions. Uses timestamp_diff for BigQuery and date_diff for DuckDB."
+    description: Adapter-aware macro computing seconds between two timestamp expressions.
+      Uses timestamp_diff for BigQuery and date_diff for DuckDB.
     arguments:
       - name: start_expr
-        description: "The starting timestamp column or expression."
+        description: The starting timestamp column or expression.
         type: string
       - name: end_expr
-        description: "The ending timestamp column or expression."
+        description: The ending timestamp column or expression.
         type: string
-
   - name: date_from_parts
-    description: "Adapter-aware macro to build a date from separate year/month/day columns. Uses DATE for BigQuery and make_date for DuckDB."
+    description: Adapter-aware macro to build a date from separate year/month/day
+      columns. Uses DATE for BigQuery and make_date for DuckDB.
     arguments:
       - name: year_expr
-        description: "The year column or expression."
+        description: The year column or expression.
         type: string
       - name: month_expr
-        description: "The month column or expression."
+        description: The month column or expression.
         type: string
       - name: day_expr
-        description: "The day column or expression."
+        description: The day column or expression.
         type: string
-
   - name: date_from_offset_seconds
-    description: "Adapter-aware macro to derive a local date from a UTC timestamp plus a second-based UTC offset string (e.g. '3600s'). Uses timestamp_add + date for BigQuery and to_seconds interval addition for DuckDB."
+    description: Adapter-aware macro to derive a local date from a UTC timestamp plus
+      a second-based UTC offset string (e.g. '3600s'). Uses timestamp_add + date for
+      BigQuery and to_seconds interval addition for DuckDB.
     arguments:
       - name: timestamp_expr
-        description: "The UTC timestamp column or expression."
+        description: The UTC timestamp column or expression.
         type: string
       - name: offset_seconds_expr
-        description: "The UTC offset string column or expression (e.g. '3600s')."
+        description: The UTC offset string column or expression (e.g. '3600s').
         type: string
-
   - name: timestamp_parse
-    description: "Adapter-aware macro to parse timestamps from columns. Uses timestamp_millis for BigQuery and make_timestamp for DuckDB."
+    description: Adapter-aware macro to parse timestamps from columns. Uses timestamp_millis
+      for BigQuery and make_timestamp for DuckDB.
     arguments:
       - name: column_name
-        description: "The column containing the timestamp to parse."
+        description: The column containing the timestamp to parse.
         type: string
-
   - name: unnest_json_array
-    description: "Adapter-aware macro to unnest JSON arrays into rows. Uses json_value_array for BigQuery and json_extract with cast for DuckDB."
+    description: Adapter-aware macro to unnest JSON arrays into rows. Uses json_value_array
+      for BigQuery and json_extract with cast for DuckDB.
     arguments:
       - name: column_name
-        description: "The JSON array column to unnest."
+        description: The JSON array column to unnest.
         type: string
       - name: alias_name
-        description: "The alias name for the unnested column."
+        description: The alias name for the unnested column.
         type: string

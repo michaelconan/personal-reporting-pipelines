@@ -184,14 +184,14 @@ The pipelines support flexible refresh modes for data loading:
 #### Method 1: Environment Variable Override (Global)
 ```bash
 export FORCE_FULL_REFRESH=true
-pipenv run python -m pipelines.hubspot
+uv run python -m pipelines.hubspot
 ```
 
 #### Method 2: Pipeline-Specific Override
 ```bash
 # Force full refresh for HubSpot only
 export HUBSPOT_FULL_REFRESH=true
-pipenv run python -m pipelines.hubspot
+uv run python -m pipelines.hubspot
 ```
 
 #### Method 5: Central CLI entrypoint
@@ -201,10 +201,10 @@ optionally select resources:
 
 ```bash
 # Full refresh for Notion via central runner
-pipenv run python -m pipelines.run_pipeline notion --full
+uv run python -m pipelines.run_pipeline notion --full
 
 # Incremental with resource selection
-pipenv run python -m pipelines.run_pipeline hubspot --incremental --select hubspot__contacts,hubspot__companies
+uv run python -m pipelines.run_pipeline hubspot --incremental --select hubspot__contacts,hubspot__companies
 ```
 
 You can also use the `Makefile` convenience targets (now consolidated as `refresh-*`):
@@ -252,7 +252,7 @@ jobs:
         env:
           FORCE_FULL_REFRESH: ${{ inputs.force_full_refresh }}
         run: |
-          pipenv run python -m pipelines.hubspot
+          uv run python -m pipelines.hubspot
 ```
 
 ### Environment Variables Reference

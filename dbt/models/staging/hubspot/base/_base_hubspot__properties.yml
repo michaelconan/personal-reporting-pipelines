@@ -1,62 +1,63 @@
+---
 version: 2
 models:
-- name: base_hubspot__engagements
-  description: Base model for HubSpot engagements unioned across object types (meetings,
-    calls, communications) with deduplication applied. One row per unique engagement.
-  columns:
-  - name: engagement_id
-    description: The primary key for this table (HubSpot engagement id).
-    data_type: bigint
+  - name: base_hubspot__engagements
+    description: Base model for HubSpot engagements unioned across object types (meetings,
+      calls, communications) with deduplication applied. One row per unique engagement.
+    columns:
+      - name: engagement_id
+        description: The primary key for this table (HubSpot engagement id).
+        data_type: bigint
+        data_tests:
+          - not_null
+          - unique
+      - name: engagement_type
+        description: The engagement object type (MEETING, CALL, COMMUNICATION).
+        data_type: string
+        data_tests:
+          - not_null
+      - name: body_preview
+        description: A preview of the engagement body content.
+        data_type: string
+      - name: occurred_at
+        description: The timestamp when the engagement occurred.
+        data_type: timestamp
+        data_tests:
+          - not_null
+      - name: created_at
+        description: The timestamp when the engagement was created.
+        data_type: timestamp
+        data_tests:
+          - not_null
+      - name: updated_at
+        description: The timestamp when the engagement was last updated.
+        data_type: timestamp
+        data_tests:
+          - not_null
+  - name: base_hubspot__engagement_contacts
+    description: Base junction table connecting HubSpot engagements to associated
+      contacts with deduplication.
     data_tests:
-    - not_null
-    - unique
-  - name: engagement_type
-    description: The engagement object type (MEETING, CALL, COMMUNICATION).
-    data_type: string
-    data_tests:
-    - not_null
-  - name: body_preview
-    description: A preview of the engagement body content.
-    data_type: string
-  - name: occurred_at
-    description: The timestamp when the engagement occurred.
-    data_type: timestamp
-    data_tests:
-    - not_null
-  - name: created_at
-    description: The timestamp when the engagement was created.
-    data_type: timestamp
-    data_tests:
-    - not_null
-  - name: updated_at
-    description: The timestamp when the engagement was last updated.
-    data_type: timestamp
-    data_tests:
-    - not_null
-- name: base_hubspot__engagement_contacts
-  description: Base junction table connecting HubSpot engagements to associated contacts
-    with deduplication.
-  data_tests:
-  - dbt_utils.unique_combination_of_columns:
-      arguments:
-        combination_of_columns:
-        - engagement_id
-        - contact_id
-  columns:
-  - name: row_id
-    description: The primary key for this table (surrogate key from the engagement
-      and contact).
-    data_type: string
-    data_tests:
-    - not_null
-    - unique
-  - name: engagement_id
-    description: The unique identifier for the engagement.
-    data_type: bigint
-    data_tests:
-    - not_null
-  - name: contact_id
-    description: The unique identifier for the associated contact.
-    data_type: bigint
-    data_tests:
-    - not_null
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - engagement_id
+              - contact_id
+    columns:
+      - name: row_id
+        description: The primary key for this table (surrogate key from the engagement
+          and contact).
+        data_type: string
+        data_tests:
+          - not_null
+          - unique
+      - name: engagement_id
+        description: The unique identifier for the engagement.
+        data_type: bigint
+        data_tests:
+          - not_null
+      - name: contact_id
+        description: The unique identifier for the associated contact.
+        data_type: bigint
+        data_tests:
+          - not_null

@@ -2,8 +2,8 @@
 # Makefile for development workflows and operations
 
 # Python environment
-PIPENV = uv run
-PYTEST = $(PIPENV) pytest \
+UVR = uv run
+PYTEST = $(UVR) pytest \
 	--log-cli-level=INFO \
 	--cov-append \
 	-v -s
@@ -40,7 +40,7 @@ inject:
 .PHONY: test-e2e
 test-e2e: ## Run tests with coverage
 	# coverage source configured in pyproject.toml [tool.coverage.run]
-	$(PIPENV) pytest tests/e2e \
+	$(UVR) pytest tests/e2e \
 		--log-cli-level=INFO \
 		--cov \
 		--cov-append \
@@ -51,7 +51,7 @@ test-e2e: ## Run tests with coverage
 .PHONY: test-local
 test-local: ## Run offline local tests only
 	# coverage source configured in pyproject.toml [tool.coverage.run]
-	$(PIPENV) pytest tests/unit \
+	$(UVR) pytest tests/unit \
 		--log-cli-level=INFO \
 		--cov \
 		--cov-append \
@@ -64,17 +64,17 @@ test-all: test-local test-e2e ## Run all tests with coverage
 
 .PHONY: lint
 lint: ## Run prek checks on all files
-	$(PIPENV) prek run -c prek.yml --all-files
+	$(UVR) prek run -c prek.yml --all-files
 
 .PHONY: test-coverage
 test-coverage: ## Generate coverage reports only
-	$(PIPENV) coverage report --show-missing
-	$(PIPENV) coverage html
+	$(UVR) coverage report --show-missing
+	$(UVR) coverage html
 
 .PHONY: run-pipeline
 run-pipeline: ## Run a pipeline via the new CLI. Usage: make run-pipeline PIPELINE=notion ARGS="--select name --full"
 	@if [ -z "$(PIPELINE)" ]; then echo "Please set PIPELINE=<name>"; exit 2; fi
-	PYTHONUNBUFFERED=1 $(PIPENV) python -m pipelines.run_pipeline $(PIPELINE) $(ARGS)
+	PYTHONUNBUFFERED=1 $(UVR) python -m pipelines.run_pipeline $(PIPELINE) $(ARGS)
 
 .PHONY: refresh-notion
 refresh-notion: ## Run Notion dlt pipeline refresh
@@ -123,7 +123,7 @@ docs: ## Generate dbt + Sphinx documentation
 	@echo "Consolidating documentation..."
 	@cp dbt/target/static_index.html docs/source/dbt.html
 	@echo "Building Sphinx documentation..."
-	$(PIPENV) sphinx-build -b html docs/source docs/_build/html
+	$(UVR) sphinx-build -b html docs/source docs/_build/html
 	@echo "Copying dbt docs to Sphinx output..."
 	@mkdir -p docs/_build/html/dbt
 	@cp dbt/target/static_index.html docs/_build/html/dbt.html

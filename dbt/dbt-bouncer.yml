@@ -1,161 +1,127 @@
+---
 dbt_artifacts_dir: target
 custom_checks_dir: checks
-
 manifest_checks:
-  # SOURCE checks
+  # Source checks
   - name: check_source_description_populated
-    description: "Sources must document their ingestion scope with a populated description."
+    description: Sources must document their ingestion scope with a populated description.
     min_description_length: 20
-
   - name: check_source_property_file_location
-    description: "Sources must be documented in the source directory that owns them."
-
+    description: Sources must be documented in the source directory that owns them.
   - name: check_source_file_name
-    description: "Source property files must follow the _{source}__sources.yml naming convention."
+    description: >
+      Source property files must follow the _{source}__sources.yml naming
+      convention.
     file_name_pattern: ^_.*__sources\.yml$
-
   - name: check_source_freshness_populated
-    description: "Sources must define a freshness SLA so stale upstream data cannot propagate silently."
-
+    description: >
+      Sources must define a freshness SLA so stale upstream data cannot propagate
+      silently.
   - name: check_source_loader_populated
-    description: "Sources must document the loading tool, tracing every source to its ingestion process."
-
+    description: >
+      Sources must document the loading tool, tracing every source to its
+      ingestion process.
   - name: check_source_names
-    description: "Source names must be lowercase snake_case."
+    description: Source names must be lowercase snake_case.
     source_name_pattern: ^[a-z0-9_]*$
-
   - name: check_duplicate_sources
-    description: "Each source table must be declared exactly once."
-
+    description: Each source table must be declared exactly once.
   - name: check_source_not_orphaned
-    description: "Every declared source table must be referenced by at least one dbt model."
-
+    description: >
+      Every declared source table must be referenced by at least one dbt
+      model.
   - name: check_source_used_by_models_in_same_directory
-    description: "Models consuming a source must sit in the directory that configures it."
-
-  # MODEL checks — layer-specific naming, one check per folder
+    description: >
+      Models consuming a source must sit in the directory that configures
+      it.
+    exclude: ^models/staging/.+/base/.*
+  # Model checks
   - name: check_model_names
-    description: "Staging models must carry the stg_ (or base_) prefix."
+    description: Staging models must carry the stg_ (or base_) prefix.
     include: ^models/staging
-    model_name_pattern: "^(stg_|base_)"
-
+    model_name_pattern: ^(stg_|base_)
   - name: check_model_names
-    description: "Core models must carry the core_ prefix."
+    description: Core models must carry the core_ prefix.
     include: ^models/core
-    model_name_pattern: "^core_"
-
+    model_name_pattern: ^core_
   - name: check_model_names
-    description: "Intermediate models must carry the int_ prefix."
+    description: Intermediate models must carry the int_ prefix.
     include: ^models/intermediate
-    model_name_pattern: "^int_"
-
+    model_name_pattern: ^int_
   - name: check_model_description_populated
-    description: "Every model must carry a description keeping the DAG self-documenting."
+    description: Every model must carry a description keeping the DAG self-documenting.
     min_description_length: 20
-
   - name: check_model_documentation_coverage
-    description: "All models must have a populated description."
+    description: All models must have a populated description.
     min_model_documentation_coverage_pct: 100
-
   - name: check_model_test_coverage
-    description: "Every model must be backed by at least one data test."
+    description: Every model must be backed by at least one data test.
     min_model_test_coverage_pct: 100
-
   - name: check_model_has_unique_test
-    description: "Every model must assert uniqueness on a single-column grain key."
-    accepted_uniqueness_tests:
-      - unique
-
+    description: Every model must assert uniqueness on a single-column grain key.
+    accepted_uniqueness_tests: [unique]
   - name: check_model_columns_have_types
-    description: "Documented columns must declare a data_type, a prerequisite for contracts."
-
+    description: Documented columns must declare a data_type, a prerequisite for contracts.
   - name: check_model_has_constraints
-    description: "Materialized tables must define model-level primary_key constraints on their grain."
+    description: Materialized tables must define model-level primary_key constraints
+      on their grain.
     materialization: table
-    required_constraint_types:
-      - primary_key
-
+    required_constraint_types: [primary_key]
   - name: check_model_has_contracts_enforced
-    description: "Table models must build with an enforced contract guarding their output schema."
+    description: Table models must build with an enforced contract guarding their
+      output schema.
     materialization: table
-
   - name: check_model_property_file_name
-    description: "Model property files must follow the _*.yml naming convention."
-    file_name_pattern: ^_.*\.yml$
-
-  # TEST checks
+    description: Model property files must follow the _*.yml naming convention.
+    file_name_pattern: ^_.*__properties\.yml$
+  # Test checks
   - name: check_model_unit_test_location
-    description: "Model unit tests must be defined in the same directory as their model."
-
+    description: Model unit tests must be defined in the same directory as their model.
   - name: check_unit_test_file_name
-    description: "Unit-test YAML files must follow the _*.yml naming convention."
-    file_name_pattern: ^_.*\.yml$
-
+    description: Unit-test YAML files must follow the _*.yml naming convention.
+    file_name_pattern: ^_.*__tests\.yml$
   - name: check_data_test_description_populated
-    description: "Singular SQL tests must explain the business rule they enforce."
+    description: Singular SQL tests must explain the business rule they enforce.
     min_description_length: 20
-
-  # SEED checks
   - name: check_seed_has_unique_test
-    description: "Seeds must assert uniqueness on at least one grain column."
-
+    description: Seeds must assert uniqueness on at least one grain column.
 catalog_checks:
+  - name: check_seed_columns_are_all_documented
+    description: Seed columns must carry a description.
+  - name: check_source_columns_are_all_documented
+    description: Source columns must carry a description.
   - name: check_column_description_populated
-    description: "Materialized columns must carry a description."
+    description: Materialized columns must carry a description.
     min_description_length: 4
-
   - name: check_column_names
-    description: "Column names must be snake_case."
+    description: Column names must be snake_case.
     column_name_pattern: ^_?[a-z][a-z0-9_]*$
-
-  # BOOLEAN columns must use is_/did_/has_ prefixes or a _met suffix
   - name: check_column_type_complies_to_column_name
-    description: "BOOLEAN columns must use an is_/did_/has_ prefix or a _met suffix."
+    description: BOOLEAN columns must use an is_/did_/has_ prefix or a _met suffix.
     column_name_pattern: ^((is|did|has)_.*|.*_met)$
-    types:
-      - BOOLEAN
-
-  # DATE columns must end with _date
+    types: [BOOLEAN]
   - name: check_column_type_complies_to_column_name
-    description: "DATE columns must end with _date."
+    description: DATE columns must end with _date.
     column_name_pattern: .*_date$
-    types:
-      - DATE
-    exclude: ^.*time_spine.*$   # date_day is the semantic layer's time-spine grain
-
-  # TIMESTAMP columns must end with _at
+    types: [DATE]
+    exclude: ^.*time_spine.*$
   - name: check_column_type_complies_to_column_name
-    description: "TIMESTAMP columns must end with _at."
+    description: TIMESTAMP columns must end with _at.
     column_name_pattern: .*_at$
-    types:
-      - TIMESTAMP
-      - TIMESTAMP WITH TIME ZONE
-
-  # INTEGER/BIGINT columns must carry a type-encoded or unit suffix
+    types: [TIMESTAMP, TIMESTAMP WITH TIME ZONE]
   - name: check_column_type_complies_to_column_name
-    description: "INTEGER/BIGINT columns must carry a type-encoded or unit suffix."
+    description: INTEGER/BIGINT columns must carry a type-encoded or unit suffix.
     column_name_pattern: .*(_id|_count|_periods|_minutes|_value|_index|_tier|_level|_kcal)$
-    types:
-      - INTEGER
-      - BIGINT
-      - HUGEINT
-
-  # Columns named like data types must have those data types (reverse guard)
+    types: [INTEGER, BIGINT, HUGEINT]
   - name: check_column_name_complies_to_column_type
-    description: "Columns named *_date must be DATE columns."
+    description: Columns named *_date must be DATE columns.
     column_name_pattern: .*_date$
-    types:
-      - DATE
-
+    types: [DATE]
   - name: check_column_name_complies_to_column_type
-    description: "Columns named *_at must be TIMESTAMP columns."
+    description: Columns named *_at must be TIMESTAMP columns.
     column_name_pattern: .*_at$
-    types:
-      - TIMESTAMP
-      - TIMESTAMP WITH TIME ZONE
-
+    types: [TIMESTAMP, TIMESTAMP WITH TIME ZONE]
   - name: check_column_name_complies_to_column_type
-    description: "Columns named with is_/did_/has_ or *_met must be BOOLEAN columns."
+    description: Columns named with is_/did_/has_ or *_met must be BOOLEAN columns.
     column_name_pattern: ^((is|did|has)_.*|.*_met)$
-    types:
-      - BOOLEAN
+    types: [BOOLEAN]

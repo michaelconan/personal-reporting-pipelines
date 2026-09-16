@@ -1,22 +1,22 @@
+---
 version: 2
-
 sources:
   - name: notion
-    description: "Source data from the Notion habit tracker."
+    description: Source data from the Notion habit tracker.
     loader: dlt
     freshness:
-      warn_after: {count: 336, period: hour}   # 14 days (weekly schedule)
+      warn_after: {count: 336, period: hour}  # 14 days (weekly schedule)
       error_after: {count: 384, period: hour}  # 16 days
     schema: "{{ env_var('RAW_SCHEMA', 'raw') }}"
     # On DuckDB (mock) targets each table is read directly from its test
     # fixture CSV as an external location; on BigQuery targets the meta is
     # inert and {identifier} is ignored.
     meta:
-      external_location: "dbt/test_fixtures/notion/{identifier}.csv"
+      external_location: dbt/test_fixtures/notion/{identifier}.csv
     tables:
       - name: data_source_daily_habits
         identifier: notion__data_source_daily_habits
-        description: "Raw habit entries from the daily habits data source."
+        description: Raw habit entries from the daily habits data source.
         columns:
           - name: parent__data_source_id
             data_type: varchar
@@ -66,10 +66,9 @@ sources:
             data_type: timestamp
             data_tests:
               - not_null
-
       - name: data_source_weekly_habits
         identifier: notion__data_source_weekly_habits
-        description: "Raw habit entries from the weekly habits data source."
+        description: Raw habit entries from the weekly habits data source.
         columns:
           - name: parent__data_source_id
             data_type: varchar
@@ -121,10 +120,10 @@ sources:
             data_type: timestamp
             data_tests:
               - not_null
-
       - name: data_source_habit_reference
         identifier: notion__data_source_habit_reference
-        description: "Reference table of all tracked disciplines from the Notion habit reference database."
+        description: Reference table of all tracked disciplines from the Notion habit
+          reference database.
         columns:
           - name: parent__data_source_id
             data_type: varchar
@@ -158,10 +157,9 @@ sources:
             data_type: varchar
           - name: properties__end_date__date
             data_type: varchar
-
       - name: data_source_monthly_habits
         identifier: notion__data_source_monthly_habits
-        description: "Raw habit entries from the monthly habits data source."
+        description: Raw habit entries from the monthly habits data source.
         columns:
           - name: parent__data_source_id
             data_type: varchar

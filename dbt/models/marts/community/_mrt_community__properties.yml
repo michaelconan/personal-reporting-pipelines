@@ -1,61 +1,62 @@
+---
 version: 2
 models:
-- name: engagement_contacts
-  description: 'Mart table of HubSpot engagements joined with contact and company
-    information. Grain: engagement + contact.'
-  versions:
-  - v: 1
-    defined_in: engagement_contacts_v1
-  columns:
-  - name: engagement_key
-    description: Surrogate key uniquely identifying each engagement-contact combination
-    data_type: string
-    data_tests:
-    - unique
-    constraints:
-    - type: not_null
-  - name: engagement_id
-    description: The unique identifier for the engagement
-    data_type: string
-    constraints:
-    - type: not_null
-  - name: engagement_type
-    description: The type of engagement (e.g., email, call, meeting)
-    data_type: string
-    constraints:
-    - type: not_null
-  - name: body_preview
-    description: A preview of the engagement body/content
-    data_type: string
-  - name: occurred_at
-    description: The timestamp when the engagement occurred
-    data_type: timestamp
-    constraints:
-    - type: not_null
-  - name: is_synchronous
-    description: Whether the engagement was synchronous (e.g., call or meeting)
-    data_type: boolean
-    constraints:
-    - type: not_null
-  - name: contact_id
-    description: The unique identifier for the contact involved in the engagement
-    data_type: bigint
-  - name: first_name
-    description: The first name of the contact
-    data_type: string
-  - name: last_name
-    description: The last name of the contact
-    data_type: string
-  - name: company_id
-    description: The unique identifier for the company associated with the contact
-    data_type: bigint
-  - name: company_name
-    description: The name of the company associated with the contact
-    data_type: string
-  - name: updated_at
-    description: The timestamp when the engagement was last updated
-    data_type: timestamp
-  constraints:
-  - type: primary_key
+  - name: engagement_contacts
+    description: 'Mart table of HubSpot engagements joined with contact and company
+      information. Grain: engagement + contact.'
+    versions:
+      - v: 1
+        defined_in: engagement_contacts_v1
     columns:
-    - engagement_key
+      - name: engagement_key
+        description: Surrogate key uniquely identifying each engagement-contact combination
+        data_type: string
+        data_tests:
+          - unique
+        constraints:
+          - type: not_null
+      - name: engagement_id
+        description: The unique identifier for the engagement
+        data_type: string
+        constraints:
+          - type: not_null
+      - name: engagement_type
+        description: The type of engagement (e.g., email, call, meeting)
+        data_type: string
+        constraints:
+          - type: not_null
+      - name: body_preview
+        description: A preview of the engagement body/content
+        data_type: string
+      - name: occurred_at
+        description: The timestamp when the engagement occurred
+        data_type: timestamp
+        constraints:
+          - type: not_null
+      - name: is_synchronous
+        description: Whether the engagement was synchronous (e.g., call or meeting)
+        data_type: boolean
+        constraints:
+          - type: not_null
+      - name: contact_id
+        description: The unique identifier for the contact involved in the engagement
+        data_type: bigint
+      - name: first_name
+        description: The first name of the contact
+        data_type: string
+      - name: last_name
+        description: The last name of the contact
+        data_type: string
+      - name: company_id
+        description: The unique identifier for the company associated with the contact
+        data_type: bigint
+      - name: company_name
+        description: The name of the company associated with the contact
+        data_type: string
+      - name: updated_at
+        description: The timestamp when the engagement was last updated
+        data_type: timestamp
+    constraints:
+      - type: primary_key
+        columns:
+          - engagement_key

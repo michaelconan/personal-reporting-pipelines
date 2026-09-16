@@ -1,8 +1,10 @@
+---
 version: 2
-
 models:
   - name: stg_google_health__sleep
-    description: "Typed and deduplicated Google Health sleep sessions, one row per sleep data point."
+    description: >
+      Typed and deduplicated Google Health sleep sessions, one row per sleep
+      data point.
     data_tests:
       - expect_intervals_to_not_overlap:
           arguments:
@@ -10,124 +12,123 @@ models:
             end_column_name: ended_at
     columns:
       - name: sleep_id
-        description: "The primary key for this table (raw data point name)."
+        description: The primary key for this table (raw data point name).
         data_type: string
         data_tests:
           - not_null
           - unique
       - name: sleep_date
-        description: "The civil (local) date the sleep session starts."
+        description: The civil (local) date the sleep session starts.
         data_type: date
         data_tests:
           - not_null
           - dbt_expectations.expect_column_values_to_be_between:
               arguments:
-                min_value: "date '2017-01-01'"
-                max_value: "date '2030-12-31'"
+                min_value: date '2017-01-01'
+                max_value: date '2030-12-31'
       - name: started_at
-        description: "Timestamp when sleep started."
+        description: Timestamp when sleep started.
         data_type: timestamp
         data_tests:
           - not_null
           - dbt_expectations.expect_column_values_to_be_between:
               arguments:
-                min_value: "timestamp '2017-01-01'"
-                max_value: "timestamp '2030-12-31'"
+                min_value: timestamp '2017-01-01'
+                max_value: timestamp '2030-12-31'
       - name: ended_at
-        description: "Timestamp when sleep ended."
+        description: Timestamp when sleep ended.
         data_type: timestamp
         data_tests:
           - not_null
           - dbt_expectations.expect_column_values_to_be_between:
               arguments:
-                min_value: "timestamp '2017-01-01'"
-                max_value: "timestamp '2030-12-31'"
+                min_value: timestamp '2017-01-01'
+                max_value: timestamp '2030-12-31'
       - name: sleep_minutes
-        description: "Sleep duration in minutes over the session interval."
+        description: Sleep duration in minutes over the session interval.
         data_type: float
         data_tests:
           - not_null
           - dbt_expectations.expect_column_values_to_be_between:
               arguments:
-                min_value: 120   # 2 hours
-                max_value: 1080  # 18 hours
+                min_value: 120
+                max_value: 1080
       - name: asleep_minutes
-        description: "Minutes asleep recorded in the sleep summary."
+        description: Minutes asleep recorded in the sleep summary.
         data_type: bigint
         data_tests:
           - dbt_expectations.expect_column_values_to_be_between:
               arguments:
                 min_value: 0
                 max_value: 1080
-                row_condition: "asleep_minutes is not null"
+                row_condition: asleep_minutes is not null
       - name: sleep_type
-        description: "Recording format of the sleep session (CLASSIC, STAGES, ...)."
+        description: Recording format of the sleep session (CLASSIC, STAGES, ...).
         data_type: string
         data_tests:
           - not_null
       - name: is_main_sleep
-        description: "Whether the session is the main sleep of the night."
+        description: Whether the session is the main sleep of the night.
         data_type: boolean
       - name: is_nap
-        description: "Whether the session is a nap."
+        description: Whether the session is a nap.
         data_type: boolean
       - name: updated_at
-        description: "Latest update timestamp available for the session."
+        description: Latest update timestamp available for the session.
         data_type: timestamp
         data_tests:
           - not_null
-
   - name: stg_google_health__steps
-    description: "Typed Google Health step intervals, one row per step data point."
+    description: Typed Google Health step intervals, one row per step data point.
     data_tests:
       - expect_intervals_to_not_overlap:
           arguments:
             start_column_name: started_at
             end_column_name: ended_at
-            group_by: data_source_platform
     columns:
       - name: step_key
-        description: "The primary key for this table (surrogate key from the interval window; no natural key exists)."
+        description: The primary key for this table (surrogate key from the interval
+          window; no natural key exists).
         data_type: string
         data_tests:
           - not_null
           - unique
       - name: started_at
-        description: "Start of the step interval."
+        description: Start of the step interval.
         data_type: timestamp
         data_tests:
           - not_null
       - name: ended_at
-        description: "End of the step interval."
+        description: End of the step interval.
         data_type: timestamp
         data_tests:
           - not_null
       - name: activity_date
-        description: "Local (civil) date the step interval belongs to."
+        description: Local (civil) date the step interval belongs to.
         data_type: date
         data_tests:
           - not_null
           - dbt_expectations.expect_column_values_to_be_between:
               arguments:
-                min_value: "date '2017-01-01'"
-                max_value: "date '2030-12-31'"
+                min_value: date '2017-01-01'
+                max_value: date '2030-12-31'
       - name: step_count
-        description: "Steps recorded within the step interval."
+        description: Steps recorded within the step interval.
         data_type: integer
         data_tests:
           - not_null
       - name: start_utc_offset
-        description: "UTC offset string for the interval start (e.g. 3600s)."
+        description: UTC offset string for the interval start (e.g. 3600s).
         data_type: string
       - name: data_source_platform
-        description: "Recording platform of the step data point; partitions the interval overlap check."
+        description: Recording platform of the step data point.
         data_type: string
       - name: device_name
-        description: "Display name of the recording device."
+        description: Display name of the recording device.
         data_type: string
-
   - name: stg_google_health__exercise
-    description: "Typed Google Health exercise sessions, one row per exercise data point."
+    description: Typed Google Health exercise sessions, one row per exercise data
+      point.
     data_tests:
       - expect_intervals_to_not_overlap:
           arguments:
@@ -135,80 +136,80 @@ models:
             end_column_name: ended_at
     columns:
       - name: exercise_id
-        description: "The primary key for this table (raw data point name)."
+        description: The primary key for this table (raw data point name).
         data_type: string
         data_tests:
           - not_null
           - unique
       - name: exercise_type
-        description: "Exercise type code (WALKING, OTHER, ...)."
+        description: Exercise type code (WALKING, OTHER, ...).
         data_type: string
       - name: activity_name
-        description: "Human readable activity name."
+        description: Human readable activity name.
         data_type: string
       - name: started_at
-        description: "Timestamp when the exercise session started."
+        description: Timestamp when the exercise session started.
         data_type: timestamp
         data_tests:
           - not_null
       - name: ended_at
-        description: "Timestamp when the exercise session ended."
+        description: Timestamp when the exercise session ended.
         data_type: timestamp
         data_tests:
           - not_null
       - name: duration_seconds
-        description: "Active duration in seconds parsed from the raw duration string."
+        description: Active duration in seconds parsed from the raw duration string.
         data_type: float
         data_tests:
           - not_null
           - dbt_expectations.expect_column_values_to_be_between:
               arguments:
                 min_value: 0
-                max_value: 172800   # 48 hours
+                max_value: 172800
       - name: duration_minutes
-        description: "Active duration in minutes."
+        description: Active duration in minutes.
         data_type: float
         data_tests:
           - not_null
           - dbt_expectations.expect_column_values_to_be_between:
               arguments:
                 min_value: 0
-                max_value: 2880    # 48 hours
+                max_value: 2880
       - name: step_count
-        description: "Steps recorded during the exercise session."
+        description: Steps recorded during the exercise session.
         data_type: integer
         data_tests:
           - dbt_expectations.expect_column_values_to_be_between:
               arguments:
                 min_value: 0
                 max_value: 200000
-                row_condition: "step_count is not null"
+                row_condition: step_count is not null
       - name: calories_kcal
-        description: "Calories burned during the session (kcal)."
+        description: Calories burned during the session (kcal).
         data_type: bigint
         data_tests:
           - dbt_expectations.expect_column_values_to_be_between:
               arguments:
                 min_value: 0
                 max_value: 20000
-                row_condition: "calories_kcal is not null"
+                row_condition: calories_kcal is not null
       - name: distance_meters
-        description: "Distance covered during the session in metres."
+        description: Distance covered during the session in metres.
         data_type: float
         data_tests:
           - dbt_expectations.expect_column_values_to_be_between:
               arguments:
                 min_value: 0
                 max_value: 200000
-                row_condition: "distance_meters is not null"
+                row_condition: distance_meters is not null
       - name: pace_seconds_per_meter
-        description: "Average pace in seconds per metre."
+        description: Average pace in seconds per metre.
         data_type: float
       - name: created_at
-        description: "When the session was recorded at the source."
+        description: When the session was recorded at the source.
         data_type: timestamp
       - name: updated_at
-        description: "When the session was last updated."
+        description: When the session was last updated.
         data_type: timestamp
         data_tests:
           - not_null

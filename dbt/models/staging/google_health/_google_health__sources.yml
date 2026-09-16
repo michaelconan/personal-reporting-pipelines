@@ -1,138 +1,139 @@
+---
 version: 2
-
 sources:
   - name: google_health
-    description: "Source data from the Google Health / Health Connect APIs."
+    description: Source data from the Google Health / Health Connect APIs.
     loader: dlt
     freshness:
-      warn_after: {count: 336, period: hour}   # 14 days (weekly schedule)
+      warn_after: {count: 336, period: hour}  # 14 days (weekly schedule)
       error_after: {count: 384, period: hour}  # 16 days
     schema: "{{ env_var('RAW_SCHEMA', 'raw') }}"
     # On DuckDB (mock) targets each table is read directly from its test
     # fixture CSV as an external location; on BigQuery targets the meta is
     # inert and {identifier} is ignored.
     meta:
-      external_location: "dbt/test_fixtures/google_health/{identifier}.csv"
+      external_location: dbt/test_fixtures/google_health/{identifier}.csv
     tables:
       - name: sleep
         identifier: google_health__sleep
-        description: "Sleep session data imported from Google Health (e.g. from Fitbit / Google Fit)."
+        description: Sleep session data imported from Google Health (e.g. from Fitbit
+          / Google Fit).
         columns:
           - name: name
-            description: "Fully qualified resource name of the sleep data point."
+            description: Fully qualified resource name of the sleep data point.
             data_type: varchar
             data_tests:
               - not_null
           - name: sleep__interval__start_time
-            description: "Start time of the sleep interval."
+            description: Start time of the sleep interval.
             data_type: timestamp
             data_tests:
               - not_null
           - name: sleep__interval__end_time
-            description: "End time of the sleep interval."
+            description: End time of the sleep interval.
             data_type: timestamp
             data_tests:
               - not_null
           - name: sleep__interval__start_utc_offset
-            description: "UTC offset of the sleep interval start (e.g. 3600s)."
+            description: UTC offset of the sleep interval start (e.g. 3600s).
             data_type: varchar
           - name: sleep__type
-            description: "Sleep recording format (STAGES, CLASSIC, ...)."
+            description: Sleep recording format (STAGES, CLASSIC, ...).
             data_type: varchar
           - name: sleep__summary__minutes_asleep
-            description: "Minutes recorded as asleep in the sleep summary."
+            description: Minutes recorded as asleep in the sleep summary.
             data_type: varchar
           - name: sleep__metadata__main_sleep
-            description: "Whether the session is the main sleep of the day."
+            description: Whether the session is the main sleep of the day.
             data_type: boolean
           - name: sleep__metadata__nap
-            description: "Whether the session is a nap."
+            description: Whether the session is a nap.
             data_type: boolean
           - name: _dlt_id
-            description: "dlt-generated row hash (row key for the raw table)."
+            description: dlt-generated row hash (row key for the raw table).
             data_type: varchar
             data_tests:
               - not_null
-
       - name: steps
         identifier: google_health__steps
-        description: "Step count interval data imported from the Google Health / Healthy DataSource API."
+        description: Step count interval data imported from the Google Health / Healthy
+          DataSource API.
         columns:
           - name: steps__count
-            description: "Number of steps recorded within the step interval."
+            description: Number of steps recorded within the step interval.
             data_type: varchar
             data_tests:
               - not_null
           - name: steps__interval__start_time
-            description: "Start time of the step interval."
+            description: Start time of the step interval.
             data_type: timestamp
             data_tests:
               - not_null
           - name: steps__interval__end_time
-            description: "End time of the step interval."
+            description: End time of the step interval.
             data_type: timestamp
             data_tests:
               - not_null
           - name: steps__interval__civil_start_time__date__year
-            description: "Local (civil) year of the step interval start."
+            description: Local (civil) year of the step interval start.
             data_type: integer
             data_tests:
               - not_null
           - name: steps__interval__civil_start_time__date__month
-            description: "Local (civil) month of the step interval start."
+            description: Local (civil) month of the step interval start.
             data_type: integer
             data_tests:
               - not_null
           - name: steps__interval__civil_start_time__date__day
-            description: "Local (civil) day of the step interval start."
+            description: Local (civil) day of the step interval start.
             data_type: integer
             data_tests:
               - not_null
           - name: _dlt_id
-            description: "dlt-generated row hash for the raw table."
+            description: dlt-generated row hash for the raw table.
             data_type: varchar
             data_tests:
               - not_null
-
       - name: exercise
         identifier: google_health__exercise
-        description: "Exercise session data imported from the Google Health / Healthy DataSource API."
+        description: Exercise session data imported from the Google Health / Healthy
+          DataSource API.
         columns:
           - name: name
-            description: "Fully qualified name of the exercise data point."
+            description: Fully qualified name of the exercise data point.
             data_type: varchar
             data_tests:
               - not_null
           - name: exercise__exercise_type
-            description: "Exercise type (e.g. WALKING, RUNNING, WORKOUT)."
+            description: Exercise type (e.g. WALKING, RUNNING, WORKOUT).
             data_type: varchar
           - name: exercise__display_name
-            description: "Human readable exercise name."
+            description: Human readable exercise name.
             data_type: varchar
           - name: exercise__active_duration
-            description: "Active duration string (e.g. 400.500s)."
+            description: Active duration string (e.g. 400.500s).
             data_type: varchar
           - name: exercise__interval__start_time
-            description: "Start time of the exercise interval."
+            description: Start time of the exercise interval.
             data_type: timestamp
             data_tests:
               - not_null
           - name: exercise__interval__end_time
-            description: "End time of the exercise interval."
+            description: End time of the exercise interval.
             data_type: timestamp
             data_tests:
               - not_null
           - name: exercise__metrics_summary__steps
-            description: "Steps recorded during the exercise session."
+            description: Steps recorded during the exercise session.
             data_type: varchar
           - name: exercise__metrics_summary__calories_kcal
-            description: "Calories burned during the exercise session (kcal)."
+            description: Calories burned during the exercise session (kcal).
             data_type: integer
           - name: exercise__metrics_summary__distance_millimeters
-            description: "Distance covered during the exercise session in millimetres."
+            description: Distance covered during the exercise session in millimetres.
             data_type: integer
           - name: _dlt_id
-            description: "dlt-generated row hash for the raw table."
+            description: dlt-generated row hash for the raw table.
             data_type: varchar
             data_tests:
               - not_null

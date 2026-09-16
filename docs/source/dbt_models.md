@@ -8,8 +8,8 @@ This project uses dbt for data transformation. The dbt documentation, including 
 
 1.  **Open dbt project** as root directory for SQLFluff and other utilities
 2.  **Local profile**: Copy BigQuery service account key to `~/.dbt/profiles.yml`
-3.  **Model development**: Use `pipenv run dbt run --select model_name` for iterative development
-4.  **Documentation**: Generate with `pipenv run dbt docs generate` and `pipenv run dbt docs serve`
+3.  **Model development**: Use `uv run dbt run --select model_name` for iterative development
+4.  **Documentation**: Generate with `uv run dbt docs generate` and `uv run dbt docs serve`
 
 ## dbt Transform Workflow
 

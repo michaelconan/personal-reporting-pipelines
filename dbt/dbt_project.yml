@@ -1,29 +1,23 @@
+---
+name: personal
+version: 1.0.0
+profile: personal
+model-paths: [models]
+analysis-paths: [analyses]
+test-paths: [tests]
+macro-paths: [macros]
+snapshot-paths: [snapshots]
+clean-targets: [target, dbt_packages]
 
-name: 'personal'
-version: '1.0.0'
-
-profile: 'personal'
-
-model-paths: ["models"]
-analysis-paths: ["analyses"]
-test-paths: ["tests"]
-macro-paths: ["macros"]
-snapshot-paths: ["snapshots"]
-
-clean-targets:         # directories to be removed by `dbt clean`
-  - "target"
-  - "dbt_packages"
-
+  # directories to be removed by `dbt clean`
 flags:
   indirect_selection: cautious
-
 # Override configuration for dbt_utils macros to add duckdb support
 dispatch:
   - macro_namespace: dbt_utils
     search_order:
       - personal
       - dbt_utils
-
 # Configuring models
 # Full documentation: https://docs.getdbt.com/docs/configuring-models
 models:
@@ -43,10 +37,8 @@ models:
       +materialized: table
       +contract:
         enforced: true
-
 # Sources are enabled for all targets: on DuckDB (mock) each source table is
 # read from its test fixture via the `external_location` meta on the source;
 # on BigQuery targets sources resolve to the raw schema.
-
 vars:
-  'dbt_date:time_zone': 'UTC'
+  dbt_date:time_zone: UTC

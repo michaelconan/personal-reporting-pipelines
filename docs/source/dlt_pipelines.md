@@ -29,7 +29,7 @@ Standard pattern (pipenv):
 
 ```bash
 # run a pipeline module (uses environment for creds/profile)
-pipenv run python -m pipelines.hubspot
+uv run python -m pipelines.hubspot
 ```
 
 Programmatic usage (for local dev/test):
@@ -54,12 +54,12 @@ Examples:
 
 ```bash
 export FORCE_FULL_REFRESH=true
-pipenv run python -m pipelines.run_pipeline notion --full
+uv run python -m pipelines.run_pipeline notion --full
 
 # Or pipeline specific
 export PIPELINE_NAME=HUBSPOT
 export HUBSPOT_FULL_REFRESH=true
-pipenv run python -m pipelines.hubspot
+uv run python -m pipelines.hubspot
 ```
 
 ## Config and secrets

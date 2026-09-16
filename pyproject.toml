@@ -37,6 +37,7 @@ dev = [
     "myst-parser",
     "sphinx-autoapi",
     "dbt-bouncer",
+    "yamlfix>=1.19.1",
 ]
 
 [tool.ruff]
@@ -97,19 +98,6 @@ directory = "htmlcov"
 [tool.coverage.xml]
 output = "coverage.xml"
 
-[tool.flake8]
-max-line-length = 100
-extend-ignore = [
-    "E203",  # whitespace before ':' (conflicts with black)
-    "W503",  # line break before binary operator (conflicts with black)
-]
-exclude = [
-    ".git",
-    "__pycache__",
-    "dbt/dbt_packages",
-    "docs",
-]
-
 [tool.mypy]
 ignore_missing_imports = true
 
@@ -127,3 +115,6 @@ ignore_errors = true
 # B101 (assert) and B608 (SQL) are expected patterns in pytest test files
 exclude_dirs = ["tests"]
 skips = ["B105", "B106", "B608"]
+
+[tool.yamlfix]
+sequence_style = "block_style"
