@@ -1,59 +1,53 @@
+---
 version: 2
-
 models:
   - name: stg_hubspot__companies
-    description: "Companies from HubSpot CRM with tiering."
+    description: Companies from HubSpot CRM with tiering.
     columns:
       - name: company_id
-        description: "The primary key for this table"
+        description: The primary key for this table
         data_type: integer
-        data_tests:
-          - unique
-          - not_null
+        data_tests: [unique, not_null]
       - name: company_name
-        description: "The name of the company."
+        description: The name of the company.
         data_type: varchar
-        data_tests:
-          - not_null
+        data_tests: [not_null]
       - name: company_tier
-        description: "The ideal customer profile tier for a company."
+        description: The ideal customer profile tier for a company.
         data_type: integer
         data_tests:
           - dbt_expectations.expect_column_values_to_be_between:
               arguments:
                 min_value: 1
                 max_value: 3
-                row_condition: "company_tier is not null"
+                row_condition: company_tier is not null
       - name: created_at
-        description: "The date the company was created."
+        description: The date the company was created.
         data_type: timestamp
         data_tests:
           - not_null
           - dbt_expectations.expect_column_values_to_be_between:
               arguments:
-                min_value: "timestamp '2020-01-01'"
-                max_value: "timestamp '2030-12-31'"
+                min_value: timestamp '2020-01-01'
+                max_value: timestamp '2030-12-31'
       - name: updated_at
-        description: "The date the company was last modified."
+        description: The date the company was last modified.
         data_type: timestamp
         data_tests:
           - not_null
           - dbt_expectations.expect_column_values_to_be_between:
               arguments:
-                min_value: "timestamp '2020-01-01'"
-                max_value: "timestamp '2030-12-31'"
-
+                min_value: timestamp '2020-01-01'
+                max_value: timestamp '2030-12-31'
   - name: stg_hubspot__contacts
-    description: "Contacts from HubSpot CRM with company mapping."
+    description: Contacts from HubSpot CRM with company mapping.
     columns:
       - name: contact_id
-        description: "The primary key for this table"
+        description: The primary key for this table
         data_type: integer
-        data_tests:
-          - unique
-          - not_null
+        data_tests: [unique, not_null]
       - name: company_id
-        description: "The ID of the company associated with a contact."
+        description: The ID of the company associated with a contact.
         data_type: integer
         data_tests:
           - relationships:
@@ -63,98 +57,88 @@ models:
                 to: ref('stg_hubspot__companies')
                 field: company_id
       - name: email
-        description: "The email address of the contact."
+        description: The email address of the contact.
         data_type: varchar
       - name: first_name
-        description: "The first name of the contact."
+        description: The first name of the contact.
         data_type: varchar
-        data_tests:
-          - not_null
+        data_tests: [not_null]
       - name: last_name
-        description: "The last name of the contact."
+        description: The last name of the contact.
         data_type: varchar
-        data_tests:
-          - not_null
+        data_tests: [not_null]
       - name: created_at
-        description: "The date the contact was created."
+        description: The date the contact was created.
         data_type: timestamp
         data_tests:
           - not_null
           - dbt_expectations.expect_column_values_to_be_between:
               arguments:
-                min_value: "timestamp '2020-01-01'"
-                max_value: "timestamp '2030-12-31'"
+                min_value: timestamp '2020-01-01'
+                max_value: timestamp '2030-12-31'
       - name: updated_at
-        description: "The date the contact was last modified."
+        description: The date the contact was last modified.
         data_type: timestamp
         data_tests:
           - not_null
           - dbt_expectations.expect_column_values_to_be_between:
               arguments:
-                min_value: "timestamp '2020-01-01'"
-                max_value: "timestamp '2030-12-31'"
-
+                min_value: timestamp '2020-01-01'
+                max_value: timestamp '2030-12-31'
   - name: stg_hubspot__engagements
-    description: "Engagements from HubSpot CRM with contact and company mapping."
+    description: Engagements from HubSpot CRM with contact and company mapping.
     columns:
       - name: engagement_id
-        description: "The primary key for this table"
+        description: The primary key for this table
         data_type: integer
-        data_tests:
-          - unique
-          - not_null
+        data_tests: [unique, not_null]
       - name: engagement_type
-        description: "The type of the engagement."
+        description: The type of the engagement.
         data_type: varchar
-        data_tests:
-          - not_null
+        data_tests: [not_null]
       - name: body_preview
-        description: "A preview of the engagement body."
+        description: A preview of the engagement body.
         data_type: varchar
       - name: is_synchronous
-        description: "Whether the engagement is synchronous."
+        description: Whether the engagement is synchronous.
         data_type: boolean
-        data_tests:
-          - not_null
+        data_tests: [not_null]
       - name: occurred_at
-        description: "The timestamp of the engagement."
+        description: The timestamp of the engagement.
         data_type: timestamp
         data_tests:
           - not_null
           - dbt_expectations.expect_column_values_to_be_between:
               arguments:
-                min_value: "timestamp '2020-01-01'"
-                max_value: "timestamp '2030-12-31'"
+                min_value: timestamp '2020-01-01'
+                max_value: timestamp '2030-12-31'
       - name: created_at
-        description: "The date the engagement was created."
+        description: The date the engagement was created.
         data_type: timestamp
         data_tests:
           - not_null
           - dbt_expectations.expect_column_values_to_be_between:
               arguments:
-                min_value: "timestamp '2020-01-01'"
-                max_value: "timestamp '2030-12-31'"
+                min_value: timestamp '2020-01-01'
+                max_value: timestamp '2030-12-31'
       - name: updated_at
-        description: "The date the engagement was last updated."
+        description: The date the engagement was last updated.
         data_type: timestamp
         data_tests:
           - not_null
           - dbt_expectations.expect_column_values_to_be_between:
               arguments:
-                min_value: "timestamp '2020-01-01'"
-                max_value: "timestamp '2030-12-31'"
-
+                min_value: timestamp '2020-01-01'
+                max_value: timestamp '2030-12-31'
   - name: stg_hubspot__engagement_contacts
-    description: "Junction table between engagements and contacts, created from companyIds."
+    description: Junction table between engagements and contacts, created from companyIds.
     columns:
       - name: row_id
-        description: "Surrogate key for engagement-contact combination"
+        description: Surrogate key for engagement-contact combination
         data_type: varchar
-        data_tests:
-          - unique
-          - not_null
+        data_tests: [unique, not_null]
       - name: engagement_id
-        description: "The ID of the engagement"
+        description: The ID of the engagement
         data_type: integer
         data_tests:
           - relationships:
@@ -164,7 +148,7 @@ models:
                 to: ref('stg_hubspot__engagements')
                 field: engagement_id
       - name: contact_id
-        description: "The ID of the contact associated with the engagement"
+        description: The ID of the contact associated with the engagement
         data_type: integer
         data_tests:
           - relationships:
@@ -173,18 +157,15 @@ models:
               arguments:
                 to: ref('stg_hubspot__contacts')
                 field: contact_id
-
   - name: stg_hubspot__engagement_companies
-    description: "Junction table between engagements and companies, created from companyIds."
+    description: Junction table between engagements and companies, created from companyIds.
     columns:
       - name: row_id
-        description: "Surrogate key for engagement-company combination"
+        description: Surrogate key for engagement-company combination
         data_type: varchar
-        data_tests:
-          - unique
-          - not_null
+        data_tests: [unique, not_null]
       - name: engagement_id
-        description: "The ID of the engagement"
+        description: The ID of the engagement
         data_type: integer
         data_tests:
           - relationships:
@@ -194,7 +175,7 @@ models:
                 to: ref('stg_hubspot__engagements')
                 field: engagement_id
       - name: company_id
-        description: "The ID of the company associated with the engagement"
+        description: The ID of the company associated with the engagement
         data_type: integer
         data_tests:
           - relationships:

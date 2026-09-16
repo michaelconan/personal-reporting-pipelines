@@ -11,10 +11,10 @@ This repo has two test systems: **pytest** for `pipelines/` (dlt) and **dbt buil
 | dlt e2e (cloud) | `tests/e2e/dlt/` | BigQuery (`live_e2e_test` / `live_data`, `dev_mode=True`) | `e2e` | `make test-e2e` (`pytest tests/e2e`) | `test-pipelines.yml` (only with secrets, skipped for dependabot) |
 | dbt transform tests | `dbt/models/**/_*.yml`, `dbt/tests/` | DuckDB (`mock` target) in CI, BigQuery otherwise | n/a (`dbt test` / `dbt build`) | `make dbt-build target=mock`, `make dbt-test target=mock` | `test-transforms.yml`, `lint.yml` |
 
-> **Note:** the Fitbit dlt pipeline was removed (Fitbit API deprecation). The dbt
-> `fitbit` staging models, `stg_fitbit__sleep_no_overlapping_logs` test, and
-> `mock_sources/fitbit` seeds are intentionally retained until they are migrated
-> to Google Health sources.
+> **Note:** the Fitbit dlt pipeline was removed (Fitbit API deprecation), and the
+> dbt layer now models Google Health directly: `staging/google_health` models, the
+> `stg_google_health__sleep_no_overlapping_sessions` test, and
+> `mock_sources/google_health` seeds replace the retired Fitbit artifacts.
 
 ## pytest global config
 
@@ -96,9 +96,9 @@ Cloud tests against real APIs + BigQuery. `conftest.py` re-enables Google Secret
 | `dev` / `test` | BigQuery (service account) | `dev_reporting` / `test_reporting` | sources enabled; models read raw schema via `make_source()` → `source()` |
 | `prod` | BigQuery | `reporting` | same as dev/test |
 
-`make_source(source_name, relation_name)` is adapter-aware, so **mock seed filenames must match raw table names** (`{source}__{table}.csv` in `dbt/seeds/mock_sources/{notion,hubspot,fitbit}/`). Key consequence, not just convention: a renamed raw table breaks `mock` builds.
+`make_source(source_name, relation_name)` is adapter-aware, so **mock seed filenames must match raw table names** (`{source}__{table}.csv` in `dbt/seeds/mock_sources/{notion,hubspot,google_health}/`). Key consequence, not just convention: a renamed raw table breaks `mock` builds.
 
-Other `dbt_project.yml` settings relevant to tests: staging = views, intermediate/marts = tables; `vars` (`sleep_goal`, `steps_goal`, `meet_goal`); `warn_error_options.silence` for disabled-source tests under `mock`; packages (`dbt_utils`, `dbt_expectations`, `dbt_date`).
+Other `dbt_project.yml` settings relevant to tests: staging/core = views, intermediate/marts = tables; `vars` (`dbt_date:time_zone`); `warn_error_options.silence` for disabled-source tests under `mock`; packages (`dbt_utils`, `dbt_expectations`, `dbt_date`).
 
 ### Commands (`Makefile`, `DBTARGS = --project-dir dbt --profiles-dir dbt`)
 
@@ -117,12 +117,12 @@ make dbt-bouncer                  # manifest checks (dbt/dbt-bouncer.yml)
 ### Test layers
 
 1. **Schema (generic) data tests** — `data_tests:` blocks in per-domain `_properties.yml` files:
-   - `staging/notion/_notion__sources.yml`, `staging/hubspot/_hubspot__sources.yml` (+ `_stg_hubspot__properties.yml` incl. `relationships` tests on association keys), `staging/fitbit/_stg_fitbit__properties.yml`, `staging/notion/_stg_notion__properties.yml`, `intermediate/habits/_int_habits__properties.yml`, `marts/habits/_mrt_habits__properties.yml` (`not_null`, `unique`, `accepted_values` on habit keys), `marts/community/_mrt_community__properties.yml` (`dbt_expectations.expect_compound_columns_to_be_unique` + `not_null`/`unique`).
-2. **Singular test** — `dbt/tests/stg_fitbit__sleep_no_overlapping_logs.sql`: fails on overlapping sleep intervals (adjacent-row `LEAD()` check; avoids a DuckDB self-join issue documented in the file header).
+   - `staging/notion/_notion__sources.yml`, `staging/hubspot/_hubspot__sources.yml` (+ `_stg_hubspot__properties.yml` incl. `relationships` tests on association keys), `staging/google_health/_google_health__sources.yml` + `_stg_google_health__properties.yml`, `staging/notion/_stg_notion__properties.yml`, `core/_core__properties.yml`, `intermediate/habits/_int_habits__properties.yml`, `marts/habits/_mrt_habits__properties.yml` (`not_null`, `unique`, `accepted_values` on habit keys), `marts/community/_mrt_community__properties.yml` (`dbt_expectations.expect_compound_columns_to_be_unique` + `not_null`/`unique`).
+2. **Generic tests** — `dbt/tests/generic/`: `expect_column_array_length_to_be_between.sql` (cross-adapter `array_length(json_extract_array())` on BigQuery, `json_array_length()` on DuckDB bounds check) and `expect_intervals_to_not_overlap.sql` (fails on overlapping half-open `[start, end)` intervals via an adjacent-row `LEAD()` check; avoids a DuckDB self-join issue documented in the file header). Applied to the Google Health sleep, steps, and exercise staging models.
 3. **Custom generic test** — `dbt/tests/generic/expect_column_array_length_to_be_between.sql`: cross-adapter (`array_length(json_extract_array())` on BigQuery, `json_array_length()` on DuckDB) bounds check.
-4. **Contract/structure tests (CI-only, no `dbt test` node)** — `dbt-bouncer` (`dbt/dbt-bouncer.yml`: model/source descriptions populated, model name pattern `^(stg_|int_|fct_|dim_|map_|time_spine_|base_|habits|engagement_contacts)`, ≥70% model test coverage) and `sqlfluff lint` (`dbt/.sqlfluff`: dialect `duckdb`, templater `dbt`, lowercase keywords/identifiers, trailing commas, explicit aliasing).
+4. **Contract/structure tests (CI-only, no `dbt test` node)** — `dbt-bouncer` (`dbt/dbt-bouncer.yml`: model/source descriptions populated, model name pattern `^(stg_|int_|core_|fct_|dim_|map_|time_spine_|base_|habits|engagement_contacts)`, ≥70% model test coverage) and `sqlfluff lint` (`dbt/.sqlfluff`: dialect `duckdb`, templater `dbt`, lowercase keywords/identifiers, trailing commas, explicit aliasing).
 
-Mock seed coverage lives in `dbt/seeds/mock_sources/{fitbit,hubspot,notion}/*.csv` (+ `_properties.yml`); canonical `discipline_reference.csv` seed is shared across all targets.
+Mock seed coverage lives in `dbt/seeds/mock_sources/{google_health,hubspot,notion}/*.csv` (+ `_properties.yml`); canonical `discipline_reference.csv` seed is shared across all targets.
 
 ## CI mapping
 
@@ -137,6 +137,6 @@ make test-local                  # offline dlt unit tests (DuckDB + fixtures)
 make test-e2e                    # cloud dlt e2e tests (needs GCP + API secrets)
 RUN_LIVE_API_TESTS=1 uv run pytest tests/integration -m live -v -s  # opt-in live checks
 make dbt-build target=mock       # full local transform check (seed + run + test)
-make dbt-test target=mock select="stg_fitbit__sleep"  # single-model dbt tests
+make dbt-test target=mock select="stg_google_health__sleep"  # single-model dbt tests
 uv run dbt-bouncer --config-file dbt/dbt-bouncer.yml  # or: make dbt-bouncer
 ```

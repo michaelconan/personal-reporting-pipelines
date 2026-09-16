@@ -1,4 +1,5 @@
 name: test dlt pipelines
+
 on:
   pull_request:
     branches:
@@ -6,14 +7,8 @@ on:
     paths:
       - 'pipelines/**'
       - 'tests/**'
-      - 'Pipfile'
-      - 'Pipfile.lock'
-  push:
-    branches:
-      - main
-    paths:
-      - 'pipelines/**'
-      - 'tests/**'
+      - 'uv.lock'
+      - 'pyproject.toml'
 
 permissions:
   contents: read

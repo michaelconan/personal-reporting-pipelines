@@ -8,7 +8,7 @@ with weekly_habits as (
         properties__fast__checkbox as did_fast,
         cast({{ json_extract_value('properties__prayer_minutes__formula', "'$.number'") }} as integer)
             as prayer_minutes,
-        properties__screen_minutes__number as screen_minutes,
+        {{ cast_safe('properties__screen_minutes__number', 'integer') }} as screen_minutes,
         properties__church__checkbox as did_church,
         properties__community__checkbox as did_community,
         properties__cook__checkbox as did_cook,
@@ -18,7 +18,7 @@ with weekly_habits as (
         created_time as created_at,
         last_edited_time as updated_at
     from
-        {{ make_source('notion', 'data_source_weekly_habits') }}
+        {{ source('notion', 'data_source_weekly_habits') }}
 
 ),
 

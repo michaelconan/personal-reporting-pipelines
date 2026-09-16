@@ -116,7 +116,7 @@ def test_get_config_reads_environment(monkeypatch):
     assert config["raw_dataset"] == "raw_test"
     assert config["sample_rows"] == 10
     assert config["max_workers"] == 2
-    assert config["output_dir"].name == "mock_sources"
+    assert config["output_dir"].name == "test_fixtures"
 
 
 def test_get_config_requires_project_and_dataset(monkeypatch):

@@ -21,21 +21,21 @@ with habit_reference as (
         lower({{ json_extract_value('properties__type__select', "'$.name'") }}) as habit_type,
         {{ json_extract_value('properties__source__select', "'$.name'") }} as source,
         -- Target is stored as a percentage integer (e.g. 80 = 80%)
-        properties__target__number as target_pct,
-        properties__threshold__number as threshold,
-        properties__below_thresholdx__checkbox as below_threshold,
+        {{ cast_safe('properties__target__number', 'numeric') }} as target_pct,
+        {{ cast_safe('properties__threshold__number', 'numeric') }} as threshold,
+        properties__below_thresholdx__checkbox as is_below_threshold,
         -- Active is a formula returning JSON {"checkbox": true/false} or {"boolean": true/false}
         coalesce(
             {{ json_extract_value('properties__active__formula', "'$.checkbox'") }},
             {{ json_extract_value('properties__active__formula', "'$.boolean'") }}
-        ) = 'true' as active,
+        ) = 'true' as is_active,
         cast(
             left({{ json_extract_value('properties__start_date__date', "'$.start'") }}, 10)
             as date
         ) as start_date,
         created_time as created_at,
         last_edited_time as updated_at
-    from {{ make_source('notion', 'data_source_habit_reference') }}
+    from {{ source('notion', 'data_source_habit_reference') }}
 
 ),
 
@@ -44,18 +44,18 @@ with_habit_key as (
     select
         page_id,
         habit_name,
-        -- Derive canonical habit_key used in habits_v1:
+        -- Derive canonical habit_key used in the habits mart:
         --   Tickbox habits → did_{snake_case_name}
         --   HubSpot meeting habits → met_{kind}
-        --   Number habits (Notion/Fitbit) → snake_case_name
+        --   Number habits (Notion/Google Health) → snake_case_name
         category,
         frequency,
         habit_type,
         source,
         target_pct,
         threshold,
-        below_threshold,
-        active,
+        is_below_threshold,
+        is_active,
         start_date,
         created_at,
         updated_at,

@@ -30,7 +30,7 @@ with contacts as (
         properties__createdate as created_at,  -- When contact was created in HubSpot
         properties__lastmodifieddate as updated_at  -- When contact was last modified
     from
-        {{ make_source('hubspot', 'contacts') }}
+        {{ source('hubspot', 'contacts') }}
 
 ),
 

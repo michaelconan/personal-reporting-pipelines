@@ -1,8 +1,9 @@
+---
 version: 2
-
 semantic_models:
   - name: habits
-    description: "Semantic model for habit tracking data combining life habits, health habits (sleep), and community engagement habits."
+    description: Semantic model for habit tracking data combining life habits, health
+      habits (sleep), and community engagement habits.
     model: ref('habits')
     entities:
       - name: habit_record
@@ -22,22 +23,22 @@ semantic_models:
         expr: habit
     measures:
       - name: habit_completions
-        description: "Count of completed habits"
+        description: Count of completed habits
         agg: sum
         expr: |
           case when habit_value > 0 then 1 else 0 end
       - name: total_habits
-        description: "Total count of habit records"
+        description: Total count of habit records
         agg: count
         expr: habit_date
       - name: completion_rate
-        description: "Percentage of habits completed"
+        description: Percentage of habits completed
         agg: average
         expr: |
           case when habit_value > 0 then 1.0 else 0.0 end
-
   - name: engagement_contacts
-    description: "Semantic model for HubSpot engagements joined with contact and company information. Grain: engagement + contact."
+    description: 'Semantic model for HubSpot engagements joined with contact and company
+      information. Grain: engagement + contact.'
     model: ref('engagement_contacts')
     entities:
       - name: engagement_contact
@@ -77,20 +78,20 @@ semantic_models:
         expr: company_name
     measures:
       - name: engagement_count
-        description: "Total count of distinct engagements"
+        description: Total count of distinct engagements
         agg: count_distinct
         expr: engagement_id
       - name: synchronous_engagements
-        description: "Count of distinct synchronous engagements (calls, meetings)"
+        description: Count of distinct synchronous engagements (calls, meetings)
         agg: count_distinct
         expr: |
           case when is_synchronous then engagement_id else null end
       - name: asynchronous_engagements
-        description: "Count of distinct asynchronous engagements (emails, etc.)"
+        description: Count of distinct asynchronous engagements (emails, etc.)
         agg: count_distinct
         expr: |
           case when not is_synchronous then engagement_id else null end
       - name: contact_count
-        description: "Count of distinct contacts involved in engagements"
+        description: Count of distinct contacts involved in engagements
         agg: count_distinct
         expr: contact_id

@@ -1,3 +1,16 @@
+-- ============================================================================
+-- MART LAYER: Habits Metrics
+-- ============================================================================
+-- Purpose: Completion rates for every habit per tracked period against the
+--          Notion habit reference targets and thresholds. Grain: one row per
+--          habit per tracked period (metric_key).
+--
+-- Sources: habits (unified habit occurrences),
+--          stg_notion__habit_reference (targets + thresholds)
+-- Output: One row per habit per tracked period
+-- ============================================================================
+
+-- Import CTEs: one per upstream reference, selected as-is
 with habits as (
 
     select
@@ -23,17 +36,17 @@ habit_ref as (
         source,
         target_pct,
         threshold,
-        below_threshold,
-        active
+        is_below_threshold,
+        is_active
     from {{ ref('stg_notion__habit_reference') }}
 
 ),
 
--- Join occurrences with reference and resolve is_complete per occurrence.
+-- Transform CTEs: resolve is_complete per occurrence against the reference
 -- tickbox: 1.0 = done
 -- number (above threshold): habit_value >= threshold
 -- number (below threshold): habit_value <= threshold
--- count (HubSpot met_*): aggregated separately below; is_complete left null here
+-- count (HubSpot met_*): aggregated separately below
 habit_occurrences as (
 
     select
@@ -43,19 +56,19 @@ habit_occurrences as (
         h.habit_value,
         hr.habit_type,
         hr.threshold,
-        hr.below_threshold,
+        hr.is_below_threshold,
         hr.target_pct,
         hr.habit_name,
         hr.category,
         hr.frequency,
         hr.source,
-        hr.active,
+        hr.is_active,
         case
             when hr.habit_type = 'tickbox'
                 then h.habit_value = 1.0
-            when hr.habit_type = 'number' and not hr.below_threshold
+            when hr.habit_type = 'number' and not hr.is_below_threshold
                 then h.habit_value >= hr.threshold
-            when hr.habit_type = 'number' and hr.below_threshold
+            when hr.habit_type = 'number' and hr.is_below_threshold
                 then h.habit_value <= hr.threshold
         end as is_complete
     from habits as h
@@ -68,10 +81,10 @@ daily_by_week as (
 
     select
         habit,
-        {{ trunc_date('week', 'habit_date') }} as period_start,
+        cast({{ trunc_date('week', 'habit_date') }} as date) as period_start,
         'week' as report_period,
-        count(*) as total_periods,
-        sum(case when is_complete then 1 else 0 end) as completed_periods
+        cast(count(*) as bigint) as total_periods,
+        cast(sum(case when is_complete then 1 else 0 end) as bigint) as completed_periods
     from habit_occurrences
     where
         habit_period = 'day'
@@ -85,10 +98,10 @@ weekly_by_week as (
 
     select
         habit,
-        habit_date as period_start,
+        cast(habit_date as date) as period_start,
         'week' as report_period,
-        1 as total_periods,
-        case when is_complete then 1 else 0 end as completed_periods
+        cast(1 as bigint) as total_periods,
+        cast(case when is_complete then 1 else 0 end as bigint) as completed_periods
     from habit_occurrences
     where
         habit_period = 'week'
@@ -101,10 +114,10 @@ monthly_by_month as (
 
     select
         habit,
-        habit_date as period_start,
+        cast(habit_date as date) as period_start,
         'month' as report_period,
-        1 as total_periods,
-        case when is_complete then 1 else 0 end as completed_periods
+        cast(1 as bigint) as total_periods,
+        cast(case when is_complete then 1 else 0 end as bigint) as completed_periods
     from habit_occurrences
     where
         habit_period = 'month'
@@ -117,8 +130,8 @@ community_counts as (
 
     select
         habit,
-        habit_date as period_start,
-        count(*) as engagement_count
+        cast(habit_date as date) as period_start,
+        cast(count(*) as bigint) as engagement_count
     from habit_occurrences
     where habit_type = 'count'
     group by habit, habit_date
@@ -131,11 +144,13 @@ community_by_week as (
         c.habit,
         c.period_start,
         'week' as report_period,
-        1 as total_periods,
-        case
-            when c.engagement_count >= coalesce(hr.threshold, 1) then 1
-            else 0
-        end as completed_periods
+        cast(1 as bigint) as total_periods,
+        cast(
+            case
+                when c.engagement_count >= coalesce(hr.threshold, 1) then 1
+                else 0
+            end as bigint
+        ) as completed_periods
     from community_counts as c
     left join habit_ref as hr on c.habit = hr.habit_key
 
@@ -153,28 +168,40 @@ all_periods as (
 
 )
 
-select
-    ap.habit,
-    hr.habit_name,
-    hr.category,
-    hr.frequency,
-    hr.source,
-    hr.habit_type,
-    ap.period_start,
-    ap.report_period,
-    ap.total_periods,
-    ap.completed_periods,
-    hr.target_pct,
-    hr.threshold,
-    hr.below_threshold,
-    hr.active,
-    round(
-        cast(ap.completed_periods as double) / nullif(ap.total_periods, 0),
-        4
-    ) as completion_rate,
-    round(
-        cast(ap.completed_periods as double) / nullif(ap.total_periods, 0),
-        4
-    ) >= hr.target_pct as target_met
-from all_periods as ap
-left join habit_ref as hr on ap.habit = hr.habit_key
+-- Transform CTE: resolve completion rates against the Notion habit reference
+,
+
+metrics as (
+
+    select
+        {{ dbt_utils.generate_surrogate_key(['ap.habit', 'ap.period_start', 'ap.report_period']) }} as metric_key,
+        ap.habit,
+        hr.habit_name,
+        hr.category,
+        hr.frequency,
+        hr.source,
+        hr.habit_type,
+        ap.period_start as period_start_date,
+        ap.report_period,
+        ap.total_periods,
+        ap.completed_periods,
+        cast(hr.target_pct as numeric) as target_pct,
+        cast(hr.threshold as numeric) as threshold,
+        hr.is_below_threshold,
+        hr.is_active,
+        cast(
+            round(
+                cast(ap.completed_periods as double) / nullif(ap.total_periods, 0),
+                4
+            ) as numeric
+        ) as completion_rate,
+        round(
+            cast(ap.completed_periods as double) / nullif(ap.total_periods, 0),
+            4
+        ) >= hr.target_pct as target_met
+    from all_periods as ap
+    left join habit_ref as hr on ap.habit = hr.habit_key
+
+)
+
+select * from metrics

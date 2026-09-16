@@ -10,9 +10,15 @@
 -- Grain: engagement_id + contact_id
 -- ============================================================================
 
+with base_hubspot__engagement_contacts as (
+
+    select * from {{ ref('base_hubspot__engagement_contacts') }}
+
+)
+
 select
     {{ dbt_utils.generate_surrogate_key(['engagement_id', 'contact_id']) }} as row_id,
     engagement_id,
     contact_id
 from
-    {{ ref('base_hubspot__engagement_contacts') }}
+    base_hubspot__engagement_contacts

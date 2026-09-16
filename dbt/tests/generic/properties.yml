@@ -1,6 +1,8 @@
+---
 macros:
   - name: expect_column_array_length_to_be_between
-    description: Test to check if length of array is within an acceptable range. It only accepts columns of type array.
+    description: Test to check if length of array is within an acceptable range. It
+      only accepts columns of type array.
     arguments:
       - name: model
         type: string
@@ -14,3 +16,20 @@ macros:
       - name: max_value
         type: int
         description: Maximum value for the array length
+  - name: expect_intervals_to_not_overlap
+    description: Test to check that half-open [start, end) intervals within a model
+      (optionally partitioned by group_by) do not overlap. Fails on any interval whose
+      end extends past the start of the next interval.
+    arguments:
+      - name: model
+        type: string
+        description: Model Name
+      - name: start_column_name
+        type: string
+        description: Column holding the interval start timestamp
+      - name: end_column_name
+        type: string
+        description: Column holding the interval end timestamp
+      - name: group_by
+        type: string
+        description: Optional column/expression to partition the overlap check by

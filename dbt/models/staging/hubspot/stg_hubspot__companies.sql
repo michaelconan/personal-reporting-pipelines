@@ -33,7 +33,7 @@ with companies as (
         {{ cast_safe("right(cast(properties__hs_ideal_customer_profile as varchar), cast(1 as integer))", "integer") }}
             as company_tier
     from
-        {{ make_source('hubspot', 'companies') }}
+        {{ source('hubspot', 'companies') }}
 
 ),
 

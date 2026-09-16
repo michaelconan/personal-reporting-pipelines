@@ -23,7 +23,7 @@ Your pipelines support flexible refresh modes for data loading:
 
 ```bash
 export FORCE_FULL_REFRESH=true
-pipenv run python -m pipelines.hubspot
+uv run python -m pipelines.hubspot
 ```
 
 #### Method 2: Pipeline-Specific Override
@@ -32,7 +32,7 @@ pipenv run python -m pipelines.hubspot
 # Force full refresh for HubSpot only
 export PIPELINE_NAME=HUBSPOT
 export HUBSPOT_FULL_REFRESH=true
-pipenv run python -m pipelines.hubspot
+uv run python -m pipelines.hubspot
 ```
 
 #### Method 3: Direct Function Parameter

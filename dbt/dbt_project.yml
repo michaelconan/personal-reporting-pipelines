@@ -1,34 +1,23 @@
+---
+name: personal
+version: 1.0.0
+profile: personal
+model-paths: [models]
+analysis-paths: [analyses]
+test-paths: [tests]
+macro-paths: [macros]
+snapshot-paths: [snapshots]
+clean-targets: [target, dbt_packages]
 
-name: 'personal'
-version: '1.0.0'
-
-profile: 'personal'
-
-model-paths: ["models"]
-analysis-paths: ["analyses"]
-test-paths: ["tests"]
-seed-paths: ["seeds"]
-macro-paths: ["macros"]
-snapshot-paths: ["snapshots"]
-
-clean-targets:         # directories to be removed by `dbt clean`
-  - "target"
-  - "dbt_packages"
-
+  # directories to be removed by `dbt clean`
 flags:
-  warn_error_options:
-    # This will not actually disable the error, no clear way to disable all source tests
-    # Message: "Test 'test' depends on a source named 'source' which is disabled"
-    silence: ["NodeNotFoundOrDisabled", "InvalidDisabledTargetInTestNode"]
   indirect_selection: cautious
-
 # Override configuration for dbt_utils macros to add duckdb support
 dispatch:
   - macro_namespace: dbt_utils
     search_order:
       - personal
       - dbt_utils
-
 # Configuring models
 # Full documentation: https://docs.getdbt.com/docs/configuring-models
 models:
@@ -38,27 +27,18 @@ models:
       columns: true
     staging:
       +materialized: view
+    core:
+      +materialized: view
     intermediate:
       +materialized: table
+      +contract:
+        enforced: true
     marts:
       +materialized: table
-
-sources:
-  personal:
-    staging:
-      +enabled: "{{ target.name != 'mock' }}"
-
-seeds:
-  personal:
-    mock_sources:
-      +schema: mock
-      +tags: ["local"]
-      +enabled: "{{ target.name == 'mock' }}"
-
+      +contract:
+        enforced: true
+# Sources are enabled for all targets: on DuckDB (mock) each source table is
+# read from its test fixture via the `external_location` meta on the source;
+# on BigQuery targets sources resolve to the raw schema.
 vars:
-  'dbt_date:time_zone': 'UTC'
-  # 7 hours (in milliseconds)
-  sleep_goal: 25200000
-  # 7500 steps per day
-  steps_goal: 7500
-  meet_goal: 1
+  dbt_date:time_zone: UTC

@@ -1,29 +1,29 @@
+---
 anchors:
   # reuse bigquery authentication and project across different schemas for targets
   - &bigquery_config
-      type: bigquery
-      method: service-account
-      project: "{{ env_var('GCP_PROJECT_ID') }}"
-      keyfile: "{{ env_var('GOOGLE_APPLICATION_CREDENTIALS') }}"
-
+    type: bigquery
+    method: service-account
+    project: "{{ env_var('GCP_PROJECT_ID') }}"
+    keyfile: "{{ env_var('GOOGLE_APPLICATION_CREDENTIALS') }}"
 personal:
   target: "{{ env_var('DBT_TARGET', 'dev') }}"
   outputs:
     mock:
       type: duckdb
-      path: 'dbt.duckdb'
+      path: dbt.duckdb
       schema: "{{ env_var('DBT_SCHEMA', 'reporting') }}"
-
+      # Pin the session timezone so timestamp→date casts match BigQuery (UTC)
+      settings:
+        TimeZone: UTC
     dev:
       <<: *bigquery_config
-      dataset: "dev_{{ env_var('DBT_SCHEMA', 'reporting') }}"
+      dataset: dev_{{ env_var('DBT_SCHEMA', 'reporting') }}
       threads: 4
-
     test:
       <<: *bigquery_config
-      dataset: "test_{{ env_var('DBT_SCHEMA', 'reporting') }}"
+      dataset: test_{{ env_var('DBT_SCHEMA', 'reporting') }}
       threads: 4
-
     prod:
       <<: *bigquery_config
       dataset: "{{ env_var('DBT_SCHEMA', 'reporting') }}"
