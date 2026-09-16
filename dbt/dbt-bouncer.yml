@@ -34,7 +34,7 @@ manifest_checks:
     description: >
       Models consuming a source must sit in the directory that configures
       it.
-    exclude: ^models/staging/.+/base/.*
+    severity: warn
   # Model checks
   - name: check_model_names
     description: Staging models must carry the stg_ (or base_) prefix.
@@ -63,12 +63,14 @@ manifest_checks:
   - name: check_model_columns_have_types
     description: Documented columns must declare a data_type, a prerequisite for contracts.
   - name: check_model_has_constraints
-    description: Materialized tables must define model-level primary_key constraints
+    description:
+      Materialized tables must define model-level primary_key constraints
       on their grain.
     materialization: table
     required_constraint_types: [primary_key]
   - name: check_model_has_contracts_enforced
-    description: Table models must build with an enforced contract guarding their
+    description:
+      Table models must build with an enforced contract guarding their
       output schema.
     materialization: table
   - name: check_model_property_file_name

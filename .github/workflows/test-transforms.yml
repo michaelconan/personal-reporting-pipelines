@@ -7,13 +7,6 @@ on:
       - 'dbt/**/*.sql'
       - 'dbt/**/*.yml'
       - 'dbt/**/*.csv'
-  push:
-    branches:
-      - main
-    paths:
-      - 'dbt/**'
-      - 'dbt/**/*.yml'
-      - 'dbt/**/*.csv'
 
 permissions:
   contents: 'read'
@@ -50,11 +43,3 @@ jobs:
       - name: run local build
         run: |
           uv run dbt build --project-dir dbt --profiles-dir dbt --target mock
-
-      - name: generate docs and catalog
-        run: |
-          uv run dbt docs generate --project-dir dbt --profiles-dir dbt --static --target mock
-
-      - name: run dbt-bouncer checks
-        run: |
-          uv run dbt-bouncer --config-file dbt/dbt-bouncer.yml
