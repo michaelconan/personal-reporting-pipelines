@@ -6,7 +6,7 @@ into the mock seed files used for local DuckDB testing.
 Source tables are discovered dynamically from the ``*_sources.yml`` files
 under ``dbt/models/staging`` (no hardcoded table list), sampled from the
 BigQuery raw schema populated by dlt, scrubbed of PII, and written to
-``dbt/seeds/mock_sources/<source>/<source>__<table>.csv``.
+``dbt/test_fixtures/<source>/<source>__<table>.csv``.
 
 Prerequisites
 ------------
@@ -90,7 +90,7 @@ def get_config() -> dict[str, Any]:
         "raw_dataset": raw_dataset,
         "sample_rows": max(sample_rows, 1),
         "max_workers": max(max_workers, 1),
-        "output_dir": PROJECT_ROOT / "dbt" / "seeds" / "mock_sources",
+        "output_dir": PROJECT_ROOT / "dbt" / "test_fixtures",
     }
 
 
@@ -215,11 +215,7 @@ def export_table(
     """
     project = project_id or os.getenv("GCP_PROJECT_ID")
     dataset = raw_dataset or os.getenv("DBT_RAW_DATASET")
-    out_dir = (
-        Path(output_dir)
-        if output_dir is not None
-        else PROJECT_ROOT / "dbt" / "seeds" / "mock_sources"
-    )
+    out_dir = Path(output_dir) if output_dir is not None else PROJECT_ROOT / "dbt" / "test_fixtures"
     bq_table = f"{project}.{dataset}.{identifier}"
     query = f"SELECT * FROM `{bq_table}` ORDER BY RAND() LIMIT {int(sample_rows)}"
     logger.info("Exporting %s → %s.csv", bq_table, identifier)

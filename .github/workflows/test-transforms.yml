@@ -24,7 +24,6 @@ jobs:
     env:
       DBT_PROJECT_DIR: dbt
       DBT_PROFILES_DIR: dbt
-      DBT_WARN_ERROR_OPTIONS: '{"silence":["NodeNotFoundOrDisabled"]}'
     steps:
       - name: check out code
         uses: actions/checkout@v5
@@ -40,12 +39,22 @@ jobs:
         with:
           python-version: '3.13'
 
-      - name: Install pipenv and dependencies
+      - name: install dependencies
         run: |
           make install
-          make dbt-deps
 
-      - name: run local tests and docs
+      - name: install dbt dependencies
         run: |
-          make dbt-build target=mock
-          make dbt-docs target=mock
+          uv run dbt deps --project-dir dbt --profiles-dir dbt
+
+      - name: run local build
+        run: |
+          uv run dbt build --project-dir dbt --profiles-dir dbt --target mock
+
+      - name: generate docs and catalog
+        run: |
+          uv run dbt docs generate --project-dir dbt --profiles-dir dbt --static --target mock
+
+      - name: run dbt-bouncer checks
+        run: |
+          uv run dbt-bouncer --config-file dbt/dbt-bouncer.yml

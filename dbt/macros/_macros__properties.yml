@@ -31,17 +31,37 @@ macros:
         description: "The target type to cast to (e.g., 'INT64', 'STRING')."
         type: string
 
-  - name: make_source
-    description: "Adapter-aware macro to load the live or mock source based on target name. Returns a ref() if target is 'dev', otherwise returns a source()."
+  - name: seconds_between
+    description: "Adapter-aware macro computing seconds between two timestamp expressions. Uses timestamp_diff for BigQuery and date_diff for DuckDB."
     arguments:
-      - name: source
-        description: "The source name."
+      - name: start_expr
+        description: "The starting timestamp column or expression."
         type: string
-      - name: relation
-        description: "The relation/table name."
+      - name: end_expr
+        description: "The ending timestamp column or expression."
         type: string
-      - name: target_name
-        description: "The target environment name (e.g. 'dev', 'prod')."
+
+  - name: date_from_parts
+    description: "Adapter-aware macro to build a date from separate year/month/day columns. Uses DATE for BigQuery and make_date for DuckDB."
+    arguments:
+      - name: year_expr
+        description: "The year column or expression."
+        type: string
+      - name: month_expr
+        description: "The month column or expression."
+        type: string
+      - name: day_expr
+        description: "The day column or expression."
+        type: string
+
+  - name: date_from_offset_seconds
+    description: "Adapter-aware macro to derive a local date from a UTC timestamp plus a second-based UTC offset string (e.g. '3600s'). Uses timestamp_add + date for BigQuery and to_seconds interval addition for DuckDB."
+    arguments:
+      - name: timestamp_expr
+        description: "The UTC timestamp column or expression."
+        type: string
+      - name: offset_seconds_expr
+        description: "The UTC offset string column or expression (e.g. '3600s')."
         type: string
 
   - name: timestamp_parse

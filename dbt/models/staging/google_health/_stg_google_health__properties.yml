@@ -3,10 +3,15 @@ version: 2
 models:
   - name: stg_google_health__sleep
     description: "Typed and deduplicated Google Health sleep sessions, one row per sleep data point."
+    data_tests:
+      - expect_intervals_to_not_overlap:
+          arguments:
+            start_column_name: started_at
+            end_column_name: ended_at
     columns:
       - name: sleep_id
         description: "The primary key for this table (raw data point name)."
-        data_type: varchar
+        data_type: string
         data_tests:
           - not_null
           - unique
@@ -48,7 +53,7 @@ models:
                 max_value: 1080  # 18 hours
       - name: asleep_minutes
         description: "Minutes asleep recorded in the sleep summary."
-        data_type: integer
+        data_type: bigint
         data_tests:
           - dbt_expectations.expect_column_values_to_be_between:
               arguments:
@@ -57,7 +62,7 @@ models:
                 row_condition: "asleep_minutes is not null"
       - name: sleep_type
         description: "Recording format of the sleep session (CLASSIC, STAGES, ...)."
-        data_type: varchar
+        data_type: string
         data_tests:
           - not_null
       - name: is_main_sleep
@@ -74,6 +79,12 @@ models:
 
   - name: stg_google_health__steps
     description: "Typed Google Health step intervals, one row per step data point."
+    data_tests:
+      - expect_intervals_to_not_overlap:
+          arguments:
+            start_column_name: started_at
+            end_column_name: ended_at
+            group_by: data_source_platform
     columns:
       - name: started_at
         description: "Start of the step interval."
@@ -94,42 +105,52 @@ models:
               arguments:
                 min_value: "date '2017-01-01'"
                 max_value: "date '2030-12-31'"
-      - name: steps
+      - name: step_count
         description: "Steps recorded within the step interval."
         data_type: integer
         data_tests:
           - not_null
       - name: start_utc_offset
         description: "UTC offset string for the interval start (e.g. 3600s)."
-        data_type: varchar
+        data_type: string
       - name: data_source_platform
-        description: "Recording platform of the step data point."
-        data_type: varchar
+        description: "Recording platform of the step data point; partitions the interval overlap check."
+        data_type: string
       - name: device_name
         description: "Display name of the recording device."
-        data_type: varchar
+        data_type: string
+      - name: _dlt_load_id
+        description: "dlt load id; recency tie-breaker for deduplication."
+        data_type: string
+        data_tests:
+          - not_null
       - name: _dlt_id
-        description: "dlt-generated row hash; primary key for this table."
-        data_type: varchar
+        description: "dlt-generated row hash; unique across deduplicated intervals."
+        data_type: string
         data_tests:
           - not_null
           - unique
 
   - name: stg_google_health__exercise
     description: "Typed Google Health exercise sessions, one row per exercise data point."
+    data_tests:
+      - expect_intervals_to_not_overlap:
+          arguments:
+            start_column_name: started_at
+            end_column_name: ended_at
     columns:
       - name: exercise_id
         description: "The primary key for this table (raw data point name)."
-        data_type: varchar
+        data_type: string
         data_tests:
           - not_null
           - unique
       - name: exercise_type
         description: "Exercise type code (WALKING, OTHER, ...)."
-        data_type: varchar
+        data_type: string
       - name: activity_name
         description: "Human readable activity name."
-        data_type: varchar
+        data_type: string
       - name: started_at
         description: "Timestamp when the exercise session started."
         data_type: timestamp
@@ -158,7 +179,7 @@ models:
               arguments:
                 min_value: 0
                 max_value: 2880    # 48 hours
-      - name: steps
+      - name: step_count
         description: "Steps recorded during the exercise session."
         data_type: integer
         data_tests:
@@ -166,10 +187,10 @@ models:
               arguments:
                 min_value: 0
                 max_value: 200000
-                row_condition: "steps is not null"
+                row_condition: "step_count is not null"
       - name: calories_kcal
         description: "Calories burned during the session (kcal)."
-        data_type: integer
+        data_type: bigint
         data_tests:
           - dbt_expectations.expect_column_values_to_be_between:
               arguments:

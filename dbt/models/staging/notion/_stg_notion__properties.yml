@@ -139,6 +139,26 @@ models:
         data_type: boolean
         data_tests:
           - not_null
+      - name: did_cook
+        description: "Whether the cook habit was completed."
+        data_type: boolean
+        data_tests:
+          - not_null
+      - name: did_cardio
+        description: "Whether the cardio habit was completed."
+        data_type: boolean
+        data_tests:
+          - not_null
+      - name: did_sabbath
+        description: "Whether the sabbath habit was completed."
+        data_type: boolean
+        data_tests:
+          - not_null
+      - name: did_date_night
+        description: "Whether the date night habit was completed."
+        data_type: boolean
+        data_tests:
+          - not_null
       - name: created_at
         description: "The date the page was created."
         data_type: timestamp
@@ -157,9 +177,6 @@ models:
               arguments:
                 min_value: "timestamp '2020-01-01'"
                 max_value: "timestamp '2030-12-31'"
-
-  - name: stg_notion__habit_reference
-    description: "Staging model for habit metadata and reference categories."
 
   - name: stg_notion__monthly_habits
     description: "Unique monthly habits from the Notion habit tracker."
@@ -209,6 +226,12 @@ models:
         data_type: boolean
         data_tests:
           - not_null
+      - name: did_goal_review
+        description: "Whether the goal review habit was completed."
+        data_type: boolean
+      - name: did_training
+        description: "Whether the training habit was completed."
+        data_type: boolean
       - name: created_at
         description: "The date the page was created."
         data_type: timestamp

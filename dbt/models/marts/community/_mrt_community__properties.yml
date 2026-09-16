@@ -13,23 +13,23 @@ models:
     columns:
       - name: engagement_key
         description: "Surrogate key uniquely identifying each engagement-contact combination"
-        data_type: varchar
+        data_type: string
         data_tests:
           - not_null
           - unique
       - name: engagement_id
         description: "The unique identifier for the engagement"
-        data_type: varchar
+        data_type: string
         data_tests:
           - not_null
       - name: engagement_type
         description: "The type of engagement (e.g., email, call, meeting)"
-        data_type: varchar
+        data_type: string
         data_tests:
           - not_null
       - name: body_preview
         description: "A preview of the engagement body/content"
-        data_type: varchar
+        data_type: string
       - name: occurred_at
         description: "The timestamp when the engagement occurred"
         data_type: timestamp
@@ -42,19 +42,19 @@ models:
           - not_null
       - name: contact_id
         description: "The unique identifier for the contact involved in the engagement"
-        data_type: integer
+        data_type: bigint
       - name: first_name
         description: "The first name of the contact"
-        data_type: varchar
+        data_type: string
       - name: last_name
         description: "The last name of the contact"
-        data_type: varchar
+        data_type: string
       - name: company_id
         description: "The unique identifier for the company associated with the contact"
-        data_type: integer
+        data_type: bigint
       - name: company_name
         description: "The name of the company associated with the contact"
-        data_type: varchar
+        data_type: string
       - name: updated_at
         description: "The timestamp when the engagement was last updated"
         data_type: timestamp

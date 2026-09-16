@@ -7,7 +7,6 @@ profile: 'personal'
 model-paths: ["models"]
 analysis-paths: ["analyses"]
 test-paths: ["tests"]
-seed-paths: ["seeds"]
 macro-paths: ["macros"]
 snapshot-paths: ["snapshots"]
 
@@ -16,10 +15,6 @@ clean-targets:         # directories to be removed by `dbt clean`
   - "dbt_packages"
 
 flags:
-  warn_error_options:
-    # This will not actually disable the error, no clear way to disable all source tests
-    # Message: "Test 'test' depends on a source named 'source' which is disabled"
-    silence: ["NodeNotFoundOrDisabled", "InvalidDisabledTargetInTestNode"]
   indirect_selection: cautious
 
 # Override configuration for dbt_utils macros to add duckdb support
@@ -42,20 +37,16 @@ models:
       +materialized: view
     intermediate:
       +materialized: table
+      +contract:
+        enforced: true
     marts:
       +materialized: table
+      +contract:
+        enforced: true
 
-sources:
-  personal:
-    staging:
-      +enabled: "{{ target.name != 'mock' }}"
-
-seeds:
-  personal:
-    mock_sources:
-      +schema: mock
-      +tags: ["local"]
-      +enabled: "{{ target.name == 'mock' }}"
+# Sources are enabled for all targets: on DuckDB (mock) each source table is
+# read from its test fixture via the `external_location` meta on the source;
+# on BigQuery targets sources resolve to the raw schema.
 
 vars:
   'dbt_date:time_zone': 'UTC'

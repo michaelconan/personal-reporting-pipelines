@@ -1,10 +1,20 @@
+version: 2
+
 models:
 
   # Daily time spine
   - name: time_spine_daily
     description: "Daily time spine table providing continuous date dimension for semantic metrics."
+    config:
+      contract:
+        enforced: true
     time_spine:
       standard_granularity_column: date_day
     columns:
       - name: date_day
+        description: "A continuous calendar date from 2020-01-01 to 2030-12-31."
         granularity: day
+        data_type: date
+        data_tests:
+          - not_null
+          - unique

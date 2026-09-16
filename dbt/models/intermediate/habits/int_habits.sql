@@ -16,7 +16,44 @@
 -- Output: One row per habit occurrence
 -- ============================================================================
 
-with habit_events as (
+with core_habit_events as (
+
+    select * from {{ ref('core_habit_events') }}
+
+),
+
+core_sleep_sessions as (
+
+    select * from {{ ref('core_sleep_sessions') }}
+
+),
+
+core_daily_steps as (
+
+    select * from {{ ref('core_daily_steps') }}
+
+),
+
+stg_hubspot__engagements as (
+
+    select
+        engagement_id,
+        occurred_at,
+        is_synchronous
+    from {{ ref('stg_hubspot__engagements') }}
+
+),
+
+stg_hubspot__engagement_contacts as (
+
+    select
+        engagement_id,
+        contact_id
+    from {{ ref('stg_hubspot__engagement_contacts') }}
+
+),
+
+habit_events as (
 
     select
         event_key as habit_key,
@@ -24,27 +61,31 @@ with habit_events as (
         event_date as habit_date,
         period as habit_period,
         habit,
-        cast(event_value as double) as habit_value
+        cast(event_value as numeric) as habit_value
     from
-        {{ ref('core_habit_events') }}
+        core_habit_events
     where
         event_value is not null
 
 ),
 
 sleep_habits as (
-    -- Sleep sessions: raw sleep_minutes; threshold comparison happens in the
-    -- metrics layer against the Notion habit reference.
+    -- Sleep aggregated to the habit/date grain: multiple sessions on one local
+    -- date (main sleep plus naps) collapse to one occurrence with the summed
+    -- duration. Threshold comparison happens in the metrics layer against the
+    -- Notion habit reference.
 
     select
-        {{ dbt_utils.generate_surrogate_key(['session_id', "'sleep_minutes'"]) }} as habit_key,
-        cast(session_id as varchar) as source_id,
+        {{ dbt_utils.generate_surrogate_key(['session_date', "'sleep_minutes'"]) }} as habit_key,
+        cast(session_date as string) as source_id,
         session_date as habit_date,
         'day' as habit_period,
         'sleep_minutes' as habit,
-        cast(duration_minutes as double) as habit_value
+        cast(sum(duration_minutes) as numeric) as habit_value
     from
-        {{ ref('core_sleep_sessions') }}
+        core_sleep_sessions
+    group by
+        session_date
 
 ),
 
@@ -54,13 +95,13 @@ step_habits as (
 
     select
         {{ dbt_utils.generate_surrogate_key(['activity_date', "'steps'"]) }} as habit_key,
-        cast(activity_date as varchar) as source_id,
+        cast(activity_date as string) as source_id,
         activity_date as habit_date,
         'day' as habit_period,
         'steps' as habit,
-        cast(steps as double) as habit_value
+        cast(step_count as numeric) as habit_value
     from
-        {{ ref('core_daily_steps') }}
+        core_daily_steps
 
 ),
 
@@ -72,9 +113,9 @@ community_meetings as (
         e.occurred_at,
         count(ec.contact_id) as contact_count
     from
-        {{ ref('stg_hubspot__engagements') }} as e
+        stg_hubspot__engagements as e
     left join
-        {{ ref('stg_hubspot__engagement_contacts') }} as ec
+        stg_hubspot__engagement_contacts as ec
         on e.engagement_id = ec.engagement_id
     where
         e.is_synchronous
@@ -91,14 +132,14 @@ community_habits as (
             'engagement_id',
             "case when contact_count = 1 then 'met_1to1' else 'met_group' end"
         ]) }} as habit_key,
-        cast(engagement_id as varchar) as source_id,
-        {{ trunc_date('week', 'cast(occurred_at as date)') }} as habit_date,
+        cast(engagement_id as string) as source_id,
+        cast({{ trunc_date('week', 'cast(occurred_at as date)') }} as date) as habit_date,
         'week' as habit_period,
         case
             when contact_count = 1 then 'met_1to1'
             else 'met_group'
         end as habit,
-        1.0 as habit_value
+        cast(1.0 as numeric) as habit_value
     from
         community_meetings
 

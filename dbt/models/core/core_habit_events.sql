@@ -13,7 +13,26 @@
 -- Output: One row per habit entry per habit
 -- ============================================================================
 
-with daily_events as (
+with stg_notion__daily_habits as (
+
+    select * from {{ ref('stg_notion__daily_habits') }}
+
+),
+
+stg_notion__weekly_habits as (
+
+    select * from {{ ref('stg_notion__weekly_habits') }}
+
+),
+
+stg_notion__monthly_habits as (
+
+    select * from {{ ref('stg_notion__monthly_habits') }}
+
+),
+
+-- Transform CTEs: unpivot wide tickbox columns and number columns to events
+daily_events as (
 
     select
         {{ dbt_utils.generate_surrogate_key(['page_id', 'habit']) }} as event_key,
@@ -27,7 +46,7 @@ with daily_events as (
         cast(is_complete as integer) as event_value,
         is_complete
     from
-        {{ ref('stg_notion__daily_habits') }}
+        stg_notion__daily_habits
     unpivot (
         is_complete for habit in (
             did_devotional,
@@ -55,7 +74,7 @@ weekly_events as (
         cast(is_complete as integer) as event_value,
         is_complete
     from
-        {{ ref('stg_notion__weekly_habits') }}
+        stg_notion__weekly_habits
     unpivot (
         is_complete for habit in (
             did_fast,
@@ -84,7 +103,7 @@ weekly_number_events as (
         cast(coalesce(prayer_minutes, 0) as integer) as event_value,
         cast(null as boolean) as is_complete
     from
-        {{ ref('stg_notion__weekly_habits') }}
+        stg_notion__weekly_habits
 
     union all
 
@@ -100,7 +119,7 @@ weekly_number_events as (
         cast(screen_minutes as integer) as event_value,
         cast(null as boolean) as is_complete
     from
-        {{ ref('stg_notion__weekly_habits') }}
+        stg_notion__weekly_habits
     where
         screen_minutes is not null
 
@@ -120,7 +139,7 @@ monthly_events as (
         cast(is_complete as integer) as event_value,
         is_complete
     from
-        {{ ref('stg_notion__monthly_habits') }}
+        stg_notion__monthly_habits
     unpivot (
         is_complete for habit in (
             did_budget,

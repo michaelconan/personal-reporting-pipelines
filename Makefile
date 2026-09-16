@@ -7,16 +7,6 @@ PYTEST = $(PIPENV) pytest \
 	--log-cli-level=INFO \
 	--cov-append \
 	-v -s
-DBTARGS = --project-dir dbt --profiles-dir dbt
-target ?= mock
-select ?= "*"
-
-# dbt exclude logic for dev environment
-# mock seeds are used in place of sources
-DBT_EXCLUDE :=
-ifeq ($(target),mock)
-	DBT_EXCLUDE := --exclude "source:*"
-endif
 
 # Optional full-refresh support for dbt commands
 full ?= false
@@ -123,50 +113,13 @@ dlt-clean: ## Clean DLT-specific files and data
 	@rm -rf ~/.dlt
 	@rm -f *.duckdb
 
-.PHONY: dbt-deps
-dbt-deps:
-	@echo "Installing dbt dependencies..."
-	$(PIPENV) dbt deps $(DBTARGS)
-
-.PHONY: dbt-seed
-dbt-seed:
-	@echo "Seeding dbt project with $(target) target..."
-	$(PIPENV) dbt seed $(DBTARGS) --target $(target) --select $(select) $(DBT_EXCLUDE) $(DBT_FULL_REFRESH)
-
-.PHONY: dbt-run
-dbt-run:
-	@echo "Running dbt project with $(target) target..."
-	$(PIPENV) dbt run $(DBTARGS) --target $(target) --select $(select) $(DBT_EXCLUDE) $(DBT_FULL_REFRESH)
-
-.PHONY: dbt-test
-dbt-test:
-	@echo "Testing dbt project with $(target) target..."
-	$(PIPENV) dbt test $(DBTARGS) --target $(target) --select $(select) $(DBT_EXCLUDE)
-
-.PHONY: dbt-build
-dbt-build:
-	@echo "Building dbt project with $(target) target..."
-	$(PIPENV) dbt build $(DBTARGS) --target $(target) --select $(select) $(DBT_EXCLUDE) $(DBT_FULL_REFRESH)
-
-.PHONY: dbt-docs
-dbt-docs:
-	@echo "Generating dbt documentation..."
-	$(PIPENV) dbt docs generate $(DBTARGS) --static --target $(target)
-
-.PHONY: dbt-bouncer
-dbt-bouncer: ## Run dbt-bouncer checks
-	$(PIPENV) dbt-bouncer --config-file dbt/dbt-bouncer.yml
-
-.PHONY: dbt-fix-lint
-dbt-fix-lint: ## Auto-fix and lint SQL files
-	@echo "Auto-fixing SQL files..."
-	( cd dbt && $(PIPENV) sqlfluff fix )
-	@echo "Linting SQL files..."
-	( cd dbt && $(PIPENV) sqlfluff lint )
-
 ## Generate dbt and Sphinx documentation
 .PHONY: docs
-docs: dbt-deps dbt-docs
+docs: ## Generate dbt + Sphinx documentation
+	@echo "Installing dbt dependencies..."
+	uv run dbt deps --project-dir dbt --profiles-dir dbt
+	@echo "Generating dbt documentation..."
+	uv run dbt docs generate --project-dir dbt --profiles-dir dbt --static --target mock
 	@echo "Consolidating documentation..."
 	@cp dbt/target/static_index.html docs/source/dbt.html
 	@echo "Building Sphinx documentation..."

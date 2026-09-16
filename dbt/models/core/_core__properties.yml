@@ -6,21 +6,21 @@ models:
     columns:
       - name: event_key
         description: "Surrogate key uniquely identifying each habit event."
-        data_type: varchar
+        data_type: string
         data_tests:
           - not_null
           - unique
       - name: source_id
         description: "The source identifier (page id on the tracking source)."
-        data_type: varchar
+        data_type: string
         data_tests:
           - not_null
       - name: database_id
         description: "The id of the parent collection on the habit tracker."
-        data_type: varchar
+        data_type: string
       - name: page_name
         description: "The name of the habit entry."
-        data_type: varchar
+        data_type: string
         data_tests:
           - not_null
       - name: event_date
@@ -30,7 +30,7 @@ models:
           - not_null
       - name: period
         description: "Tracking frequency of the habit entry (day, week, month)."
-        data_type: varchar
+        data_type: string
         data_tests:
           - not_null
           - accepted_values:
@@ -38,12 +38,12 @@ models:
                 values: ["day", "week", "month"]
       - name: habit
         description: "The habit key being tracked."
-        data_type: varchar
+        data_type: string
         data_tests:
           - not_null
       - name: event_type
         description: "How value maps to completion (tickbox or number)."
-        data_type: varchar
+        data_type: string
         data_tests:
           - not_null
           - accepted_values:
@@ -51,7 +51,7 @@ models:
                 values: ["tickbox", "number"]
       - name: event_value
         description: "The raw habit value (1/0 for tickbox habits, the metric value for number habits)."
-        data_type: integer
+        data_type: bigint
         data_tests:
           - not_null
       - name: is_complete
@@ -63,7 +63,7 @@ models:
     columns:
       - name: session_id
         description: "The primary key for this table."
-        data_type: varchar
+        data_type: string
         data_tests:
           - not_null
           - unique
@@ -84,7 +84,7 @@ models:
           - not_null
       - name: duration_minutes
         description: "Sleep duration in minutes."
-        data_type: float
+        data_type: numeric
         data_tests:
           - not_null
           - dbt_expectations.expect_column_values_to_be_between:
@@ -93,7 +93,7 @@ models:
                 max_value: 1080  # 18 hours
       - name: asleep_minutes
         description: "Minutes recorded asleep in the provider summary."
-        data_type: integer
+        data_type: bigint
         data_tests:
           - dbt_expectations.expect_column_values_to_be_between:
               arguments:
@@ -102,7 +102,7 @@ models:
                 row_condition: "asleep_minutes is not null"
       - name: sleep_type
         description: "Recording format of the sleep session."
-        data_type: varchar
+        data_type: string
         data_tests:
           - not_null
       - name: is_main_sleep
@@ -113,7 +113,7 @@ models:
         data_type: boolean
       - name: provider
         description: "The source system that recorded the sleep session."
-        data_type: varchar
+        data_type: string
         data_tests:
           - not_null
 
@@ -122,7 +122,7 @@ models:
     columns:
       - name: session_id
         description: "The primary key for this table."
-        data_type: varchar
+        data_type: string
         data_tests:
           - not_null
           - unique
@@ -138,7 +138,7 @@ models:
           - not_null
       - name: active_duration_minutes
         description: "Active duration in minutes."
-        data_type: float
+        data_type: numeric
         data_tests:
           - not_null
           - dbt_expectations.expect_column_values_to_be_between:
@@ -147,27 +147,27 @@ models:
                 max_value: 2880    # 48 hours
       - name: active_duration_seconds
         description: "Active duration in seconds."
-        data_type: float
+        data_type: numeric
         data_tests:
           - not_null
       - name: exercise_type
         description: "Exercise type code."
-        data_type: varchar
+        data_type: string
       - name: activity_name
         description: "Human readable activity name."
-        data_type: varchar
-      - name: steps
+        data_type: string
+      - name: step_count
         description: "Steps recorded during the session."
-        data_type: integer
+        data_type: bigint
         data_tests:
           - dbt_expectations.expect_column_values_to_be_between:
               arguments:
                 min_value: 0
                 max_value: 200000
-                row_condition: "steps is not null"
+                row_condition: "step_count is not null"
       - name: calories_kcal
         description: "Calories burned during the session (kcal)."
-        data_type: integer
+        data_type: bigint
         data_tests:
           - dbt_expectations.expect_column_values_to_be_between:
               arguments:
@@ -176,7 +176,7 @@ models:
                 row_condition: "calories_kcal is not null"
       - name: distance_meters
         description: "Distance covered during the session in metres."
-        data_type: float
+        data_type: numeric
         data_tests:
           - dbt_expectations.expect_column_values_to_be_between:
               arguments:
@@ -185,10 +185,10 @@ models:
                 row_condition: "distance_meters is not null"
       - name: pace_seconds_per_meter
         description: "Average pace in seconds per metre."
-        data_type: float
+        data_type: numeric
       - name: provider
         description: "The source system that recorded the session."
-        data_type: varchar
+        data_type: string
         data_tests:
           - not_null
 
@@ -201,9 +201,9 @@ models:
         data_tests:
           - not_null
           - unique
-      - name: steps
+      - name: step_count
         description: "Total steps recorded on the activity date."
-        data_type: integer
+        data_type: bigint
         data_tests:
           - not_null
           - dbt_expectations.expect_column_values_to_be_between:
@@ -212,11 +212,11 @@ models:
                 max_value: 300000
       - name: interval_count
         description: "Number of step intervals aggregated for the day."
-        data_type: integer
+        data_type: bigint
         data_tests:
           - not_null
       - name: provider
         description: "The source system that recorded the step data."
-        data_type: varchar
+        data_type: string
         data_tests:
           - not_null

@@ -98,7 +98,7 @@ Cloud tests against real APIs + BigQuery. `conftest.py` re-enables Google Secret
 
 `make_source(source_name, relation_name)` is adapter-aware, so **mock seed filenames must match raw table names** (`{source}__{table}.csv` in `dbt/seeds/mock_sources/{notion,hubspot,google_health}/`). Key consequence, not just convention: a renamed raw table breaks `mock` builds.
 
-Other `dbt_project.yml` settings relevant to tests: staging = views, intermediate/marts = tables; `vars` (`sleep_goal`, `steps_goal`, `meet_goal`); `warn_error_options.silence` for disabled-source tests under `mock`; packages (`dbt_utils`, `dbt_expectations`, `dbt_date`).
+Other `dbt_project.yml` settings relevant to tests: staging/core = views, intermediate/marts = tables; `vars` (`dbt_date:time_zone`); `warn_error_options.silence` for disabled-source tests under `mock`; packages (`dbt_utils`, `dbt_expectations`, `dbt_date`).
 
 ### Commands (`Makefile`, `DBTARGS = --project-dir dbt --profiles-dir dbt`)
 
@@ -118,7 +118,7 @@ make dbt-bouncer                  # manifest checks (dbt/dbt-bouncer.yml)
 
 1. **Schema (generic) data tests** — `data_tests:` blocks in per-domain `_properties.yml` files:
    - `staging/notion/_notion__sources.yml`, `staging/hubspot/_hubspot__sources.yml` (+ `_stg_hubspot__properties.yml` incl. `relationships` tests on association keys), `staging/google_health/_google_health__sources.yml` + `_stg_google_health__properties.yml`, `staging/notion/_stg_notion__properties.yml`, `core/_core__properties.yml`, `intermediate/habits/_int_habits__properties.yml`, `marts/habits/_mrt_habits__properties.yml` (`not_null`, `unique`, `accepted_values` on habit keys), `marts/community/_mrt_community__properties.yml` (`dbt_expectations.expect_compound_columns_to_be_unique` + `not_null`/`unique`).
-2. **Singular test** — `dbt/tests/stg_google_health__sleep_no_overlapping_sessions.sql`: fails on overlapping sleep session intervals (adjacent-row `LEAD()` check; avoids a DuckDB self-join issue documented in the file header).
+2. **Generic tests** — `dbt/tests/generic/`: `expect_column_array_length_to_be_between.sql` (cross-adapter `array_length(json_extract_array())` on BigQuery, `json_array_length()` on DuckDB bounds check) and `expect_intervals_to_not_overlap.sql` (fails on overlapping half-open `[start, end)` intervals via an adjacent-row `LEAD()` check; avoids a DuckDB self-join issue documented in the file header). Applied to the Google Health sleep, steps, and exercise staging models.
 3. **Custom generic test** — `dbt/tests/generic/expect_column_array_length_to_be_between.sql`: cross-adapter (`array_length(json_extract_array())` on BigQuery, `json_array_length()` on DuckDB) bounds check.
 4. **Contract/structure tests (CI-only, no `dbt test` node)** — `dbt-bouncer` (`dbt/dbt-bouncer.yml`: model/source descriptions populated, model name pattern `^(stg_|int_|core_|fct_|dim_|map_|time_spine_|base_|habits|engagement_contacts)`, ≥70% model test coverage) and `sqlfluff lint` (`dbt/.sqlfluff`: dialect `duckdb`, templater `dbt`, lowercase keywords/identifiers, trailing commas, explicit aliasing).
 

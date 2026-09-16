@@ -23,15 +23,29 @@ with step_intervals as (
             'steps__interval__civil_start_time__date__month',
             'steps__interval__civil_start_time__date__day'
         ) }} as activity_date,  -- Local (civil) date the interval belongs to
-        {{ cast_safe('steps__count', 'integer') }} as steps,  -- Steps recorded within the interval
-        steps__interval__start_utc_offset,
+        {{ cast_safe('steps__count', 'integer') }} as step_count,  -- Steps recorded within the interval
+        steps__interval__start_utc_offset as start_utc_offset,
         data_source__platform as data_source_platform,
         data_source__device__display_name as device_name,
+        _dlt_load_id,  -- dlt load id (recency tie-breaker for dedupe)
         _dlt_id  -- dlt-generated row hash (row key)
     from
-        {{ make_source('google_health', 'steps') }}
+        {{ source('google_health', 'steps') }}
 
+),
+
+unique_step_intervals as (
+-- CTE: Deduplicated step intervals
+-- Purpose: The pipeline appends with an inclusive cursor, so boundary records
+--          can arrive in more than one load. The natural key of a step
+--          interval is its interval window; keep only the most recent delivery
+--          per interval (the load id is only a recency tie-breaker).
+    {{ dbt_utils.deduplicate(
+        relation='step_intervals',
+        partition_by='started_at, ended_at',
+        order_by='_dlt_load_id desc'
+    ) }}
 )
 
--- Final output: Typed step interval data
-select * from step_intervals
+-- Final output: Deduplicated step interval data
+select * from unique_step_intervals

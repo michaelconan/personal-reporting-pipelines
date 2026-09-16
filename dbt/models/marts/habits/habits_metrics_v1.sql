@@ -23,8 +23,8 @@ habit_ref as (
         source,
         target_pct,
         threshold,
-        below_threshold,
-        active
+        is_below_threshold,
+        is_active
     from {{ ref('stg_notion__habit_reference') }}
 
 ),
@@ -43,19 +43,19 @@ habit_occurrences as (
         h.habit_value,
         hr.habit_type,
         hr.threshold,
-        hr.below_threshold,
+        hr.is_below_threshold,
         hr.target_pct,
         hr.habit_name,
         hr.category,
         hr.frequency,
         hr.source,
-        hr.active,
+        hr.is_active,
         case
             when hr.habit_type = 'tickbox'
                 then h.habit_value = 1.0
-            when hr.habit_type = 'number' and not hr.below_threshold
+            when hr.habit_type = 'number' and not hr.is_below_threshold
                 then h.habit_value >= hr.threshold
-            when hr.habit_type = 'number' and hr.below_threshold
+            when hr.habit_type = 'number' and hr.is_below_threshold
                 then h.habit_value <= hr.threshold
         end as is_complete
     from habits as h
@@ -68,10 +68,10 @@ daily_by_week as (
 
     select
         habit,
-        {{ trunc_date('week', 'habit_date') }} as period_start,
+        cast({{ trunc_date('week', 'habit_date') }} as date) as period_start,
         'week' as report_period,
-        count(*) as total_periods,
-        sum(case when is_complete then 1 else 0 end) as completed_periods
+        cast(count(*) as bigint) as total_periods,
+        cast(sum(case when is_complete then 1 else 0 end) as bigint) as completed_periods
     from habit_occurrences
     where
         habit_period = 'day'
@@ -87,8 +87,8 @@ weekly_by_week as (
         habit,
         habit_date as period_start,
         'week' as report_period,
-        1 as total_periods,
-        case when is_complete then 1 else 0 end as completed_periods
+        cast(1 as bigint) as total_periods,
+        cast(case when is_complete then 1 else 0 end as bigint) as completed_periods
     from habit_occurrences
     where
         habit_period = 'week'
@@ -103,8 +103,8 @@ monthly_by_month as (
         habit,
         habit_date as period_start,
         'month' as report_period,
-        1 as total_periods,
-        case when is_complete then 1 else 0 end as completed_periods
+        cast(1 as bigint) as total_periods,
+        cast(case when is_complete then 1 else 0 end as bigint) as completed_periods
     from habit_occurrences
     where
         habit_period = 'month'
@@ -118,7 +118,7 @@ community_counts as (
     select
         habit,
         habit_date as period_start,
-        count(*) as engagement_count
+        cast(count(*) as bigint) as engagement_count
     from habit_occurrences
     where habit_type = 'count'
     group by habit, habit_date
@@ -131,11 +131,13 @@ community_by_week as (
         c.habit,
         c.period_start,
         'week' as report_period,
-        1 as total_periods,
-        case
-            when c.engagement_count >= coalesce(hr.threshold, 1) then 1
-            else 0
-        end as completed_periods
+        cast(1 as bigint) as total_periods,
+        cast(
+            case
+                when c.engagement_count >= coalesce(hr.threshold, 1) then 1
+                else 0
+            end as bigint
+        ) as completed_periods
     from community_counts as c
     left join habit_ref as hr on c.habit = hr.habit_key
 
@@ -160,17 +162,19 @@ select
     hr.frequency,
     hr.source,
     hr.habit_type,
-    ap.period_start,
+    ap.period_start as period_start_date,
     ap.report_period,
     ap.total_periods,
     ap.completed_periods,
-    hr.target_pct,
-    hr.threshold,
-    hr.below_threshold,
-    hr.active,
-    round(
-        cast(ap.completed_periods as double) / nullif(ap.total_periods, 0),
-        4
+    cast(hr.target_pct as numeric) as target_pct,
+    cast(hr.threshold as numeric) as threshold,
+    hr.is_below_threshold,
+    hr.is_active,
+    cast(
+        round(
+            cast(ap.completed_periods as double) / nullif(ap.total_periods, 0),
+            4
+        ) as numeric
     ) as completion_rate,
     round(
         cast(ap.completed_periods as double) / nullif(ap.total_periods, 0),

@@ -9,14 +9,24 @@
 -- Output: One row per local activity date
 -- ============================================================================
 
-with daily_step_totals as (
+with step_intervals as (
 
     select
         activity_date,
-        sum(steps) as steps,
-        count(*) as interval_count
+        step_count
     from
         {{ ref('stg_google_health__steps') }}
+
+),
+
+daily_step_totals as (
+
+    select
+        activity_date,
+        cast(sum(step_count) as bigint) as step_count,
+        count(*) as interval_count
+    from
+        step_intervals
     group by
         activity_date
 
@@ -24,7 +34,7 @@ with daily_step_totals as (
 
 select
     activity_date,
-    steps,
+    step_count,
     interval_count,
     'google_health' as provider
 from

@@ -20,10 +20,10 @@ with exercise_sessions as (
         exercise__interval__start_time as started_at,  -- Session interval start
         exercise__interval__end_time as ended_at,  -- Session interval end
         -- Active duration parsed from "<n>s"
-        {{ cast_safe("replace(exercise__active_duration, 's', '')", 'double') }} as duration_seconds,
+        {{ cast_safe("replace(exercise__active_duration, 's', '')", 'numeric') }} as duration_seconds,
         -- Active duration in minutes
-        {{ cast_safe("replace(exercise__active_duration, 's', '')", 'double') }} / 60.0 as duration_minutes,
-        {{ cast_safe('exercise__metrics_summary__steps', 'integer') }} as steps,  -- Steps recorded in the session
+        {{ cast_safe("replace(exercise__active_duration, 's', '')", 'numeric') }} / 60.0 as duration_minutes,
+        {{ cast_safe('exercise__metrics_summary__steps', 'integer') }} as step_count,  -- Steps recorded in the session
         -- Calories burned (kcal)
         {{ cast_safe('exercise__metrics_summary__calories_kcal', 'integer') }} as calories_kcal,
         -- Distance in metres
@@ -32,9 +32,21 @@ with exercise_sessions as (
         exercise__create_time as created_at,
         exercise__update_time as updated_at
     from
-        {{ make_source('google_health', 'exercise') }}
+        {{ source('google_health', 'exercise') }}
 
+),
+
+unique_exercise_sessions as (
+-- CTE: Deduplicated exercise sessions
+-- Purpose: The pipeline appends with an inclusive cursor, so repeated versions
+--          of an exercise data point can exist across loads. Keep only the
+--          most recently updated version of each data point.
+    {{ dbt_utils.deduplicate(
+        relation='exercise_sessions',
+        partition_by='exercise_id',
+        order_by='updated_at desc'
+    ) }}
 )
 
--- Final output: Typed exercise session data
-select * from exercise_sessions
+-- Final output: Clean, deduplicated exercise session data
+select * from unique_exercise_sessions

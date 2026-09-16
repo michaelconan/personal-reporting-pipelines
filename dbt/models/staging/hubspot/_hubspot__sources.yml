@@ -3,7 +3,16 @@ version: 2
 sources:
   - name: hubspot
     description: "Source data from the HubSpot CRM."
+    loader: dlt
+    freshness:
+      warn_after: {count: 48, period: hour}    # Daily schedule
+      error_after: {count: 72, period: hour}
     schema: "{{ env_var('RAW_SCHEMA', 'raw') }}"
+    # On DuckDB (mock) targets each table is read directly from its test
+    # fixture CSV as an external location; on BigQuery targets the meta is
+    # inert and {identifier} is ignored.
+    meta:
+      external_location: "dbt/test_fixtures/hubspot/{identifier}.csv"
     tables:
       - name: companies
         identifier: hubspot__companies
@@ -152,84 +161,4 @@ sources:
             data_type: bigint
           - name: _hubspot__communications_id
             description: "The parent communication ID."
-            data_type: bigint
-
-      - name: deals
-        identifier: hubspot__deals
-        description: "Raw deal data from HubSpot CRM."
-        columns:
-          - name: id
-            description: "Primary key for the HubSpot deal."
-            data_type: bigint
-            data_tests:
-              - not_null
-          - name: properties__dealname
-            data_type: varchar
-          - name: properties__dealstage
-            data_type: varchar
-          - name: properties__pipeline
-            data_type: varchar
-          - name: properties__amount
-            data_type: numeric
-          - name: properties__closedate
-            data_type: timestamp
-          - name: properties__hs_deal_stage_probability
-            data_type: numeric
-          - name: properties__hs_is_closed
-            data_type: boolean
-          - name: properties__hs_is_closed_won
-            data_type: boolean
-          - name: properties__hs_lastmodifieddate
-            data_type: timestamp
-          - name: created_at
-            data_type: timestamp
-          - name: updated_at
-            data_type: timestamp
-
-      - name: deals_to_contacts
-        identifier: hubspot__deals_to_contacts
-        description: "Association table between deals and contacts."
-        columns:
-          - name: to_object_id
-            description: "The contact ID."
-            data_type: bigint
-          - name: _hubspot__deals_id
-            description: "The parent deal ID."
-            data_type: bigint
-
-      - name: tickets
-        identifier: hubspot__tickets
-        description: "Raw ticket data from HubSpot CRM."
-        columns:
-          - name: id
-            description: "Primary key for the HubSpot ticket."
-            data_type: bigint
-            data_tests:
-              - not_null
-          - name: properties__subject
-            data_type: varchar
-          - name: properties__hs_ticket_priority
-            data_type: varchar
-          - name: properties__hs_pipeline
-            data_type: varchar
-          - name: properties__hs_pipeline_stage
-            data_type: varchar
-          - name: properties__hs_ticket_category
-            data_type: varchar
-          - name: properties__hs_lastmodifieddate
-            data_type: timestamp
-          - name: created_at
-            data_type: timestamp
-          - name: updated_at
-            data_type: timestamp
-
-      - name: tickets_to_contacts
-        identifier: hubspot__tickets_to_contacts
-        description: "Association table between tickets and contacts."
-        columns:
-          - name: to_object_id
-            description: "The contact ID."
-            data_type: bigint
-          - name: _hubspot__tickets_id
-            description: "The parent ticket ID."
             data_type: bigint

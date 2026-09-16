@@ -15,7 +15,7 @@ with daily_habits as (
         created_time as created_at,
         last_edited_time as updated_at
     from
-        {{ make_source('notion', 'data_source_daily_habits') }}
+        {{ source('notion', 'data_source_daily_habits') }}
 
 ),
 

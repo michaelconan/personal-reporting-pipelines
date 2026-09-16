@@ -3,7 +3,16 @@ version: 2
 sources:
   - name: google_health
     description: "Source data from the Google Health / Health Connect APIs."
+    loader: dlt
+    freshness:
+      warn_after: {count: 336, period: hour}   # 14 days (weekly schedule)
+      error_after: {count: 384, period: hour}  # 16 days
     schema: "{{ env_var('RAW_SCHEMA', 'raw') }}"
+    # On DuckDB (mock) targets each table is read directly from its test
+    # fixture CSV as an external location; on BigQuery targets the meta is
+    # inert and {identifier} is ignored.
+    meta:
+      external_location: "dbt/test_fixtures/google_health/{identifier}.csv"
     tables:
       - name: sleep
         identifier: google_health__sleep

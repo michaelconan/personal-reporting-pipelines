@@ -13,7 +13,7 @@ with meetings_contacts as (
     select
         _hubspot__meetings_id as engagement_id,
         to_object_id as contact_id
-    from {{ make_source('hubspot', 'meetings_to_contacts') }}
+    from {{ source('hubspot', 'meetings_to_contacts') }}
     where _hubspot__meetings_id is not null
 
 ),
@@ -23,7 +23,7 @@ calls_contacts as (
     select
         _hubspot__calls_id as engagement_id,
         to_object_id as contact_id
-    from {{ make_source('hubspot', 'calls_to_contacts') }}
+    from {{ source('hubspot', 'calls_to_contacts') }}
     where _hubspot__calls_id is not null
 
 ),
@@ -33,7 +33,7 @@ communications_contacts as (
     select
         _hubspot__communications_id as engagement_id,
         to_object_id as contact_id
-    from {{ make_source('hubspot', 'communications_to_contacts') }}
+    from {{ source('hubspot', 'communications_to_contacts') }}
     where _hubspot__communications_id is not null
 
 )

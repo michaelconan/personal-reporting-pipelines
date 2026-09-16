@@ -1,0 +1,59 @@
+version: 2
+
+models:
+  - name: stg_notion__habit_reference
+    description: "Cleaned Notion habit reference with canonical habit keys, targets, and thresholds for all tracked disciplines."
+    columns:
+      - name: page_id
+        description: "The primary key for this table (Notion page id)."
+        data_type: string
+        data_tests:
+          - not_null
+          - unique
+      - name: habit_key
+        description: "The canonical habit key used to join with the habits mart."
+        data_type: string
+      - name: habit_name
+        description: "The display name of the habit."
+        data_type: string
+        data_tests:
+          - not_null
+      - name: category
+        description: "The habit category (e.g. Faith, Life, Health)."
+        data_type: string
+      - name: frequency
+        description: "The tracking frequency of the habit (day, week, month)."
+        data_type: string
+      - name: habit_type
+        description: "How completion is derived (tickbox, number, count)."
+        data_type: string
+      - name: source
+        description: "The source system that tracks the habit."
+        data_type: string
+      - name: target_pct
+        description: "Completion target as a percentage integer (e.g. 80 = 80%)."
+        data_type: numeric
+      - name: threshold
+        description: "Numeric threshold for number habits."
+        data_type: numeric
+      - name: is_below_threshold
+        description: "Whether the threshold comparison is inverted."
+        data_type: boolean
+      - name: is_active
+        description: "Whether the habit is currently active."
+        data_type: boolean
+        data_tests:
+          - not_null
+      - name: start_date
+        description: "The date the habit tracking started."
+        data_type: date
+      - name: created_at
+        description: "When the reference page was created."
+        data_type: timestamp
+        data_tests:
+          - not_null
+      - name: updated_at
+        description: "When the reference page was last edited."
+        data_type: timestamp
+        data_tests:
+          - not_null

@@ -9,6 +9,12 @@
 -- Output: One row per sleep session
 -- ============================================================================
 
+with stg_google_health__sleep as (
+
+    select * from {{ ref('stg_google_health__sleep') }}
+
+)
+
 select
     sleep_id as session_id,
     sleep_date as session_date,
@@ -21,4 +27,4 @@ select
     is_nap,
     'google_health' as provider
 from
-    {{ ref('stg_google_health__sleep') }}
+    stg_google_health__sleep

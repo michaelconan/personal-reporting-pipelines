@@ -36,7 +36,10 @@ jobs:
       - name: install uv and dependencies
         run: |
           make install
-          make dbt-deps
+
+      - name: install dbt dependencies
+        run: |
+          uv run dbt deps --project-dir dbt --profiles-dir dbt
 
       - name: set environment variables
         run: |
@@ -50,7 +53,7 @@ jobs:
 
       - name: run dbt build
         run: |
-          make dbt-build target=prod
+          uv run dbt build --project-dir dbt --profiles-dir dbt --target prod ${{ inputs.force_full_refresh && '--full-refresh' || '' }}
 
       - name: remove keyfile and secrets
         if: always()

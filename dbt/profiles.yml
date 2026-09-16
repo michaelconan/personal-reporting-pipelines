@@ -13,6 +13,9 @@ personal:
       type: duckdb
       path: 'dbt.duckdb'
       schema: "{{ env_var('DBT_SCHEMA', 'reporting') }}"
+      # Pin the session timezone so timestamp→date casts match BigQuery (UTC)
+      settings:
+        TimeZone: 'UTC'
 
     dev:
       <<: *bigquery_config

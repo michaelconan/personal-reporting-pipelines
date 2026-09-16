@@ -6,13 +6,13 @@ models:
     columns:
       - name: habit_key
         description: "Surrogate key uniquely identifying each habit occurrence."
-        data_type: varchar
+        data_type: string
         data_tests:
           - not_null
           - unique
       - name: source_id
         description: "The source identifier (page id, sleep session id, activity date, or engagement id)."
-        data_type: varchar
+        data_type: string
         data_tests:
           - not_null
       - name: habit_date
@@ -22,7 +22,7 @@ models:
           - not_null
       - name: habit_period
         description: "The period for which the habit is tracked (day, week, or month)."
-        data_type: varchar
+        data_type: string
         data_tests:
           - not_null
           - accepted_values:
@@ -30,11 +30,11 @@ models:
                 values: ["day", "week", "month"]
       - name: habit
         description: "The key of the habit being tracked."
-        data_type: varchar
+        data_type: string
         data_tests:
           - not_null
       - name: habit_value
         description: "The value of the habit tracked (1.0/0.0 for tickbox habits, metric values for number habits)."
-        data_type: double
+        data_type: numeric
         data_tests:
           - not_null

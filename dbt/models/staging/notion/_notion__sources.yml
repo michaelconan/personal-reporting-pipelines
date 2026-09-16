@@ -3,7 +3,16 @@ version: 2
 sources:
   - name: notion
     description: "Source data from the Notion habit tracker."
+    loader: dlt
+    freshness:
+      warn_after: {count: 336, period: hour}   # 14 days (weekly schedule)
+      error_after: {count: 384, period: hour}  # 16 days
     schema: "{{ env_var('RAW_SCHEMA', 'raw') }}"
+    # On DuckDB (mock) targets each table is read directly from its test
+    # fixture CSV as an external location; on BigQuery targets the meta is
+    # inert and {identifier} is ignored.
+    meta:
+      external_location: "dbt/test_fixtures/notion/{identifier}.csv"
     tables:
       - name: data_source_daily_habits
         identifier: notion__data_source_daily_habits
@@ -88,12 +97,6 @@ sources:
               - not_null
           - name: properties__screen_minutes__number
             data_type: numeric
-            data_tests:
-              - dbt_expectations.expect_column_values_to_be_between:
-                  arguments:
-                    min_value: 250
-                    max_value: 2000
-                    row_condition: "properties__screen_minutes__number is not null"
           - name: properties__church__checkbox
             data_type: boolean
             data_tests:

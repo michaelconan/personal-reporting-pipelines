@@ -18,7 +18,7 @@ with meetings as (
         cast(properties__hs_meeting_start_time as timestamp) as occurred_at,
         cast(created_at as timestamp) as created_at,
         cast(updated_at as timestamp) as updated_at
-    from {{ make_source('hubspot', 'meetings') }}
+    from {{ source('hubspot', 'meetings') }}
 
 ),
 
@@ -31,7 +31,7 @@ calls as (
         cast(properties__hs_timestamp as timestamp) as occurred_at,
         cast(created_at as timestamp) as created_at,
         cast(updated_at as timestamp) as updated_at
-    from {{ make_source('hubspot', 'calls') }}
+    from {{ source('hubspot', 'calls') }}
 
 ),
 
@@ -44,7 +44,7 @@ communications as (
         cast(properties__hs_timestamp as timestamp) as occurred_at,
         cast(created_at as timestamp) as created_at,
         cast(updated_at as timestamp) as updated_at
-    from {{ make_source('hubspot', 'communications') }}
+    from {{ source('hubspot', 'communications') }}
 
 ),
 

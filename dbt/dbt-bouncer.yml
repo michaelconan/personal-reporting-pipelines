@@ -1,15 +1,112 @@
 dbt_artifacts_dir: target
+custom_checks_dir: checks
 
 manifest_checks:
-  - name: check_model_description_populated
-    min_description_length: 1
-    exclude: ".*habits_metrics.*"
-
+  # SOURCE checks
   - name: check_source_description_populated
-    min_description_length: 1
+    min_description_length: 20
 
+  - name: check_source_property_file_location
+
+  - name: check_source_file_name
+    file_name_pattern: ^_.*__sources\.yml$
+
+  - name: check_source_freshness_populated
+
+  - name: check_source_loader_populated
+
+  - name: check_source_names
+    source_name_pattern: ^[a-z0-9_]*$
+
+  - name: check_duplicate_sources
+
+  - name: check_source_not_orphaned
+
+  - name: check_source_used_by_models_in_same_directory
+
+  # MODEL checks
   - name: check_model_names
     model_name_pattern: "^(stg_|int_|core_|fct_|dim_|map_|time_spine_|base_|habits|engagement_contacts)"
 
+  - name: check_model_description_populated
+    min_description_length: 20
+
+  - name: check_model_documentation_coverage
+    min_model_documentation_coverage_pct: 100
+
   - name: check_model_test_coverage
-    min_model_test_coverage_pct: 70
+    min_model_test_coverage_pct: 100
+
+  - name: check_model_has_unique_test
+
+  - name: check_model_columns_have_types
+
+  - name: check_model_has_contracts_enforced
+    materialization: table
+
+  - name: check_model_property_file_name
+    file_name_pattern: ^_.*\.yml$
+
+  # TEST checks
+  - name: check_model_unit_test_location
+
+  - name: check_unit_test_file_name
+    file_name_pattern: ^_.*\.yml$
+
+  - name: check_data_test_description_populated
+    min_description_length: 20
+
+  # SEED checks
+  - name: check_seed_has_unique_test
+
+catalog_checks:
+  - name: check_column_description_populated
+    min_description_length: 4
+
+  - name: check_column_names
+    column_name_pattern: ^_?[a-z][a-z0-9_]*$   # snake_case
+
+  # BOOLEAN columns must use is_/did_/has_ prefixes or a _met suffix
+  - name: check_column_type_complies_to_column_name
+    column_name_pattern: ^((is|did|has)_.*|.*_met)$
+    types:
+      - BOOLEAN
+
+  # DATE columns must end with _date
+  - name: check_column_type_complies_to_column_name
+    column_name_pattern: .*_date$
+    types:
+      - DATE
+    exclude: ^.*time_spine.*$   # date_day is the semantic layer's time-spine grain
+
+  # TIMESTAMP columns must end with _at
+  - name: check_column_type_complies_to_column_name
+    column_name_pattern: .*_at$
+    types:
+      - TIMESTAMP
+      - TIMESTAMP WITH TIME ZONE
+
+  # INTEGER/BIGINT columns must carry a type-encoded or unit suffix
+  - name: check_column_type_complies_to_column_name
+    column_name_pattern: .*(_id|_count|_periods|_minutes|_value|_index|_tier|_level|_kcal)$
+    types:
+      - INTEGER
+      - BIGINT
+      - HUGEINT
+
+  # Columns named like data types must have those data types (reverse guard)
+  - name: check_column_name_complies_to_column_type
+    column_name_pattern: .*_date$
+    types:
+      - DATE
+
+  - name: check_column_name_complies_to_column_type
+    column_name_pattern: .*_at$
+    types:
+      - TIMESTAMP
+      - TIMESTAMP WITH TIME ZONE
+
+  - name: check_column_name_complies_to_column_type
+    column_name_pattern: ^((is|did|has)_.*|.*_met)$
+    types:
+      - BOOLEAN
