@@ -1,60 +1,40 @@
 version: 2
 
 models:
-  - name: int_habits_unpivoted
-    description: "Combined list of daily, weekly, and monthly habits from the Notion habit tracker."
+  - name: int_habits
+    description: "Unified habit occurrences across sources: Notion tickbox/number habits, sleep minutes, daily steps, and community engagement habits."
     columns:
-      - name: row_id
-        description: "Unique identifier for day and habit record"
+      - name: habit_key
+        description: "Surrogate key uniquely identifying each habit occurrence."
         data_type: varchar
         data_tests:
           - not_null
           - unique
+      - name: source_id
+        description: "The source identifier (page id, sleep session id, activity date, or engagement id)."
+        data_type: varchar
+        data_tests:
+          - not_null
+      - name: habit_date
+        description: "The date for the habit tracking period."
+        data_type: date
+        data_tests:
+          - not_null
       - name: habit_period
-        description: "The period for which habit is recorded"
+        description: "The period for which the habit is tracked (day, week, or month)."
         data_type: varchar
         data_tests:
           - not_null
           - accepted_values:
               arguments:
                 values: ["day", "week", "month"]
-      - name: page_id
-        description: "The primary key for this table"
-        data_type: varchar
-        data_tests:
-          - not_null
-      - name: database_id
-        description: "The ID of the parent database."
-        data_type: varchar
-        data_tests:
-          - not_null
-      - name: page_date
-        description: "The date of the habit entry."
-        data_type: date
-        data_tests:
-          - not_null
-      - name: page_name
-        description: "The name of the habit entry."
-        data_type: varchar
-        data_tests:
-          - not_null
       - name: habit
-        description: "The name of the habit."
+        description: "The key of the habit being tracked."
         data_type: varchar
         data_tests:
           - not_null
-      - name: is_complete
-        description: "Whether the habit was completed."
-        data_type: boolean
-        data_tests:
-          - not_null
-      - name: created_at
-        description: "The date the page was created."
-        data_type: timestamp
-        data_tests:
-          - not_null
-      - name: updated_at
-        description: "The date the page was last edited."
-        data_type: timestamp
+      - name: habit_value
+        description: "The value of the habit tracked (1.0/0.0 for tickbox habits, metric values for number habits)."
+        data_type: double
         data_tests:
           - not_null
