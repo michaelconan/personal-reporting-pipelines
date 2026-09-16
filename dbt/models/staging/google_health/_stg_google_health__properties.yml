@@ -86,6 +86,12 @@ models:
             end_column_name: ended_at
             group_by: data_source_platform
     columns:
+      - name: step_key
+        description: "The primary key for this table (surrogate key from the interval window; no natural key exists)."
+        data_type: string
+        data_tests:
+          - not_null
+          - unique
       - name: started_at
         description: "Start of the step interval."
         data_type: timestamp
@@ -119,17 +125,6 @@ models:
       - name: device_name
         description: "Display name of the recording device."
         data_type: string
-      - name: _dlt_load_id
-        description: "dlt load id; recency tie-breaker for deduplication."
-        data_type: string
-        data_tests:
-          - not_null
-      - name: _dlt_id
-        description: "dlt-generated row hash; unique across deduplicated intervals."
-        data_type: string
-        data_tests:
-          - not_null
-          - unique
 
   - name: stg_google_health__exercise
     description: "Typed Google Health exercise sessions, one row per exercise data point."
