@@ -38,6 +38,8 @@ models:
       columns: true
     staging:
       +materialized: view
+    core:
+      +materialized: view
     intermediate:
       +materialized: table
     marts:
@@ -57,8 +59,3 @@ seeds:
 
 vars:
   'dbt_date:time_zone': 'UTC'
-  # 7 hours (in milliseconds)
-  sleep_goal: 25200000
-  # 7500 steps per day
-  steps_goal: 7500
-  meet_goal: 1

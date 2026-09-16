@@ -48,13 +48,20 @@ Mock data for local development. Named `{source}__{table}.csv` to match raw BigQ
 ### Staging (`dbt/models/staging/`)
 - **notion/**: `stg_notion__daily_habits`, `stg_notion__weekly_habits`, `stg_notion__monthly_habits`
 - **hubspot/**: `stg_hubspot__contacts`, `stg_hubspot__companies`, `stg_hubspot__engagements`, `stg_hubspot__engagement_contacts`, `stg_hubspot__engagement_companies`; base models: `base_hubspot__engagements`, `base_hubspot__engagement_contacts`
-- **fitbit/**: `stg_fitbit__sleep`, `stg_fitbit__activities`
+- **google_health/**: `stg_google_health__sleep`, `stg_google_health__steps`, `stg_google_health__exercise`
+
+### Core (`dbt/models/core/`)
+Generic, source-agnostic entities that could map to comparable source systems:
+- `core_habit_events`: long-format habit events (tickbox + number habits) from Notion staging
+- `core_sleep_sessions`: one row per sleep session
+- `core_daily_steps`: one row per local activity date with total steps
+- `core_exercise_sessions`: one row per exercise session
 
 ### Intermediate (`dbt/models/intermediate/habits/`)
-- `int_habits_unpivoted`: Unpivots Notion checkbox columns to long format (one row per habit per period)
+- `int_habits`: Merges habit events, sleep minutes, daily steps, and HubSpot engagement habits into one occurrence grain feeding the marts
 
 ### Marts (`dbt/models/marts/`)
-- `habits/habits_v1`: Unified habits table (Notion checkboxes + Fitbit sleep/steps + HubSpot meetings)
+- `habits/habits_v1`: Unified habits table (Notion habits + Google Health sleep/steps + HubSpot meetings)
 - `habits/habits_metrics_v1`: Completion rates vs. discipline reference targets
 - `community/engagement_contacts_v1`: Denormalized engagement-contact-company table
 
@@ -78,24 +85,26 @@ Mock data for local development. Named `{source}__{table}.csv` to match raw BigQ
   - `_hubspot__{object}_id` — parent object ID (from dlt `include_from_parent`)
   - `_hubspot__{object}_updated_at` — parent updatedAt (from dlt `include_from_parent`)
 
-### Fitbit
-- Sleep table: `fitbit__sleep` — `log_id`, `date_of_sleep`, `duration` (milliseconds), `start_time`, `end_time`
-- Activities table: `fitbit__activities` — `log_id`, `steps`, `start_time`, `last_modified`, `duration`, `active_duration`
+### Google Health
+- Sleep table: `google_health__sleep` — `name` (data point id), `sleep__interval__start_time`, `sleep__interval__end_time`, `sleep__summary__minutes_asleep`, `sleep__metadata__{main_sleep,nap}`
+- Steps table: `google_health__steps` — `steps__count` (string), `steps__interval__{start_time,end_time}`, civil date columns `steps__interval__civil_start_time__date__{year,month,day}`
+- Exercise table: `google_health__exercise` — `name`, `exercise__{exercise_type,display_name,active_duration}`, `exercise__metrics_summary__{steps,calories_kcal,distance_millimeters}`
+- Child tables (dlt nested tables): `google_health__sleep__sleep__stages`, `google_health__exercise__exercise__{exercise_events,splits}`
 
 ## Habits Data Model
 
 ### Habit Keys (values in `habit` column of habits mart)
 Notion daily (checkboxes): `did_devotional`, `did_journal`, `did_prayer`, `did_read_bible`, `did_workout`, `did_language`
 Notion weekly (checkboxes): `did_fast`, `did_church`, `did_community`, `did_sabbath`, `did_cook`, `did_cardio`, `did_date_night`
-Notion weekly (numbers): `prayer_minutes` (>=15 goal), `screen_minutes` (<=800 goal)
+Notion weekly (numbers): `prayer_minutes`, `screen_minutes`
 Notion monthly (checkboxes): `did_budget`, `did_serve`, `did_travel`, `did_blog`, `did_goal_review`, `did_training`
-Fitbit: `sleep_minutes` (>=420 goal), `steps` (>=7500 goal)
-HubSpot: `met_1to1` (>=2/week goal), `met_group` (>=2/week goal)
+Google Health: `sleep_minutes`, `steps`
+HubSpot: `met_1to1`, `met_group`
+
+Note: habit completions and thresholds come from the Notion habit reference data (`stg_notion__habit_reference`) in the metrics layer; goal caps are no longer encoded as dbt vars.
 
 ## dbt Variables
-- `sleep_goal`: 25200000 (7 hours in ms, used in stg_fitbit__sleep)
-- `steps_goal`: 7500 (used in stg_fitbit__activities)
-- `meet_goal`: 1 (default minimum engagements; discipline_reference has threshold=2)
+- `dbt_date:time_zone`: 'UTC' (used by dbt date utilities)
 
 ## Custom Macros
 - `make_source(source, relation)` — adapter-aware source/ref resolution
@@ -103,6 +112,9 @@ HubSpot: `met_1to1` (>=2/week goal), `met_group` (>=2/week goal)
 - `timestamp_parse(column)` — parse ms timestamps (legacy, no longer needed for new HubSpot model)
 - `trunc_date(period, date_expr)` — cross-db date truncation
 - `cast_safe(expr, type)` — safe cast
+- `seconds_between(start_ts, end_ts)` — cross-db timestamp difference in seconds
+- `date_from_parts(year, month, day)` — cross-db date construction
+- `date_from_offset_seconds(ts, offset)` — local date from UTC timestamp + seconds offset string
 - `unnest_json_array(array_col, alias)` — cross-db JSON array unnesting (legacy)
 
 ## Testing

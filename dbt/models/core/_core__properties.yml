@@ -1,0 +1,222 @@
+version: 2
+
+models:
+  - name: core_habit_events
+    description: "Generic habit event entity, one row per habit per tracking period. Tickbox events are complete/not complete; number events carry raw values with goals resolved downstream."
+    columns:
+      - name: event_key
+        description: "Surrogate key uniquely identifying each habit event."
+        data_type: varchar
+        data_tests:
+          - not_null
+          - unique
+      - name: source_id
+        description: "The source identifier (page id on the tracking source)."
+        data_type: varchar
+        data_tests:
+          - not_null
+      - name: database_id
+        description: "The id of the parent collection on the habit tracker."
+        data_type: varchar
+      - name: page_name
+        description: "The name of the habit entry."
+        data_type: varchar
+        data_tests:
+          - not_null
+      - name: event_date
+        description: "The date of the habit entry."
+        data_type: date
+        data_tests:
+          - not_null
+      - name: period
+        description: "Tracking frequency of the habit entry (day, week, month)."
+        data_type: varchar
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["day", "week", "month"]
+      - name: habit
+        description: "The habit key being tracked."
+        data_type: varchar
+        data_tests:
+          - not_null
+      - name: event_type
+        description: "How value maps to completion (tickbox or number)."
+        data_type: varchar
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["tickbox", "number"]
+      - name: event_value
+        description: "The raw habit value (1/0 for tickbox habits, the metric value for number habits)."
+        data_type: integer
+        data_tests:
+          - not_null
+      - name: is_complete
+        description: "Whether the habit was completed (tickbox habits only)."
+        data_type: boolean
+
+  - name: core_sleep_sessions
+    description: "Conformed sleep session entity, one row per sleep session regardless of provider."
+    columns:
+      - name: session_id
+        description: "The primary key for this table."
+        data_type: varchar
+        data_tests:
+          - not_null
+          - unique
+      - name: session_date
+        description: "The civil (local) date the sleep session starts."
+        data_type: date
+        data_tests:
+          - not_null
+      - name: started_at
+        description: "Timestamp when sleep started."
+        data_type: timestamp
+        data_tests:
+          - not_null
+      - name: ended_at
+        description: "Timestamp when sleep ended."
+        data_type: timestamp
+        data_tests:
+          - not_null
+      - name: duration_minutes
+        description: "Sleep duration in minutes."
+        data_type: float
+        data_tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 120   # 2 hours
+                max_value: 1080  # 18 hours
+      - name: asleep_minutes
+        description: "Minutes recorded asleep in the provider summary."
+        data_type: integer
+        data_tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+                max_value: 1080
+                row_condition: "asleep_minutes is not null"
+      - name: sleep_type
+        description: "Recording format of the sleep session."
+        data_type: varchar
+        data_tests:
+          - not_null
+      - name: is_main_sleep
+        description: "Whether the session is the main sleep of the night."
+        data_type: boolean
+      - name: is_nap
+        description: "Whether the session is a nap."
+        data_type: boolean
+      - name: provider
+        description: "The source system that recorded the sleep session."
+        data_type: varchar
+        data_tests:
+          - not_null
+
+  - name: core_exercise_sessions
+    description: "Conformed exercise session entity, one row per exercise session regardless of provider."
+    columns:
+      - name: session_id
+        description: "The primary key for this table."
+        data_type: varchar
+        data_tests:
+          - not_null
+          - unique
+      - name: started_at
+        description: "Timestamp when the session started."
+        data_type: timestamp
+        data_tests:
+          - not_null
+      - name: ended_at
+        description: "Timestamp when the session ended."
+        data_type: timestamp
+        data_tests:
+          - not_null
+      - name: active_duration_minutes
+        description: "Active duration in minutes."
+        data_type: float
+        data_tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+                max_value: 2880    # 48 hours
+      - name: active_duration_seconds
+        description: "Active duration in seconds."
+        data_type: float
+        data_tests:
+          - not_null
+      - name: exercise_type
+        description: "Exercise type code."
+        data_type: varchar
+      - name: activity_name
+        description: "Human readable activity name."
+        data_type: varchar
+      - name: steps
+        description: "Steps recorded during the session."
+        data_type: integer
+        data_tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+                max_value: 200000
+                row_condition: "steps is not null"
+      - name: calories_kcal
+        description: "Calories burned during the session (kcal)."
+        data_type: integer
+        data_tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+                max_value: 20000
+                row_condition: "calories_kcal is not null"
+      - name: distance_meters
+        description: "Distance covered during the session in metres."
+        data_type: float
+        data_tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+                max_value: 200000
+                row_condition: "distance_meters is not null"
+      - name: pace_seconds_per_meter
+        description: "Average pace in seconds per metre."
+        data_type: float
+      - name: provider
+        description: "The source system that recorded the session."
+        data_type: varchar
+        data_tests:
+          - not_null
+
+  - name: core_daily_steps
+    description: "Conformed daily activity entity, one row per local day with total steps."
+    columns:
+      - name: activity_date
+        description: "The primary key for this table (local activity date)."
+        data_type: date
+        data_tests:
+          - not_null
+          - unique
+      - name: steps
+        description: "Total steps recorded on the activity date."
+        data_type: integer
+        data_tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+                max_value: 300000
+      - name: interval_count
+        description: "Number of step intervals aggregated for the day."
+        data_type: integer
+        data_tests:
+          - not_null
+      - name: provider
+        description: "The source system that recorded the step data."
+        data_type: varchar
+        data_tests:
+          - not_null

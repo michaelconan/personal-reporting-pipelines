@@ -15,7 +15,7 @@ models:
           - not_null
           - unique
       - name: source_id
-        description: "The source identifier (page_id for life habits, log_id for health habits, engagement_id for community habits)"
+        description: "The source identifier (page_id for habit events, sleep session id for health habits, activity date for step habits, engagement_id for community habits)"
         data_type: varchar
       - name: habit_date
         description: "The date for the habit tracking period"
@@ -31,7 +31,7 @@ models:
               arguments:
                 values: ["day", "week", "month"]
       - name: habit
-        description: "The name of the habit being tracked (e.g., met_1to1, met_group, met_sleep_goal, did_devotional, etc.)"
+        description: "The name of the habit being tracked (e.g., met_1to1, met_group, sleep_minutes, did_devotional, etc.)"
         data_type: varchar
         data_tests:
           - not_null

@@ -19,8 +19,8 @@ This runs the repository Python unit tests (pipenv environment expected).
 ```bash
 make dbt-build target=dev
 # or run specific models and tests
-pipenv run dbt run --select stg_fitbit__sleep
-pipenv run dbt test --select stg_fitbit__sleep
+pipenv run dbt run --select stg_google_health__sleep
+pipenv run dbt test --select stg_google_health__sleep
 ```
 
 - Generate docs:
