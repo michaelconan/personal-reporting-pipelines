@@ -18,7 +18,7 @@ semantic_models:
       - name: habit_period
         type: categorical
         expr: habit_period
-      - name: habit_name
+      - name: habit_key
         type: categorical
         expr: habit_key
     measures:
@@ -26,18 +26,21 @@ semantic_models:
         description: Count of completed habits
         agg: sum
         expr: |
-          case when coalesce(is_complete, habit_value > 0) then 1 else 0 end
+          case when is_complete then 1 else 0 end
       - name: total_habits
         description: Total count of habit records
         agg: count
         expr: habit_occurrence_key
       - name: completion_rate
-        description: Percentage of habits completed
+        description: >
+          Percentage of row-level habits completed. Count habits are excluded
+          because their adherence is evaluated at the aggregation grain
+          (is_complete is NULL by design).
         agg: average
         expr: |
           case
-            when coalesce(is_complete, habit_value > 0) then 1.0
-            else 0.0
+            when is_complete then 1.0
+            when not is_complete then 0.0
           end
   - name: engagement_contacts
     description: 'Semantic model for HubSpot engagements joined with person and group
