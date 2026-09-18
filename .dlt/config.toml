@@ -1,0 +1,10 @@
+[destination.databricks]
+# Unity Catalog managed volume used as temporary staging for direct load.
+# Format: <catalog>.<schema>.<volume>. The volume must already exist.
+staging_volume_name = "workspace.test_raw.staging"
+# Keep staged parquet files in the volume after load. Databricks direct load
+# succeeds with keep_staged_files = false, but the post-load directory REMOVE
+# fails with 404 (FILES_API_FILE_NOT_FOUND) via databricks-sql-connector 4.x,
+# which dlt treats as a transient load failure. Staged files are written under
+# a unique per-load folder, so leaving them does not affect later loads.
+keep_staged_files = true

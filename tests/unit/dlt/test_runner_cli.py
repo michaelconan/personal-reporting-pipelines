@@ -143,11 +143,11 @@ def test_runner_refresh_pipeline(mock_validate, mock_dlt_pipeline):
         mock_dlt_pipeline.assert_called_once_with(
             pipeline_name="notion_habits_pipeline",
             dataset_name=RAW_SCHEMA,
-            destination="bigquery",
+            destination="databricks",
             progress="log",
         )
         mock_pipeline_instance.run.assert_called_once_with(
             mock_notion_source,
             write_disposition=None,  # None for is_incremental=True as per get_write_disposition
-            loader_file_format="jsonl",
+            loader_file_format="parquet",
         )

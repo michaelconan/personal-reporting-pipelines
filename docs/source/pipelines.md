@@ -4,7 +4,7 @@ This section describes the data pipelines in this project, their data sources, a
 
 ## Data Sources
 
-The following data will be ingested from my personal systems into a BigQuery warehouse for automation and analysis.
+The following data will be ingested from my personal systems into a Databricks warehouse (Unity Catalog) for automation and analysis.
 
 1.  Notion
 2.  HubSpot

@@ -35,7 +35,7 @@ class PipelineConfig:
     pipeline_name: str
     display_name: str
     required_secret_keys: list[str] | None = None
-    loader_file_format: str | None = "jsonl"
+    loader_file_format: str | None = "parquet"
     progress: str | None = "log"
     token_getter: Callable | None = None
     source_kwargs: dict | None = None
@@ -122,7 +122,7 @@ def run_refresh(
         pipeline = dlt.pipeline(
             pipeline_name=pipeline_name,
             dataset_name=RAW_SCHEMA,
-            destination="bigquery",
+            destination="databricks",
             progress=progress,
         )
 

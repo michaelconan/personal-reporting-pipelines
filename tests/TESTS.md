@@ -8,7 +8,7 @@ This repo has two test systems: **pytest** for `pipelines/` (dlt) and **dbt buil
 | Fixture-tooling unit | `tests/unit/scripts/` | none (pure functions, `tmp_path`, stubbed BQ client) | none | runs under `make test-local` | `test-pipelines.yml` via `test-local` |
 | dlt integration (live, opt-in) | `tests/integration/dlt/` | DuckDB / live APIs | `live` | `RUN_LIVE_API_TESTS=1 pytest tests/integration -m live` | not run in CI |
 | Fixture-tooling live | `tests/integration/scripts/` | DuckDB / live APIs | `live` | `RUN_LIVE_API_TESTS=1 pytest tests/integration -m live` | not run in CI |
-| dlt e2e (cloud) | `tests/e2e/dlt/` | BigQuery (`live_e2e_test` / `live_data`, `dev_mode=True`) | `e2e` | `make test-e2e` (`pytest tests/e2e`) | `test-pipelines.yml` (only with secrets, skipped for dependabot) |
+| dlt e2e (cloud) | `tests/e2e/dlt/` | Databricks (`live_e2e_test` / `live_data`, `dev_mode=True`) | `e2e` | `make test-e2e` (`pytest tests/e2e`) | `test-pipelines.yml` (only with secrets, skipped for dependabot) |
 | dbt transform tests | `dbt/models/**/_*.yml`, `dbt/tests/` | DuckDB (`mock` target) in CI, BigQuery otherwise | n/a (`dbt test` / `dbt build`) | `make dbt-build target=mock`, `make dbt-test target=mock` | `test-transforms.yml`, `lint.yml` |
 
 > **Note:** the Fitbit dlt pipeline was removed (Fitbit API deprecation), and the
@@ -21,7 +21,7 @@ This repo has two test systems: **pytest** for `pipelines/` (dlt) and **dbt buil
 Defined in `pyproject.toml` (`[tool.pytest.ini_options]`) and `tests/conftest.py`:
 
 - `testpaths = ["tests"]`, `python_files = ["test_*.py"]`.
-- Markers: `e2e` (cloud BigQuery), `live` (calls external APIs, explicit opt-in), `local` (offline).
+- Markers: `e2e` (cloud Databricks), `live` (calls external APIs, explicit opt-in), `local` (offline).
 - `addopts = "-s -p no:pytest-responses --log-cli-level=INFO"`: the `responses` mock library is activated explicitly per-test via the `mock_responses` fixture, so it never interferes with e2e tests.
 - Coverage: `source = ["pipelines"]`, branch coverage, reports to `coverage.xml` + `test-results-*.xml` uploaded to Codecov.
 - `tests/conftest.py` sets `TEST=True`, `DBT_TARGET=test`, `RUNTIME__LOG_LEVEL=INFO`, and re-wires the `dlt` logger to pytest handlers.
@@ -53,7 +53,7 @@ Each source file (`test_notion_unit.py`, `test_hubspot_unit.py`, `test_google_he
 
 ### Runner / utils / mock-tooling unit tests
 
-- `test_runner_cli.py`: `parse_select()` parsing, `main()` CLI success/unknown-pipeline/exception paths (mocked `refresh_pipeline`), and `refresh_pipeline()` dispatch (source factory args, `with_resources()`, `dlt.pipeline(..., dataset_name=RAW_SCHEMA, destination="bigquery")`, `write_disposition`).
+- `test_runner_cli.py`: `parse_select()` parsing, `main()` CLI success/unknown-pipeline/exception paths (mocked `refresh_pipeline`), and `refresh_pipeline()` dispatch (source factory args, `with_resources()`, `dlt.pipeline(..., dataset_name=RAW_SCHEMA, destination="databricks")`, `write_disposition`).
 - `test_utils.py`: `should_force_full_refresh()` / `get_refresh_mode()` env-var matrix (`FORCE_FULL_REFRESH`, `<PIPELINE>_FULL_REFRESH`).
 - `tests/unit/scripts/test_export_mock_responses.py`: pure-function tests for `scripts/fixtures/export_mock_responses.py` — response capture, paginator override (single-page), incremental-limit override, wide export date ranges, dlt-metadata URL matching, cursor sorting, PII scrubbing, 3/2/1 split validation, registry-driven dispatch, and `save_captured_responses()` end-to-end to `tmp_path`.
 - `tests/unit/scripts/test_export_mock_seeds.py`: offline tests for `scripts/fixtures/export_mock_seeds.py` with a stubbed BigQuery client — env config, dynamic source discovery from `*_sources.yml`, BigQuery type normalization, scrubbed CSV export, parallel `export_all()` summary, and CLI wiring.
@@ -80,10 +80,10 @@ reused by the e2e suite to keep runtimes low:
 
 ## dlt e2e tests (`tests/e2e/dlt/`, marker `e2e`)
 
-Cloud tests against real APIs + BigQuery. `conftest.py` re-enables Google Secrets (`PROVIDERS__ENABLE_GOOGLE_SECRETS=true`, TOML fragments off, list-secrets on):
+Cloud tests against real APIs + Databricks. `conftest.py` re-enables Google Secrets (`PROVIDERS__ENABLE_GOOGLE_SECRETS=true`, TOML fragments off, list-secrets on):
 
 - `check_config` (module autouse): asserts `GOOGLE_APPLICATION_CREDENTIALS` exists and the `GoogleSecretsProvider` is configured when `SECRET_STORE=google`.
-- `bigquery_pipeline` (class-scoped): `dlt.pipeline(pipeline_name="live_e2e_test", destination="bigquery", dataset_name="live_data", dev_mode=True)`; drops pipeline + dataset schema afterwards.
+- `databricks_pipeline` (class-scoped): `dlt.pipeline(pipeline_name="live_e2e_test", destination="databricks", dataset_name="live_data", dev_mode=True)`; drops pipeline + dataset schema afterwards.
 - `test_load_pipelines.py::TestPipelines`: `REFRESH_ARGS = LIVE_REFRESH_ARGS` (narrow 7-day window from `tests/live_test_range.py`, shared with integration tests) and one test per pipeline (`notion`, `hubspot`, `google_health`) via `refresh_pipeline()`, asserting `info.has_failed_jobs is False`. Google Health pre-reads its refresh-token secret.
 
 ## dbt tests

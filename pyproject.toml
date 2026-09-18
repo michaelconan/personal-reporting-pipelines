@@ -4,7 +4,7 @@ version = "1.0.0"
 description = "Personal data integration and analytics platform tracking personal disciplines/habits"
 requires-python = ">=3.12"
 dependencies = [
-    "dlt[bigquery,parquet,duckdb]",
+    "dlt[bigquery,parquet,duckdb,databricks]",
     "google-cloud-bigquery-storage",
     "google-cloud-secret-manager",
     "google-api-python-client",
