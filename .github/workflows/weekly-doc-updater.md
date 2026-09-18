@@ -106,7 +106,7 @@ For each merged PR, use `pull_request_read.get_files` and `pull_request_read.get
 **dbt SQL model changes** (`dbt/models/**/*.sql`):
 - New, renamed, or removed models (staging, intermediate, marts)
 - New or removed columns in existing models
-- New habit keys added to `habits_v1`
+- New habit keys added to `dim_habit` / `fct_habit_occurrence`
 
 **dbt property/source changes** (`dbt/models/**/*.yml`):
 - New or modified source table definitions
@@ -114,7 +114,7 @@ For each merged PR, use `pull_request_read.get_files` and `pull_request_read.get
 
 **Seed changes** (`dbt/seeds/**/*.csv`):
 - New or renamed seed files
-- New habits added to `discipline_reference.csv`
+- New tiers or cadence changes in `group_connect_cadence.csv`
 
 **Macro changes** (`dbt/macros/**/*.sql`):
 - New, renamed, or removed custom macros
@@ -157,7 +157,7 @@ Work through each documentation target. For each one, identify gaps caused by th
 - `## Data Model Layers / Staging` — new or renamed staging models
 - `## Data Model Layers / Intermediate` — new or renamed intermediate models
 - `## Data Model Layers / Marts` — new or renamed mart tables
-- `## Habit Keys` — new or removed habit keys in `habits_v1`
+- `## Habit Keys` — new or removed habit keys in `dim_habit` / `fct_habit_occurrence`
 - `## dbt Variables` — new or changed dbt variables
 - `## Custom Macros` — new or removed macros
 

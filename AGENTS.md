@@ -27,23 +27,23 @@ Current agentic workflow: `weekly-doc-updater` — runs every Monday, opens a PR
 - `pipelines/google_health.py` — Google Health sleep/steps/exercise extraction
 - `pipelines/hs_config.yml` — HubSpot object/property config
 - `pipelines/__init__.py` — Shared constants: BASE_DATE, RAW_SCHEMA, DBT_SCHEMA
-- `Discipline Reference.csv` — Master list of 28 personal habits with targets/thresholds
+- `dbt/seeds/group_connect_cadence.csv` — Target connection cadence per group tier
 - `dbt/dbt_project.yml` — dbt config (profile, materializations, vars)
 - `dbt/profiles.yml` — dev=duckdb, test/prod=BigQuery
 
-## Critical Macro: make_source
-`make_source(source_name, relation_name)` resolves differently by environment:
-- **dev (DuckDB)**: `ref('{source_name}__{relation_name}')` → reads from seed files
-- **prod/test (BigQuery)**: `source(source_name, relation_name)` → reads from raw schema
+## Source Resolution (no make_source macro)
+There is no `make_source` macro. Models call `{{ source(source_name, relation_name) }}` directly for every target:
+- **mock (DuckDB)**: each source reads its test fixture via `config.external_location: dbt/test_fixtures/{source}/{identifier}.csv`.
+- **dev/test/prod (BigQuery)**: sources resolve to the raw schema.
 
-**Consequence**: mock seed filenames MUST match the source identifier names in `sources.yml`.
+**Consequence**: fixtures in `dbt/test_fixtures/{source}/` MUST be named after the source identifiers in `_*sources.yml`.
 
 ## Data Model Layers
-### Seeds (dev only, `dbt/seeds/mock_sources/`)
-Mock data for local development. Named `{source}__{table}.csv` to match raw BigQuery table names.
-
 ### Seeds (`dbt/seeds/`)
-- `discipline_reference.csv` — canonical habit keys, targets, thresholds for all environments
+Reference data for all environments, `snake_case.csv` with a sibling `_seeds__properties.yml`:
+- `group_connect_cadence.csv` — target connection cadence per group tier (`cadence_value` + `cadence_period`)
+
+Local mock source data lives in `dbt/test_fixtures/{source}/*.csv` (see Source Resolution above).
 
 ### Staging (`dbt/models/staging/`)
 - **notion/**: `stg_notion__daily_habits`, `stg_notion__weekly_habits`, `stg_notion__monthly_habits`
@@ -61,9 +61,17 @@ Generic, source-agnostic entities that could map to comparable source systems:
 - `int_habits`: Merges habit events, sleep minutes, daily steps, and HubSpot engagement habits into one occurrence grain feeding the marts
 
 ### Marts (`dbt/models/marts/`)
-- `habits/habits_v1`: Unified habits table (Notion habits + Google Health sleep/steps + HubSpot meetings)
-- `habits/habits_metrics_v1`: Completion rates vs. discipline reference targets
-- `community/engagement_contacts_v1`: Denormalized engagement-contact-company table
+Conformed dimensions (`dim_*_v1`) and facts (`fct_*_v1`) stored flat in `dbt/models/marts/` (no subdirectories), all with enforced contracts and versioned `_v1` SQL files:
+- `dim_date_v1`: Conformed date dimension (calendar spine + attributes, sentinel 1900-01-01)
+- `dim_habit_v1`: Habit goal master (targets/thresholds from `stg_notion__habit_reference`, sentinel `UNKNOWN_HABIT`)
+- `dim_person_v1`: Contact dimension with group key (sentinel `UNKNOWN_PERSON`)
+- `dim_group_v1`: HubSpot company/group dimension (sentinel `UNKNOWN_GROUP`)
+- `dim_group_tier_v1`: Group tier cadence reference from the `group_connect_cadence` seed (sentinel `UNKNOWN_TIER`)
+- `fct_habit_occurrence_v1`: One row per habit occurrence, completion resolved against `dim_habit`
+- `fct_engagement_v1`: One row per engagement-contact association with date/person/group keys
+- `fct_health_session_v1`: One row per sleep or exercise session (`session_kind` discriminator)
+
+Model-level and column docs live in `dbt/models/marts/_mrt__properties.yml`.
 
 ## API Naming Conventions
 
@@ -93,7 +101,7 @@ Generic, source-agnostic entities that could map to comparable source systems:
 
 ## Habits Data Model
 
-### Habit Keys (values in `habit` column of habits mart)
+### Habit Keys (values in `habit_key` on `dim_habit` and `fct_habit_occurrence`)
 Notion daily (checkboxes): `did_devotional`, `did_journal`, `did_prayer`, `did_read_bible`, `did_workout`, `did_language`
 Notion weekly (checkboxes): `did_fast`, `did_church`, `did_community`, `did_sabbath`, `did_cook`, `did_cardio`, `did_date_night`
 Notion weekly (numbers): `prayer_minutes`, `screen_minutes`
@@ -107,7 +115,6 @@ Note: habit completions and thresholds come from the Notion habit reference data
 - `dbt_date:time_zone`: 'UTC' (used by dbt date utilities)
 
 ## Custom Macros
-- `make_source(source, relation)` — adapter-aware source/ref resolution
 - `json_extract_value(column, path)` — cross-db JSON extraction (BigQuery: `json_extract_scalar`, DuckDB: `json_extract_string`)
 - `timestamp_parse(column)` — parse ms timestamps (legacy, no longer needed for new HubSpot model)
 - `trunc_date(period, date_expr)` — cross-db date truncation
@@ -153,10 +160,29 @@ Note: habit completions and thresholds come from the Notion habit reference data
 - Keywords: lowercase; identifiers: lowercase with underscores
 - Line length: 80; indentation: 4 spaces; trailing commas; explicit aliasing
 
+### dbt model structure (required)
+Every SQL model follows this top-to-bottom shape:
+1. **Import CTEs at the top** — one CTE per `ref()`/`source()`. This is the only place `ref()` is called, so the model's inputs are visible immediately.
+2. **Transform CTEs next** — all joins, casts, derivations, and filtering as named CTEs after the imports.
+3. **`final` CTE + `select * from final` last** — the last CTE holds the output shape and the model ends with exactly `select * from final`, keeping column order out of the logic and making debugging easier.
+
+```sql
+with
+stg_hubspot__contacts as (
+    select * from {{ ref('stg_hubspot__contacts') }}
+),
+final as (
+    select contact_id, email from stg_hubspot__contacts
+)
+select * from final
+```
+
+Applies to staging, core, intermediate, and marts. Union models align branches in CTEs and union inside `final`.
+
 ## Naming Conventions
 - **dlt tables**: `{source}__{entity}` (e.g., `hubspot__contacts`)
 - **Pipeline functions**: `refresh_{source}()` (e.g., `refresh_hubspot()`)
-- **dbt staging**: `stg_{source}__{entity}`; intermediate: `int_{domain}_{description}`
+- **dbt staging**: `stg_{source}__{entity}`; intermediate: `int_{domain}_{description}`; marts: `dim_{entity}_v1` / `fct_{entity}_v1`
 - **GitHub Actions workflows**: `{action}-{frequency}` (e.g., `dlt-daily`)
 - **Env vars**: `FORCE_FULL_REFRESH` (global), `{PIPELINE_NAME}_FULL_REFRESH` (per-pipeline)
 
@@ -170,6 +196,7 @@ Note: habit completions and thresholds come from the Notion habit reference data
 
 ## ALWAYS ACTIVATE those skills
 they are essential for ANY work in this project
+- `transformations-workflow`
 - `rest-api-pipeline-workflow`
 
 ## Security

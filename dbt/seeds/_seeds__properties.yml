@@ -1,0 +1,30 @@
+---
+version: 2
+seeds:
+  - name: group_connect_cadence
+    description: >
+      Target connection cadence per group tier expressed in days. Feeds
+      dim_group_tier so relationship-adherence reporting can compare actual
+      engagement recency against the goal for each tier.
+    columns:
+      - name: group_tier
+        description: Group tier (1-3); higher tiers require less frequent contact.
+        data_type: bigint
+        data_tests:
+          - not_null
+          - unique
+      - name: cadence_value
+        description: Target number of cadence_period units between connections for the tier.
+        data_type: bigint
+        data_tests:
+          - not_null
+      - name: cadence_period
+        description: Unit of time for cadence_value (currently always days).
+        data_type: string
+        data_tests:
+          - not_null
+      - name: description
+        description: Human readable description of the tier connection goal.
+        data_type: string
+        data_tests:
+          - not_null

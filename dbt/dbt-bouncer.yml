@@ -48,6 +48,23 @@ manifest_checks:
     description: Intermediate models must carry the int_ prefix.
     include: ^models/intermediate
     model_name_pattern: ^int_
+  - name: check_model_names
+    description: Mart models must be a dim_ or fct_ entity.
+    include: ^models/marts
+    model_name_pattern: ^(dim_|fct_)
+  - name: check_model_file_name
+    description: >
+      Mart model files must end with a version suffix (e.g. dim_date_v1.sql).
+      Model names exclude the version, so the suffix is enforced on the file.
+    include: ^models/marts
+    file_name_pattern: ^.*_v[0-9]+\.sql$
+  - name: check_model_latest_version_specified
+    description: Mart models must be versioned so their relation name ends with _v{n}.
+    include: ^models/marts
+  - name: check_model_version_allowed
+    description: Mart model versions must be numeric (e.g. 1).
+    include: ^models/marts
+    version_pattern: ^[0-9]+$
   - name: check_model_description_populated
     description: Every model must carry a description keeping the DAG self-documenting.
     min_description_length: 20

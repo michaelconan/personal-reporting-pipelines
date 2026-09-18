@@ -46,11 +46,11 @@ the current marts**; it does not read raw dlt tables. Inputs:
 | `fct_engagement` | `stg_hubspot__engagements`, `stg_hubspot__engagement_contacts`, `stg_hubspot__contacts`, `stg_hubspot__companies` | engagement-contact bridge |
 | `fct_health_session` | `core_sleep_sessions`, `core_exercise_sessions` | one row per sleep or exercise session |
 
-**Replaces current marts.** These tables supersede `habits` (v1), `habits_metrics_v1`,
-and `engagement_contacts_v1`: the occurrence fact absorbs `habits` v1, the derived
-metrics below absorb `habits_metrics_v1`, and `fct_engagement` absorbs
-`engagement_contacts_v1`. At implementation time the mart models and their property
-files are removed, and the MetricFlow semantic models are repointed at the new facts
+**Implemented.** These tables superseded `habits` (v1), `habits_metrics_v1`,
+and `engagement_contacts_v1`: the occurrence fact absorbed `habits` v1, the derived
+metrics below absorb `habits_metrics_v1`, and `fct_engagement` absorbed
+`engagement_contacts_v1`. The old mart models and their property files were removed,
+and the MetricFlow semantic models now point at the new facts
 (`habits_metrics_v1` logic moves into the derived-metrics layer).
 
 ## Habit keys covered
@@ -80,12 +80,14 @@ Grain: one row per calendar day. Static, no SCD. Built from `time_spine_daily`.
 
 | Column | Type | Notes |
 |---|---|---|
-| `date_key` | bigint | PK; surrogate, e.g. `to_char(date_day, 'YYYYMMDD')` |
+| `date_key` | string | PK; `YYYY-MM-DD` string (castable to `date` on DuckDB + BigQuery, used by the MetricFlow time dimension) |
 | `date_day` | date | natural key, unique |
-| `year`, `quarter`, `month`, `month_name` | int / string | calendar attrs |
-| `week_of_year` | int | ISO week number (`dbt_date.iso_week_of_year`) |
-| `day_of_week` | int | ISO ordinal 1 (Mon) – 7 (Sun) |
+| `year_start_date`, `quarter_start_date`, `month_start_date`, `week_start_date` | date | period-start calendar attributes (`trunc_date`) |
+| `month_name` | string | English calendar month name |
+| `day_of_week` | string | English day name |
 | `is_weekend` | bool | Sat/Sun |
+
+A sentinel row with `date_key = '1900-01-01'` is included so fact date keys are never NULL.
 
 > **Decision:** extend `time_spine_daily` to start **2016-01-01** so pre-2020 Google
 > Health rows have a `dim_date` row (no `UNKNOWN_DATE` sentinel needed).
@@ -188,7 +190,7 @@ Notes:
 - `habit_value` is **additive within a single `habit_period`**; rows at different
   periods must not be summed together (semi-additive across periods).
 - Count-habit completeness is not meaningful per row; count adherence is a derived
-  metric (`engagement_count >= threshold`), mirroring `habits_metrics_v1`.
+  metric (`engagement_count >= threshold`), computed in the derived-metrics layer.
 
 ### `fct_engagement` — relationship maintenance
 
@@ -270,20 +272,23 @@ from the habit fact, `relationship` rows from the engagement fact (including tie
 cadence adherence), and health habits (`sleep_minutes`, `steps`) are native habit
 rows in the habit fact with detail in the health-session fact.
 
-## Conventions and placement (implementation time)
+## Conventions and placement (implemented)
 
-- Proposed location: `dbt/models/marts/datamart/`; files `{model}_v1.sql` following
-  the repo's `{entity}_v1` file convention. Model names: `dim_date`, `dim_habit`,
-  `dim_person`, `dim_group`, `dim_group_tier`, `fct_habit_occurrence`,
-  `fct_engagement`, `fct_health_session`. The `dim_`/`fct_` prefixes already satisfy
-  the dbt-bouncer model-name pattern `^(stg_|int_|core_|fct_|dim_|...)`.
+- Location: `dbt/models/marts/` (flat, alongside the other marts — no `datamart/`
+  subdirectory); files `{model}_v1.sql` following the repo's `{entity}_v1` file
+  convention. Model names: `dim_date`, `dim_habit`, `dim_person`, `dim_group`,
+  `dim_group_tier`, `fct_habit_occurrence`, `fct_engagement`, `fct_health_session`.
+  The `dim_`/`fct_` prefixes already satisfy the dbt-bouncer model-name pattern
+  `^(stg_|int_|core_|fct_|dim_|...)`.
 - Surrogate keys use the `_key` suffix; foreign keys follow the PK in each table.
 - Conformed `dim_date` must be identical (same surrogate scheme) across all facts.
-- Properties in `_mrt_datamart__properties.yml` with enforced contracts and PK
-  constraints (surrogate keys).
-- On implementation, remove `habits_v1.sql`, `habits_metrics_v1.sql`,
-  `engagement_contacts_v1.sql` and their property files; repoint MetricFlow semantic
-  models to the new facts.
+- Properties live in `dbt/models/marts/_mrt__properties.yml` with enforced contracts
+  and PK constraints (surrogate keys).
+- The former `habits_v1.sql`, `habits_metrics_v1.sql`, `engagement_contacts_v1.sql`
+  and their property files were removed; the MetricFlow semantic models were
+  repointed to `fct_habit_occurrence` / `fct_engagement`.
+- Every model follows the repo's CTE convention: import CTEs at the top, transform
+  CTEs after, and a closing `final` CTE with `select * from final`.
 
 ## Decisions and risks (resolved)
 
@@ -305,8 +310,9 @@ rows in the habit fact with detail in the health-session fact.
 
 ## Subsequent implementation steps
 
-When approved, the work follows the `transformations` workflow toolkit
+The work followed the `transformations` workflow toolkit
 (`annotate-sources` → `create-ontology` → `generate-cdm` → `create-transformation`),
-producing the eight tables above as dbt models under `marts/datamart/`, the
-`group_connect_cadence` seed, removal of the three superseded mart models, plus
-optional MetricFlow metrics on completion rate and adherence.
+producing the eight tables above as dbt models under `dbt/models/marts/`, the
+`group_connect_cadence` seed, removal of the three superseded mart models, and
+repointed MetricFlow semantic models. Metrics on completion rate and adherence remain
+optional follow-up work.

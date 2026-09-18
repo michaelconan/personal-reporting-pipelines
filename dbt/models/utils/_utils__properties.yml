@@ -12,7 +12,7 @@ models:
       standard_granularity_column: date_day
     columns:
       - name: date_day
-        description: A continuous calendar date from 2020-01-01 to 2030-12-31.
+        description: A continuous calendar date from 2016-01-01 to 2030-12-31.
         granularity: day
         data_type: date
         data_tests:

@@ -7,21 +7,42 @@ This page explains the dbt layering strategy used in this project and key conven
 - Staging (`dbt/models/staging/`): lightweight, source-facing models that normalize raw table shapes and expose consistent column names. Files are `stg_{source}__{entity}.sql`.
 - Core (`dbt/models/core/`): generic, source-agnostic entities that could be produced by comparable source systems (for example: `core_habit_events.sql`, `core_sleep_sessions.sql`, `core_daily_steps.sql`, `core_exercise_sessions.sql`).
 - Intermediate (`dbt/models/intermediate/`): merge, reshape, and transform across core entities into the reporting grain. Example: `habits/int_habits.sql`.
-- Marts (`dbt/models/marts/`): analytics-ready tables and aggregates consumed by BI/metrics. Examples: `habits/habits_v1.sql`, `habits/habits_metrics_v1.sql`.
+- Marts (`dbt/models/marts/`): analytics-ready conformed dimensions and facts consumed by BI/metrics, stored flat in the directory. Examples: `dim_habit_v1.sql`, `fct_habit_occurrence_v1.sql`.
 
-## make_source macro
+## Model structure
 
-The macro `make_source(source_name, relation_name)` adapts to environment:
+Every SQL model follows the same top-to-bottom shape so it is easy to debug:
 
-- In dev (DuckDB) it returns `ref('{source_name}__{relation_name}')` so dbt reads mock seed files.
-- In prod/test (BigQuery) it returns `source(source_name, relation_name)` to reference the raw BigQuery schema.
+1. **Import CTEs at the top** — one CTE per `ref()`/`source()`, and the only place `ref()` is called.
+2. **Transform CTEs next** — all joins, casts, derivations, and filtering as named CTEs.
+3. **`final` CTE + `select * from final` last** — the last CTE holds the output shape and the model ends with exactly `select * from final`.
 
-Consequence: local seed filenames must match the source identifier names in `dbt/seeds/mock_sources/` (e.g., `notion__data_source_daily_habits.csv`).
+```sql
+with
+stg_hubspot__contacts as (
+    select * from {{ ref('stg_hubspot__contacts') }}
+),
+final as (
+    select contact_id, email from stg_hubspot__contacts
+)
+select * from final
+```
+
+The convention applies to staging, core, intermediate, and marts. Union models align their branches in CTEs and union inside `final`.
+
+## Source resolution (no make_source macro)
+
+Models call `{{ source(source_name, relation_name) }}` directly; there is no `make_source` macro:
+
+- In mock (DuckDB) each source reads its test fixture via `config.external_location: dbt/test_fixtures/{source}/{identifier}.csv`.
+- In dev/test/prod (BigQuery) sources resolve to the raw schema.
+
+Consequence: fixture filenames under `dbt/test_fixtures/{source}/` must match the source identifiers in `_*sources.yml`.
 
 ## Seeds
 
-- `dbt/seeds/discipline_reference.csv` — canonical master list of personal disciplines, targets and thresholds.
-- `dbt/seeds/mock_sources/` — mock source files used for local development and DuckDB target. These seeds replicate the raw table naming convention.
+- `dbt/seeds/group_connect_cadence.csv` — target connection cadence per group tier (`cadence_value` + `cadence_period`), for all environments.
+- `dbt/test_fixtures/{source}/*.csv` — mock source files used for local development and the DuckDB `mock` target; these follow the raw table naming convention.
 
 ## Macros and utilities
 

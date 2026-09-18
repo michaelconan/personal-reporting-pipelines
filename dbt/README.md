@@ -15,7 +15,17 @@ Model layers have been implemented as recommended by [dbt's project structure gu
 | Staging      | Foundational models organised by source   | Renaming, type casting, basic computations, categorising | Standardise names to snake case, deduplicate for change data loading |
 | Core         | Generic, source-agnostic data entities    | Conformed entities a comparable source system could produce | Conformance contracts remain provider-neutral                  |
 | Intermediate | Apply complex transformations by focus area | Structural simplification, re-graining, merging, isolating complex operations | Contracts enforced |
-| Marts        | Entity or concept layer, denormalised     | Standard entity concepts, built wide, and extended thoughtfully | Contracts enforced |
+| Marts        | Entity or concept layer, denormalised     | Conformed dimensions (`dim_*_v1`) and facts (`fct_*_v1`) stored flat in `dbt/models/marts/` | Contracts enforced |
+
+## Model Structure
+
+Every SQL model follows the same convention:
+
+1. **Import CTEs at the top** — one CTE per `ref()`/`source()`, and the only place `ref()` is called. This makes the model's inputs explicit.
+2. **Transform CTEs in the middle** — all joins, casts, filtering, and derivations in named CTEs.
+3. **`final` CTE plus `select * from final` at the bottom** — the last CTE holds the output shape and the model closes with a wildcard select. Keeping the final statement a plain `select *` decouples output column order from the logic and makes debugging easier.
+
+The same shape applies to every layer (staging, core, intermediate, marts), including models that union multiple sources: build the aligned branches as CTEs, then union them inside `final`.
 
 ## Column Naming Standards
 
