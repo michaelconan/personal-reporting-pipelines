@@ -32,10 +32,10 @@ uv run dbt docs serve
 
 ## SQL linting
 
-- SQLFluff config is present. Lint against DuckDB dialect for local development:
+- dbt 2.x ships a built-in SQL linter (SQLFluff-compatible, reusing `dbt/.sqlfluff`). Lint against the mock target for local development:
 
 ```bash
-sqlfluff lint --dialect duckdb
+uv run dbt lint --project-dir dbt --profiles-dir dbt --target mock
 ```
 
 ## GitHub Actions

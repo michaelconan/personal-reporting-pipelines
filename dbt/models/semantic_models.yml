@@ -4,42 +4,48 @@ semantic_models:
   - name: habits
     description: Semantic model for habit tracking data combining life habits, health
       habits (sleep), and community engagement habits.
-    model: ref('habits')
+    model: ref('fct_habit_occurrence')
     entities:
       - name: habit_record
         type: primary
-        expr: habit_key
+        expr: habit_occurrence_key
     dimensions:
       - name: habit_date
         type: time
         type_params:
           time_granularity: day
-        expr: habit_date
+        expr: cast(date_key as date)
       - name: habit_period
         type: categorical
         expr: habit_period
-      - name: habit_name
+      - name: habit_key
         type: categorical
-        expr: habit
+        expr: habit_key
     measures:
       - name: habit_completions
         description: Count of completed habits
         agg: sum
         expr: |
-          case when habit_value > 0 then 1 else 0 end
+          case when is_complete then 1 else 0 end
       - name: total_habits
         description: Total count of habit records
         agg: count
-        expr: habit_date
+        expr: habit_occurrence_key
       - name: completion_rate
-        description: Percentage of habits completed
+        description: >
+          Percentage of row-level habits completed. Count habits are excluded
+          because their adherence is evaluated at the aggregation grain
+          (is_complete is NULL by design).
         agg: average
         expr: |
-          case when habit_value > 0 then 1.0 else 0.0 end
+          case
+            when is_complete then 1.0
+            when not is_complete then 0.0
+          end
   - name: engagement_contacts
-    description: 'Semantic model for HubSpot engagements joined with contact and company
+    description: 'Semantic model for HubSpot engagements joined with person and group
       information. Grain: engagement + contact.'
-    model: ref('engagement_contacts')
+    model: ref('fct_engagement')
     entities:
       - name: engagement_contact
         type: primary
@@ -49,17 +55,16 @@ semantic_models:
         expr: engagement_id
       - name: contact
         type: foreign
-        expr: contact_id
+        expr: person_key
       - name: company
         type: foreign
-        expr: company_id
+        expr: group_key
     dimensions:
       - name: engagement_date
         type: time
         type_params:
           time_granularity: day
-        expr: |
-          cast(occurred_at as date)
+        expr: cast(date_key as date)
       - name: engagement_type
         type: categorical
         expr: engagement_type
@@ -67,15 +72,9 @@ semantic_models:
         type: categorical
         expr: |
           case when is_synchronous then 'synchronous' else 'asynchronous' end
-      - name: contact_first_name
+      - name: engagement_kind
         type: categorical
-        expr: first_name
-      - name: contact_last_name
-        type: categorical
-        expr: last_name
-      - name: company_name
-        type: categorical
-        expr: company_name
+        expr: engagement_kind
     measures:
       - name: engagement_count
         description: Total count of distinct engagements
@@ -94,4 +93,4 @@ semantic_models:
       - name: contact_count
         description: Count of distinct contacts involved in engagements
         agg: count_distinct
-        expr: contact_id
+        expr: person_key

@@ -1,0 +1,4 @@
+group_tier,cadence_value,cadence_period,description
+1,45,days,Connect with tier 1 contacts at least once every 45 days
+2,90,days,Connect with tier 2 contacts at least once every 90 days
+3,365,days,Connect with tier 3 contacts at least once every 365 days

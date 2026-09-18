@@ -4,7 +4,7 @@ This dbt project is designed to transform and model data from various sources, i
 
 ## Data Ingestion
 
-The raw data is ingested using `dlt` (data load tool), which means that the raw tables have a specific structure that the staging models are designed to handle. The raw data is loaded into the `raw` schema in the production environment (BigQuery). For local testing, source tables are read directly from CSV test fixtures in `dbt/test_fixtures/` via DuckDB external locations (configured through the `external_location` meta on each source).
+The raw data is ingested using `dlt` (data load tool), which means that the raw tables have a specific structure that the staging models are designed to handle. The raw data is loaded into the `raw` schema in the production environment (BigQuery). For local testing, source tables are read directly from CSV test fixtures in `dbt/test_fixtures/` via DuckDB external locations (configured through each source's `config.external_location`).
 
 ## Layers
 
@@ -15,7 +15,17 @@ Model layers have been implemented as recommended by [dbt's project structure gu
 | Staging      | Foundational models organised by source   | Renaming, type casting, basic computations, categorising | Standardise names to snake case, deduplicate for change data loading |
 | Core         | Generic, source-agnostic data entities    | Conformed entities a comparable source system could produce | Conformance contracts remain provider-neutral                  |
 | Intermediate | Apply complex transformations by focus area | Structural simplification, re-graining, merging, isolating complex operations | Contracts enforced |
-| Marts        | Entity or concept layer, denormalised     | Standard entity concepts, built wide, and extended thoughtfully | Contracts enforced |
+| Marts        | Entity or concept layer, denormalised     | Conformed dimensions (`dim_*_v1`) and facts (`fct_*_v1`) stored flat in `dbt/models/marts/` | Contracts enforced |
+
+## Model Structure
+
+Every SQL model follows the same convention:
+
+1. **Import CTEs at the top** — one CTE per `ref()`/`source()`, and the only place `ref()` is called. This makes the model's inputs explicit.
+2. **Transform CTEs in the middle** — all joins, casts, filtering, and derivations in named CTEs.
+3. **`final` CTE plus `select * from final` at the bottom** — the last CTE holds the output shape and the model closes with a wildcard select. Keeping the final statement a plain `select *` decouples output column order from the logic and makes debugging easier.
+
+The same shape applies to every layer (staging, core, intermediate, marts), including models that union multiple sources: build the aligned branches as CTEs, then union them inside `final`.
 
 ## Column Naming Standards
 
@@ -42,9 +52,9 @@ Conventions:
 This project is set up with a local testing environment using DuckDB. To run the project locally, you need to:
 1.  Run `uv sync` to install Python dependencies.
 2.  Run `uv run dbt build --project-dir dbt --profiles-dir dbt --target mock` to exercise the models and tests against the `dbt/test_fixtures/` CSVs.
-3.  Optionally run `uv run dbt docs generate --project-dir dbt --profiles-dir dbt --static --target mock` for docs/catalog and `uv run dbt-bouncer --config-file dbt/dbt-bouncer.yml` for governance checks.
+3.  Optionally run `make docs` for the dbt + Sphinx docs site and `uv run dbt-bouncer --config-file dbt/dbt-bouncer.yml` (from `dbt/`) for governance checks.
 
-The local testing setup uses a `profiles.yml` file located in `dbt/profiles`, which is configured to use a local DuckDB database file (`dbt.duckdb`).
+The local testing setup uses a `profiles.yml` file located in `dbt/profiles.yml`, which is configured to use a local DuckDB database file (`dbt.duckdb`).
 
 ## Data Quality
 

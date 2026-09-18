@@ -27,7 +27,7 @@ Macros centralize cross-database logic. Important macros:
 - `cast_safe(expr, type)` — returns safely casted expression or null on failure
 - `unnest_json_array(array_col, alias)` — helper to unnest JSON arrays in a cross-db manner
 
-Location: `dbt/macros/` (look for `_macros__properties.yml` and `.sql` files)
+Location: `dbt/macros/{dates,json,sources}/` — each subfolder holds its `.sql` macros alongside a co-located `_{subfolder}__macros.yml` properties file.
 
 ## Best practices
 

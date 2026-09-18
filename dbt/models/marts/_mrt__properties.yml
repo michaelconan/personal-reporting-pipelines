@@ -1,0 +1,383 @@
+---
+version: 2
+models:
+  - name: dim_date
+    description: >
+      Conformed date dimension shared by every datamart fact. One row per
+      calendar day from 2016-01-01 to 2030-12-31 plus an UNKNOWN sentinel row.
+    versions:
+      - v: 1
+        defined_in: dim_date_v1
+        description: >
+          Conformed date dimension shared by every datamart fact. One row per
+          calendar day from 2016-01-01 to 2030-12-31 plus an UNKNOWN sentinel row.
+    constraints:
+      - type: primary_key
+        columns:
+          - date_key
+    columns:
+      - name: date_key
+        description: Surrogate key for the calendar day (YYYY-MM-DD string).
+        data_type: string
+        data_tests:
+          - unique
+        constraints:
+          - type: not_null
+      - name: date_day
+        description: The natural calendar date.
+        data_type: date
+        data_tests:
+          - unique
+        constraints:
+          - type: not_null
+      - name: year_start_date
+        description: First day of the calendar year containing the date.
+        data_type: date
+      - name: quarter_start_date
+        description: First day of the calendar quarter containing the date.
+        data_type: date
+      - name: month_start_date
+        description: First day of the calendar month containing the date.
+        data_type: date
+      - name: week_start_date
+        description: Start of the calendar week containing the date.
+        data_type: date
+      - name: month_name
+        description: English name of the calendar month.
+        data_type: string
+      - name: day_of_week
+        description: English name of the day of week.
+        data_type: string
+      - name: is_weekend
+        description: Whether the date falls on a Saturday or Sunday.
+        data_type: boolean
+  - name: dim_habit
+    description: >
+      Habit goal master, one row per tracked discipline with the targets and
+      thresholds used to evaluate completion. SCD type 1.
+    versions:
+      - v: 1
+        defined_in: dim_habit_v1
+        description: >
+          Habit goal master, one row per tracked discipline with the targets and
+          thresholds used to evaluate completion. SCD type 1.
+    constraints:
+      - type: primary_key
+        columns:
+          - habit_key
+    columns:
+      - name: habit_key
+        description: >
+          Canonical habit business key (did_*, met_*, snake_case), used directly
+          as the surrogate key.
+        data_type: string
+        data_tests:
+          - unique
+        constraints:
+          - type: not_null
+      - name: source_id
+        description: Source identifier of the habit goal row (Notion page id).
+        data_type: string
+      - name: habit_name
+        description: Display name of the habit.
+        data_type: string
+      - name: category
+        description: Habit category (faith, life, health, community, work).
+        data_type: string
+      - name: frequency
+        description: Tracking frequency of the habit (day, week, month).
+        data_type: string
+      - name: habit_type
+        description: How completion is derived (tickbox, number, count).
+        data_type: string
+      - name: source
+        description: Source system that tracks the habit.
+        data_type: string
+      - name: target_pct
+        description: Completion target as a share of tracked periods.
+        data_type: numeric
+      - name: threshold
+        description: Numeric threshold for number and count habits.
+        data_type: numeric
+      - name: is_below_threshold
+        description: Whether the threshold comparison is inverted for this habit.
+        data_type: boolean
+      - name: is_active
+        description: Whether the habit goal is currently active.
+        data_type: boolean
+      - name: start_date
+        description: Date the habit goal started being tracked.
+        data_type: date
+  - name: dim_person
+    description: >
+      Relationship master, one row per HubSpot contact with their group. SCD type
+      1, including an UNKNOWN sentinel row.
+    versions:
+      - v: 1
+        defined_in: dim_person_v1
+        description: >
+          Relationship master, one row per HubSpot contact with their group. SCD
+          type 1, including an UNKNOWN sentinel row.
+    constraints:
+      - type: primary_key
+        columns:
+          - person_key
+    columns:
+      - name: person_key
+        description: Surrogate key for the contact.
+        data_type: string
+        data_tests:
+          - unique
+        constraints:
+          - type: not_null
+      - name: group_key
+        description: Foreign key to dim_group, or UNKNOWN_GROUP when unassigned.
+        data_type: string
+        constraints:
+          - type: not_null
+      - name: contact_id
+        description: Natural HubSpot contact identifier.
+        data_type: string
+      - name: email
+        description: Contact email address.
+        data_type: string
+      - name: first_name
+        description: Contact first name.
+        data_type: string
+      - name: last_name
+        description: Contact last name.
+        data_type: string
+  - name: dim_group
+    description: >
+      Group and community master, one row per HubSpot company. SCD type 1,
+      including an UNKNOWN sentinel row.
+    versions:
+      - v: 1
+        defined_in: dim_group_v1
+        description: >
+          Group and community master, one row per HubSpot company. SCD type 1,
+          including an UNKNOWN sentinel row.
+    constraints:
+      - type: primary_key
+        columns:
+          - group_key
+    columns:
+      - name: group_key
+        description: Surrogate key for the group.
+        data_type: string
+        data_tests:
+          - unique
+        constraints:
+          - type: not_null
+      - name: group_id
+        description: Natural HubSpot company identifier.
+        data_type: string
+      - name: group_name
+        description: Display name of the group.
+        data_type: string
+      - name: group_tier
+        description: Group tier 1-3 parsed from the ideal customer profile field.
+        data_type: bigint
+  - name: dim_group_tier
+    description: >
+      Group tier cadence reference, one row per tier with the target connection
+      cadence in days. SCD type 1, including an UNKNOWN sentinel row.
+    versions:
+      - v: 1
+        defined_in: dim_group_tier_v1
+        description: >
+          Group tier cadence reference, one row per tier with the target
+          connection cadence in days. SCD type 1, including an UNKNOWN row.
+    constraints:
+      - type: primary_key
+        columns:
+          - group_tier_key
+    columns:
+      - name: group_tier_key
+        description: Surrogate key for the group tier.
+        data_type: string
+        data_tests:
+          - unique
+        constraints:
+          - type: not_null
+      - name: group_tier
+        description: Natural group tier (1-3).
+        data_type: bigint
+      - name: cadence_value
+        description: Target number of cadence_period units between connections.
+        data_type: bigint
+      - name: cadence_period
+        description: Unit of time for cadence_value (currently always days).
+        data_type: string
+  - name: fct_habit_occurrence
+    description: >
+      Habit occurrence fact, one row per habit per tracking period with
+      completion resolved against dim_habit.
+    versions:
+      - v: 1
+        defined_in: fct_habit_occurrence_v1
+        description: >
+          Habit occurrence fact, one row per habit per tracking period with
+          completion resolved against dim_habit.
+    constraints:
+      - type: primary_key
+        columns:
+          - habit_occurrence_key
+    columns:
+      - name: habit_occurrence_key
+        description: Surrogate key uniquely identifying each habit occurrence.
+        data_type: string
+        data_tests:
+          - unique
+        constraints:
+          - type: not_null
+      - name: date_key
+        description: Foreign key to dim_date for the occurrence date.
+        data_type: string
+        constraints:
+          - type: not_null
+      - name: habit_key
+        description: Foreign key to dim_habit identifying the tracked habit.
+        data_type: string
+        constraints:
+          - type: not_null
+      - name: habit_period
+        description: Degenerate tracking period of the occurrence.
+        data_type: string
+      - name: source_id
+        description: Source identifier of the occurrence for lineage.
+        data_type: string
+      - name: habit_value
+        description: >
+          Habit value: 1.0/0.0 for tickbox habits, metric value for number and
+          count habits.
+        data_type: numeric
+      - name: is_complete
+        description: >
+          Whether the occurrence met its goal; null for count habits whose
+          adherence is evaluated at aggregation.
+        data_type: boolean
+  - name: fct_engagement
+    description: >
+      Relationship-maintenance bridge fact, one row per engagement-contact
+      association with person, group, and date keys.
+    versions:
+      - v: 1
+        defined_in: fct_engagement_v1
+        description: >
+          Relationship-maintenance bridge fact, one row per engagement-contact
+          association with person, group, and date keys.
+    constraints:
+      - type: primary_key
+        columns:
+          - engagement_key
+    columns:
+      - name: engagement_key
+        description: Surrogate key uniquely identifying each engagement-contact row.
+        data_type: string
+        data_tests:
+          - unique
+        constraints:
+          - type: not_null
+      - name: date_key
+        description: Foreign key to dim_date for the engagement occurrence date.
+        data_type: string
+        constraints:
+          - type: not_null
+      - name: person_key
+        description: Foreign key to dim_person, or UNKNOWN_PERSON when unassigned.
+        data_type: string
+        constraints:
+          - type: not_null
+      - name: group_key
+        description: Foreign key to dim_group via the contact, or UNKNOWN_GROUP.
+        data_type: string
+        constraints:
+          - type: not_null
+      - name: engagement_id
+        description: Degenerate natural engagement identifier.
+        data_type: bigint
+      - name: engagement_type
+        description: Degenerate engagement channel (MEETING, CALL, COMMUNICATION).
+        data_type: string
+      - name: is_synchronous
+        description: Whether the engagement was a real-time meeting or call.
+        data_type: boolean
+      - name: associate_count
+        description: Engagement-level count of associated contacts, repeated per row.
+        data_type: bigint
+      - name: engagement_kind
+        description: Degenerate classification of the engagement (1to1, group, unspecified).
+        data_type: string
+  - name: fct_health_session
+    description: >
+      Health session fact, one row per sleep or exercise session disambiguated
+      by session_kind.
+    versions:
+      - v: 1
+        defined_in: fct_health_session_v1
+        description: >
+          Health session fact, one row per sleep or exercise session
+          disambiguated by session_kind.
+    constraints:
+      - type: primary_key
+        columns:
+          - session_key
+    columns:
+      - name: session_key
+        description: Surrogate key uniquely identifying each health session.
+        data_type: string
+        data_tests:
+          - unique
+        constraints:
+          - type: not_null
+      - name: date_key
+        description: Foreign key to dim_date for the session local date.
+        data_type: string
+        constraints:
+          - type: not_null
+      - name: session_kind
+        description: Degenerate session type (SLEEP or EXERCISE).
+        data_type: string
+      - name: session_id
+        description: Natural source identifier of the session.
+        data_type: string
+      - name: sleep_type
+        description: Collapsed sleep classification (MAIN, NAP, OTHER, NOT_APPLICABLE).
+        data_type: string
+      - name: started_at
+        description: Timestamp when the session started.
+        data_type: timestamp
+      - name: ended_at
+        description: Timestamp when the session ended.
+        data_type: timestamp
+      - name: duration_minutes
+        description: Total session duration in minutes for both session kinds.
+        data_type: numeric
+      - name: asleep_minutes
+        description: Minutes recorded asleep, sleep sessions only.
+        data_type: bigint
+      - name: exercise_type
+        description: Exercise type code, exercise sessions only.
+        data_type: string
+      - name: activity_name
+        description: Human readable activity name, exercise sessions only.
+        data_type: string
+      - name: active_duration_minutes
+        description: Active duration in minutes, exercise sessions only.
+        data_type: numeric
+      - name: calories_kcal
+        description: Calories burned in kcal, exercise sessions only.
+        data_type: bigint
+      - name: distance_meters
+        description: Distance covered in metres, exercise sessions only.
+        data_type: numeric
+      - name: pace_seconds_per_meter
+        description: Average pace in seconds per metre, exercise sessions only.
+        data_type: numeric
+      - name: step_count
+        description: Steps recorded during the session, exercise sessions only.
+        data_type: bigint
+      - name: provider
+        description: Source system that recorded the session.
+        data_type: string

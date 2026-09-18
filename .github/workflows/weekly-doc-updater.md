@@ -76,7 +76,7 @@ You are responsible for keeping these files accurate:
 | `docs/source/dbt.rst` | Sphinx dbt page: links to generated dbt docs |
 | `dbt/models/**/*__properties.yml` | dbt model and column descriptions |
 | `dbt/models/staging/**/*__sources.yml` | dbt source table definitions |
-| `dbt/macros/_macros__properties.yml` | dbt macro descriptions |
+| `dbt/macros/**/_*__macros.yml` | dbt macro descriptions (co-located per macro subfolder) |
 | `dbt/seeds/_seeds__properties.yml` | dbt seed descriptions |
 
 ## Task Steps
@@ -106,7 +106,7 @@ For each merged PR, use `pull_request_read.get_files` and `pull_request_read.get
 **dbt SQL model changes** (`dbt/models/**/*.sql`):
 - New, renamed, or removed models (staging, intermediate, marts)
 - New or removed columns in existing models
-- New habit keys added to `habits_v1`
+- New habit keys added to `dim_habit` / `fct_habit_occurrence`
 
 **dbt property/source changes** (`dbt/models/**/*.yml`):
 - New or modified source table definitions
@@ -114,7 +114,7 @@ For each merged PR, use `pull_request_read.get_files` and `pull_request_read.get
 
 **Seed changes** (`dbt/seeds/**/*.csv`):
 - New or renamed seed files
-- New habits added to `discipline_reference.csv`
+- New tiers or cadence changes in `group_connect_cadence.csv`
 
 **Macro changes** (`dbt/macros/**/*.sql`):
 - New, renamed, or removed custom macros
@@ -157,7 +157,7 @@ Work through each documentation target. For each one, identify gaps caused by th
 - `## Data Model Layers / Staging` — new or renamed staging models
 - `## Data Model Layers / Intermediate` — new or renamed intermediate models
 - `## Data Model Layers / Marts` — new or renamed mart tables
-- `## Habit Keys` — new or removed habit keys in `habits_v1`
+- `## Habit Keys` — new or removed habit keys in `dim_habit` / `fct_habit_occurrence`
 - `## dbt Variables` — new or changed dbt variables
 - `## Custom Macros` — new or removed macros
 
@@ -202,8 +202,9 @@ For source files (`*__sources.yml`):
 - If a new raw table was added in a pipeline file, add or update the corresponding source entry.
 - If a table was renamed in the pipeline, update the source `name` field.
 
-For macro files (`dbt/macros/_macros__properties.yml`):
-- Add entries for any new macros, or remove entries for deleted macros.
+For macro files (`dbt/macros/**/_*__macros.yml`):
+- Each macro subfolder (`dates/`, `json/`, `sources/`) holds its own `_{subfolder}__macros.yml`. Add entries for any new macros — including adapter-dispatch variants (`bigquery__*`, `duckdb__*`) — or remove entries for deleted macros, in the owning subfolder's file.
+- Every macro entry needs a `description`, and every documented macro argument needs a `description` too. These are enforced by dbt-bouncer (`check_macro_description_populated`, `check_macro_arguments_description_populated`), which also enforces the correct property file location and naming (`check_macro_property_file_location`).
 
 For seed files (`dbt/seeds/_seeds__properties.yml`):
 - Add entries for any new seed files.

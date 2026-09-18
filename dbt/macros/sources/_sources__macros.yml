@@ -1,0 +1,67 @@
+---
+version: 2
+macros:
+  - name: cast_safe
+    description: Adapter-aware macro to safely cast a column to a target type, returning
+      NULL when the cast fails. Uses safe_cast for BigQuery and try_cast for DuckDB.
+      Decides convertibility via a cross-database type_check macro.
+    arguments:
+      - name: column_name
+        description: The column or expression to cast.
+        type: string
+      - name: data_type
+        description: The target type to cast to (e.g., 'INT64', 'STRING').
+        type: string
+  - name: bigquery__cast_safe
+    description: BigQuery implementation of cast_safe, dispatched via adapter.dispatch.
+    arguments:
+      - name: column_name
+        description: The column or expression to cast.
+        type: string
+      - name: data_type
+        description: The target type to cast to (e.g., 'INT64', 'STRING').
+        type: string
+  - name: duckdb__cast_safe
+    description: DuckDB implementation of cast_safe, dispatched via adapter.dispatch.
+    arguments:
+      - name: column_name
+        description: The column or expression to cast.
+        type: string
+      - name: data_type
+        description: The target type to cast to (e.g., 'INT64', 'STRING').
+        type: string
+  - name: duckdb__deduplicate
+    description: Override of dbt_utils.deduplicate for DuckDB. Instead of ROW_NUMBER
+      filtered by CTE, it uses the QUALIFY clause and deduplicates in place, which DuckDB
+      supports natively.
+    arguments:
+      - name: relation
+        description: The source relation to deduplicate.
+        type: relation
+      - name: partition_by
+        description: The column or list of columns to use as the deduplication key,
+          or an SQL expression (e.g., 'col_name FIELD_NAME' for positional deduplication).
+        type: string
+      - name: order_by
+        description: The column or list of columns used to determine which row to keep,
+          or an SQL expression. The row with the highest order_by value is kept.
+        type: string
+  - name: timestamp_parse
+    description: Adapter-aware macro to parse Unix epoch milliseconds timestamps into
+      timestamps. Uses timestamp_seconds(ms / 1000) for BigQuery and epoch_ms for DuckDB.
+    arguments:
+      - name: column_name
+        description: The column or expression holding the millisecond timestamp.
+        type: string
+  - name: bigquery__timestamp_parse
+    description: BigQuery implementation of timestamp_parse, dispatched via adapter.dispatch.
+    arguments:
+      - name: column_name
+        description: The column or expression holding the millisecond timestamp.
+        type: string
+  - name: duckdb__timestamp_parse
+    description: DuckDB implementation of timestamp_parse, dispatched via adapter.dispatch.
+    arguments:
+      - name: column_name
+        description: The column or expression holding the millisecond timestamp.
+        type: string

@@ -65,6 +65,7 @@ The project follows modern data engineering best practices with clear separation
 
 - **dlt pipelines**: `{source}__{entity}` (e.g., `hubspot__contacts`, `google_health__steps`)
 - **dbt models** (except marts): `{layer}_{source}__{entity}` (e.g., `stg_hubspot__contacts`, `contacts`)
+- **dbt marts**: `dim_{entity}_v1` / `fct_{entity}_v1` (e.g., `dim_habit_v1`, `fct_engagement_v1`)
 
 ## Setup
 
@@ -311,6 +312,42 @@ jobs:
 1. **Model development**: Use `make dbt-run target=dev select="model_name"` for iterative development
 2. **Model testing**: Use `make dbt-test target=dev select="model_name"` for iterative testing
 3. **Documentation**: Generate with `make dbt-docs target=dev`
+
+#### Model structure
+
+Every dbt SQL model follows the same top-to-bottom shape so a reader can debug it
+without scrolling:
+
+1. **Import CTEs first.** One CTE per `ref()`/`source()`, placed at the very top of
+   the model. This is the only place `{{ ref(...) }}` appears, so the model's inputs
+   are obvious at a glance.
+2. **Transform CTEs next.** All shaping, joining, casting, and derivation happens in
+   named CTEs after the imports, reading from the imports or earlier CTEs.
+3. **Select from `final` last.** The model ends with a `final` CTE holding the output
+   shape, followed by exactly `select * from final`. Selecting the wildcard keeps the
+   output decoupled from column order and makes it cheap to inspect the final shape
+   while debugging.
+
+```sql
+with
+-- Import CTEs: one per upstream model, selected as-is
+stg_hubspot__contacts as (
+    select * from {{ ref('stg_hubspot__contacts') }}
+),
+
+-- Transform CTEs: all reshaping happens here
+filtered as (
+    select * from stg_hubspot__contacts where email is not null
+),
+
+final as (
+    select contact_id, email from filtered
+)
+
+select * from final
+```
+
+This convention applies to every model (staging, core, intermediate, and marts).
 
 ## GitHub Actions Orchestration
 
