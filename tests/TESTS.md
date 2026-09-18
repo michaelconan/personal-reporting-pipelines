@@ -120,7 +120,7 @@ make dbt-bouncer                  # manifest checks (dbt/dbt-bouncer.yml)
    - `staging/notion/_notion__sources.yml`, `staging/hubspot/_hubspot__sources.yml` (+ `_stg_hubspot__properties.yml` incl. `relationships` tests on association keys), `staging/google_health/_google_health__sources.yml` + `_stg_google_health__properties.yml`, `staging/notion/_stg_notion__properties.yml`, `core/_core__properties.yml`, `intermediate/habits/_int_habits__properties.yml`, `marts/habits/_mrt_habits__properties.yml` (`not_null`, `unique`, `accepted_values` on habit keys), `marts/community/_mrt_community__properties.yml` (`dbt_expectations.expect_compound_columns_to_be_unique` + `not_null`/`unique`).
 2. **Generic tests** — `dbt/tests/generic/`: `expect_column_array_length_to_be_between.sql` (cross-adapter `array_length(json_extract_array())` on BigQuery, `json_array_length()` on DuckDB bounds check) and `expect_intervals_to_not_overlap.sql` (fails on overlapping half-open `[start, end)` intervals via an adjacent-row `LEAD()` check; avoids a DuckDB self-join issue documented in the file header). Applied to the Google Health sleep, steps, and exercise staging models.
 3. **Custom generic test** — `dbt/tests/generic/expect_column_array_length_to_be_between.sql`: cross-adapter (`array_length(json_extract_array())` on BigQuery, `json_array_length()` on DuckDB) bounds check.
-4. **Contract/structure tests (CI-only, no `dbt test` node)** — `dbt-bouncer` (`dbt/dbt-bouncer.yml`: model/source descriptions populated, model name pattern `^(stg_|int_|core_|fct_|dim_|map_|time_spine_|base_|habits|engagement_contacts)`, ≥70% model test coverage) and `sqlfluff lint` (`dbt/.sqlfluff`: dialect `duckdb`, templater `dbt`, lowercase keywords/identifiers, trailing commas, explicit aliasing).
+4. **Contract/structure tests (CI-only, no `dbt test` node)** — `dbt-bouncer` (`dbt/dbt-bouncer.yml`: model/source descriptions populated, model name pattern `^(stg_|int_|core_|fct_|dim_|map_|time_spine_|base_|habits|engagement_contacts)`, ≥70% model test coverage) and `dbt lint` (SQLFluff-compatible engine reusing `dbt/.sqlfluff`: dialect `duckdb`, templater `dbt`, lowercase keywords/identifiers, trailing commas, explicit aliasing).
 
 Mock seed coverage lives in `dbt/seeds/mock_sources/{google_health,hubspot,notion}/*.csv` (+ `_properties.yml`); canonical `discipline_reference.csv` seed is shared across all targets.
 
@@ -128,7 +128,7 @@ Mock seed coverage lives in `dbt/seeds/mock_sources/{google_health,hubspot,notio
 
 - `test-pipelines.yml` (on `pipelines/**`, `tests/**` changes): `make install` → `make inject` (1Password, skipped for dependabot) → always `make test-local` → `make test-e2e` when secrets exist → Codecov coverage (`coverage.xml`) + test results (`test-results-*.xml`).
 - `test-transforms.yml` (on `dbt/**` changes): `make install` + `make dbt-deps` → `make dbt-build target=mock` (seed+run+test) → `make dbt-docs target=mock`.
-- `lint.yml` (every PR): `prek` (Python/ruff), `sqlfluff lint` with `DBT_TARGET=mock`, `dbt parse` + `dbt docs generate`, `dbt-bouncer` checks.
+- `lint.yml` (every PR): `prek` (Python/ruff), `dbt lint` (SQLFluff engine, reuses `dbt/.sqlfluff`, `DBT_TARGET=mock`), `dbt parse` + `dbt compile --write-catalog` (produces `catalog.json` for bouncer; `docs generate` no longer emits one under dbt 2.x), `dbt-bouncer` checks.
 
 ## Quick reference
 

@@ -119,13 +119,21 @@ Note: habit completions and thresholds come from the Notion habit reference data
 
 ## Testing
 - `make test-local` — Python unit tests
-- `make dbt-build target=dev` — local dbt build with DuckDB + mock seeds
-- `make dbt-run target=dev select="model"` — run specific model
-- SQL linting: `sqlfluff lint --dialect duckdb`
+- `make docs` — dbt docs site (v2 SPA) + Sphinx docs
+- `uv run dbt build --project-dir dbt --profiles-dir dbt --target mock` — local dbt build (DuckDB + CSV test fixtures)
+- `uv run dbt run --project-dir dbt --profiles-dir dbt --select <model> --target mock` — run specific model
+- SQL linting: `uv run dbt lint --project-dir dbt --profiles-dir dbt --target mock` (dbt 2.x built-in linter — rust parser with real dbt templating, reuses `dbt/.sqlfluff` rule config). Verified: full-project run exits 0 (warnings only). The `sqlfluff`/`sqlfluff-templater-dbt` PyPI packages are NOT installed — `sqlfluff-templater-dbt` requires Python `dbt-core` and cannot coexist with the dbt 2.x `dbt` package, and standalone sqlfluff (jinja templater) cannot resolve package macros like `dbt_utils.surrogate_key`, so `dbt lint` is the only reliable lint path.
+
+## dbt 2.x Notes (Rust engine, `dbt~=2.0`)
+- dbt-bouncer gets `catalog.json` only from `dbt compile --write-catalog` — `dbt docs generate` no longer writes it.
+- `dbt docs generate --static` no longer exists; v2 emits a static SPA (`index.html` + `assets/` + `info_schema/*.parquet`) into `dbt/target/` which `make docs` copies to `docs/_build/html/dbt/`.
+- Source-level `freshness` and `meta: external_location` at the top level are rejected by the strict v2 parser (`dbt1060`) — they must live under each source's `config:`. Freshness uses `loaded_at_query` joining `_dlt_loads` on `_dlt_load_id` (`where status = 0`); do not coalesce NULL to `current_timestamp()` (NULL = failed freshness).
+- BigQuery profile keys `project`/`dataset` remain valid in the dbt 2.x bigquery adapter (documented as interchangeable with `database`/`schema`).
+- Adapters are bundled with the `dbt` distribution (no separate `dbt-duckdb`/`dbt-bigquery` PyPI packages needed), so `profiles.yml` still uses `type: duckdb` / `type: bigquery`.
 
 ## Tech Stack
 - **Data Ingestion**: dlt (Python)
-- **Data Transformation**: dbt core
+- **Data Transformation**: dbt 2.x (Rust engine, installed via the `dbt` PyPI distribution)
 - **Data Warehouse**: Google BigQuery
 - **Orchestration**: GitHub Actions
 - **Secret Management**: GCP Secret Manager or 1Password (configured via `SECRET_STORE` env var)

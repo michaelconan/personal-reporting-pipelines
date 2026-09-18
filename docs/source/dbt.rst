@@ -10,8 +10,8 @@ This page provides access to the dbt documentation generated from your dbt proje
    This documentation is automatically generated from your dbt project.
    To regenerate it, run::
 
-      pipenv run dbt docs generate
-      pipenv run dbt docs serve
+      uv run dbt docs generate --project-dir dbt --profiles-dir dbt
+      uv run dbt docs serve --project-dir dbt --profiles-dir dbt
 
 The dbt documentation includes:
 

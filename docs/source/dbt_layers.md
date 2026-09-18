@@ -58,11 +58,11 @@ make dbt-run target=dev select="stg_google_health__sleep"
 - Generate docs:
 
 ```bash
-pipenv run dbt docs generate
-pipenv run dbt docs serve
+uv run dbt docs generate --project-dir dbt --profiles-dir dbt
+uv run dbt docs serve --project-dir dbt --profiles-dir dbt
 ```
 
 ## Tests
 
 - Unit/integration SQL tests live in `dbt/tests/` and are executed during CI and in `make dbt-build`.
-- Use `sqlfluff lint --dialect duckdb` for SQL style checks when working against the dev target.
+- Use `uv run dbt lint --project-dir dbt --profiles-dir dbt --target mock` for SQL style checks when working against the dev target.

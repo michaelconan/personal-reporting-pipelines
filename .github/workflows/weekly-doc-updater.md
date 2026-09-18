@@ -76,7 +76,7 @@ You are responsible for keeping these files accurate:
 | `docs/source/dbt.rst` | Sphinx dbt page: links to generated dbt docs |
 | `dbt/models/**/*__properties.yml` | dbt model and column descriptions |
 | `dbt/models/staging/**/*__sources.yml` | dbt source table definitions |
-| `dbt/macros/_macros__properties.yml` | dbt macro descriptions |
+| `dbt/macros/**/_*__macros.yml` | dbt macro descriptions (co-located per macro subfolder) |
 | `dbt/seeds/_seeds__properties.yml` | dbt seed descriptions |
 
 ## Task Steps
@@ -202,8 +202,9 @@ For source files (`*__sources.yml`):
 - If a new raw table was added in a pipeline file, add or update the corresponding source entry.
 - If a table was renamed in the pipeline, update the source `name` field.
 
-For macro files (`dbt/macros/_macros__properties.yml`):
-- Add entries for any new macros, or remove entries for deleted macros.
+For macro files (`dbt/macros/**/_*__macros.yml`):
+- Each macro subfolder (`dates/`, `json/`, `sources/`) holds its own `_{subfolder}__macros.yml`. Add entries for any new macros — including adapter-dispatch variants (`bigquery__*`, `duckdb__*`) — or remove entries for deleted macros, in the owning subfolder's file.
+- Every macro entry needs a `description`, and every documented macro argument needs a `description` too. These are enforced by dbt-bouncer (`check_macro_description_populated`, `check_macro_arguments_description_populated`), which also enforces the correct property file location and naming (`check_macro_property_file_location`).
 
 For seed files (`dbt/seeds/_seeds__properties.yml`):
 - Add entries for any new seed files.

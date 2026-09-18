@@ -85,6 +85,20 @@ manifest_checks:
   - name: check_data_test_description_populated
     description: Singular SQL tests must explain the business rule they enforce.
     min_description_length: 20
+  # Macro checks
+  - name: check_macro_property_file_location
+    description: >
+      Macro property files must live alongside the macros they document in
+      the owning subfolder and follow the _{subfolder}__macros.yml naming
+      convention.
+    include: ^macros/
+  - name: check_macro_description_populated
+    description: Every macro must carry a description so its purpose is documented
+      without reading the Jinja source.
+    include: ^macros/
+  - name: check_macro_arguments_description_populated
+    description: Every documented macro argument must carry a populated description.
+    include: ^macros/
   - name: check_seed_has_unique_test
     description: Seeds must assert uniqueness on at least one grain column.
 catalog_checks:

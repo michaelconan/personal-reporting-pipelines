@@ -1,0 +1,79 @@
+---
+version: 2
+macros:
+  - name: extract_notion_title
+    description: Cross-database macro to extract and concatenate the plain text from
+      Notion's Rich Text / Title JSON array. Uses string_agg + json_extract_scalar
+      for BigQuery and list_aggregate + json_transform for DuckDB.
+    arguments:
+      - name: column_name
+        description: The JSON column holding Notion's rich text or title array.
+        type: string
+  - name: bigquery__extract_notion_title
+    description: BigQuery implementation of extract_notion_title, dispatched via adapter.dispatch.
+    arguments:
+      - name: column_name
+        description: The JSON column holding Notion's rich text or title array.
+        type: string
+  - name: duckdb__extract_notion_title
+    description: DuckDB implementation of extract_notion_title, dispatched via adapter.dispatch.
+    arguments:
+      - name: column_name
+        description: The JSON column holding Notion's rich text or title array.
+        type: string
+  - name: json_extract_value
+    description: Cross-database macro to extract scalar values from JSON columns.
+      Uses json_extract_scalar for BigQuery and json_extract_string for DuckDB.
+    arguments:
+      - name: column_name
+        description: The name of the JSON column to extract from
+        type: string
+      - name: json_path
+        description: The JSONPath expression to extract the value (e.g., '$.property_name')
+        type: string
+  - name: bigquery__json_extract_value
+    description: BigQuery implementation of json_extract_value, dispatched via adapter.dispatch.
+    arguments:
+      - name: column_name
+        description: The name of the JSON column to extract from
+        type: string
+      - name: json_path
+        description: The JSONPath expression to extract the value (e.g., '$.property_name')
+        type: string
+  - name: duckdb__json_extract_value
+    description: DuckDB implementation of json_extract_value, dispatched via adapter.dispatch.
+    arguments:
+      - name: column_name
+        description: The name of the JSON column to extract from
+        type: string
+      - name: json_path
+        description: The JSONPath expression to extract the value (e.g., '$.property_name')
+        type: string
+  - name: unnest_json_array
+    description: Adapter-aware macro to unnest JSON arrays into rows. Uses json_value_array
+      for BigQuery and json_extract with cast for DuckDB.
+    arguments:
+      - name: column_name
+        description: The JSON array column to unnest.
+        type: string
+      - name: alias_name
+        description: The alias name for the unnested column.
+        type: string
+  - name: bigquery__unnest_json_array
+    description: BigQuery implementation of unnest_json_array, dispatched via adapter.dispatch.
+    arguments:
+      - name: column_name
+        description: The JSON array column to unnest.
+        type: string
+      - name: alias_name
+        description: The alias name for the unnested column.
+        type: string
+  - name: duckdb__unnest_json_array
+    description: DuckDB implementation of unnest_json_array, dispatched via adapter.dispatch.
+    arguments:
+      - name: column_name
+        description: The JSON array column to unnest.
+        type: string
+      - name: alias_name
+        description: The alias name for the unnested column.
+        type: string

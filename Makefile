@@ -119,12 +119,24 @@ docs: ## Generate dbt + Sphinx documentation
 	@echo "Installing dbt dependencies..."
 	uv run dbt deps --project-dir dbt --profiles-dir dbt
 	@echo "Generating dbt documentation..."
-	uv run dbt docs generate --project-dir dbt --profiles-dir dbt --static --target mock
-	@echo "Consolidating documentation..."
-	@cp dbt/target/static_index.html docs/source/dbt.html
+	uv run dbt docs generate --project-dir dbt --profiles-dir dbt --target mock
+	@echo "Writing dbt docs redirect page..."
+	@printf '%s\n' \
+		'<!doctype html>' \
+		'<html lang="en">' \
+		'  <head>' \
+		'    <meta charset="utf-8" />' \
+		'    <meta http-equiv="refresh" content="0; url=dbt/" />' \
+		'    <link rel="canonical" href="dbt/" />' \
+		'    <title>Redirecting to dbt docs</title>' \
+		'  </head>' \
+		'  <body>' \
+		'    <p>dbt documentation has moved to <a href="dbt/">dbt/</a>.</p>' \
+		'  </body>' \
+		'</html>' > docs/source/dbt.html
 	@echo "Building Sphinx documentation..."
 	$(UVR) sphinx-build -b html docs/source docs/_build/html
-	@echo "Copying dbt docs to Sphinx output..."
+	@echo "Copying dbt docs site to Sphinx output..."
 	@mkdir -p docs/_build/html/dbt
-	@cp dbt/target/static_index.html docs/_build/html/dbt.html
+	@cp -r dbt/target/index.html dbt/target/assets dbt/target/info_schema docs/_build/html/dbt/
 	@echo "Documentation available at docs/_build/html/index.html"

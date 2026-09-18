@@ -1,0 +1,131 @@
+---
+version: 2
+macros:
+  - name: date_from_parts
+    description: Adapter-aware macro to build a date from separate year/month/day
+      columns. Uses DATE for BigQuery and make_date for DuckDB.
+    arguments:
+      - name: year_expr
+        description: The year column or expression.
+        type: string
+      - name: month_expr
+        description: The month column or expression.
+        type: string
+      - name: day_expr
+        description: The day column or expression.
+        type: string
+  - name: bigquery__date_from_parts
+    description: BigQuery implementation of date_from_parts, dispatched via adapter.dispatch.
+    arguments:
+      - name: year_expr
+        description: The year column or expression.
+        type: string
+      - name: month_expr
+        description: The month column or expression.
+        type: string
+      - name: day_expr
+        description: The day column or expression.
+        type: string
+  - name: duckdb__date_from_parts
+    description: DuckDB implementation of date_from_parts, dispatched via adapter.dispatch.
+    arguments:
+      - name: year_expr
+        description: The year column or expression.
+        type: string
+      - name: month_expr
+        description: The month column or expression.
+        type: string
+      - name: day_expr
+        description: The day column or expression.
+        type: string
+  - name: date_from_offset_seconds
+    description: Adapter-aware macro to derive a local date from a UTC timestamp plus
+      a second-based UTC offset string (e.g. '3600s'). Uses timestamp_add + date for
+      BigQuery and to_seconds interval addition for DuckDB.
+    arguments:
+      - name: timestamp_expr
+        description: The UTC timestamp column or expression.
+        type: string
+      - name: offset_seconds_expr
+        description: The UTC offset string column or expression (e.g. '3600s').
+        type: string
+  - name: bigquery__date_from_offset_seconds
+    description: BigQuery implementation of date_from_offset_seconds, dispatched via
+      adapter.dispatch.
+    arguments:
+      - name: timestamp_expr
+        description: The UTC timestamp column or expression.
+        type: string
+      - name: offset_seconds_expr
+        description: The UTC offset string column or expression (e.g. '3600s').
+        type: string
+  - name: duckdb__date_from_offset_seconds
+    description: DuckDB implementation of date_from_offset_seconds, dispatched via
+      adapter.dispatch.
+    arguments:
+      - name: timestamp_expr
+        description: The UTC timestamp column or expression.
+        type: string
+      - name: offset_seconds_expr
+        description: The UTC offset string column or expression (e.g. '3600s').
+        type: string
+  - name: seconds_between
+    description: Adapter-aware macro computing seconds between two timestamp expressions.
+      Uses timestamp_diff for BigQuery and date_diff for DuckDB.
+    arguments:
+      - name: start_expr
+        description: The starting timestamp column or expression.
+        type: string
+      - name: end_expr
+        description: The ending timestamp column or expression.
+        type: string
+  - name: bigquery__seconds_between
+    description: BigQuery implementation of seconds_between, dispatched via adapter.dispatch.
+    arguments:
+      - name: start_expr
+        description: The starting timestamp column or expression.
+        type: string
+      - name: end_expr
+        description: The ending timestamp column or expression.
+        type: string
+  - name: duckdb__seconds_between
+    description: DuckDB implementation of seconds_between, dispatched via adapter.dispatch.
+    arguments:
+      - name: start_expr
+        description: The starting timestamp column or expression.
+        type: string
+      - name: end_expr
+        description: The ending timestamp column or expression.
+        type: string
+  - name: trunc_date
+    description: "Adapter-aware macro that truncates timestamps/dates to a specified\
+      \ part (e.g., 'month', 'year'). Pass the part as a quoted literal (for example:\
+      \ 'month'). BigQuery and DuckDB implementations are handled via adapter dispatch."
+    arguments:
+      - name: part
+        description: The part to truncate to (e.g., 'year', 'month', 'day'). Must
+          be passed as a quoted literal.
+        type: string
+      - name: column_name
+        description: The timestamp or date column/expression to truncate.
+        type: string
+  - name: bigquery__trunc_date
+    description: BigQuery implementation of trunc_date, dispatched via adapter.dispatch.
+    arguments:
+      - name: part
+        description: The part to truncate to (e.g., 'year', 'month', 'day'). Must
+          be passed as a quoted literal.
+        type: string
+      - name: column_name
+        description: The timestamp or date column/expression to truncate.
+        type: string
+  - name: duckdb__trunc_date
+    description: DuckDB implementation of trunc_date, dispatched via adapter.dispatch.
+    arguments:
+      - name: part
+        description: The part to truncate to (e.g., 'year', 'month', 'day'). Must
+          be passed as a quoted literal.
+        type: string
+      - name: column_name
+        description: The timestamp or date column/expression to truncate.
+        type: string
