@@ -14,6 +14,7 @@ Personal Reporting Documentation
    seeds_macros
    testing_ci
    gh_aw
+   personal_progress_datamart
    dbt
 
 .. include:: ../../README.md
