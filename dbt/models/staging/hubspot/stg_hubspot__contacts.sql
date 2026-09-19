@@ -23,7 +23,7 @@ with contacts as (
 
     select
         id as contact_id,  -- HubSpot contact ID
-        properties__associatedcompanyid as company_id,  -- Associated company ID (can be null)
+        nullif(cast(properties__associatedcompanyid as string), '') as company_id,  -- Associated company ID (empty string -> null)
         properties__email as email,  -- Contact email address
         properties__firstname as first_name,  -- Contact's first name
         properties__lastname as last_name,  -- Contact's last name

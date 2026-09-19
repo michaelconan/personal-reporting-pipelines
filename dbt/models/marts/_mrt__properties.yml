@@ -13,6 +13,7 @@ models:
           calendar day from 2016-01-01 to 2030-12-31 plus an UNKNOWN sentinel row.
     constraints:
       - type: primary_key
+        warn_unenforced: false
         columns:
           - date_key
     columns:
@@ -63,6 +64,7 @@ models:
           thresholds used to evaluate completion. SCD type 1.
     constraints:
       - type: primary_key
+        warn_unenforced: false
         columns:
           - habit_key
     columns:
@@ -95,10 +97,10 @@ models:
         data_type: string
       - name: target_pct
         description: Completion target as a share of tracked periods.
-        data_type: numeric
+        data_type: numeric(38, 9)
       - name: threshold
         description: Numeric threshold for number and count habits.
-        data_type: numeric
+        data_type: numeric(38, 9)
       - name: is_below_threshold
         description: Whether the threshold comparison is inverted for this habit.
         data_type: boolean
@@ -120,6 +122,7 @@ models:
           type 1, including an UNKNOWN sentinel row.
     constraints:
       - type: primary_key
+        warn_unenforced: false
         columns:
           - person_key
     columns:
@@ -159,6 +162,7 @@ models:
           including an UNKNOWN sentinel row.
     constraints:
       - type: primary_key
+        warn_unenforced: false
         columns:
           - group_key
     columns:
@@ -190,6 +194,7 @@ models:
           connection cadence in days. SCD type 1, including an UNKNOWN row.
     constraints:
       - type: primary_key
+        warn_unenforced: false
         columns:
           - group_tier_key
     columns:
@@ -221,8 +226,42 @@ models:
           completion resolved against dim_habit.
     constraints:
       - type: primary_key
+        warn_unenforced: false
         columns:
           - habit_occurrence_key
+    semantic_model:
+      enabled: true
+      name: habits
+    agg_time_dimension: habit_date
+    metrics:
+      - name: habit_completions
+        description: Count of completed habits
+        type: simple
+        agg: sum
+        expr: case when is_complete then 1 else 0 end
+      - name: total_habits
+        description: Total count of habit records
+        type: simple
+        agg: count
+        expr: habit_occurrence_key
+      - name: completion_rate
+        description: >
+          Percentage of row-level habits completed. Count habits are excluded
+          because their adherence is evaluated at the aggregation grain
+          (is_complete is NULL by design).
+        type: simple
+        agg: average
+        expr: >
+          case
+            when is_complete then 1.0
+            when not is_complete then 0.0
+          end
+    derived_semantics:
+      dimensions:
+        - name: habit_date
+          type: time
+          granularity: day
+          expr: cast(date_key as date)
     columns:
       - name: habit_occurrence_key
         description: Surrogate key uniquely identifying each habit occurrence.
@@ -231,6 +270,9 @@ models:
           - unique
         constraints:
           - type: not_null
+        entity:
+          type: primary
+          name: habit_record
       - name: date_key
         description: Foreign key to dim_date for the occurrence date.
         data_type: string
@@ -241,9 +283,13 @@ models:
         data_type: string
         constraints:
           - type: not_null
+        dimension:
+          type: categorical
       - name: habit_period
         description: Degenerate tracking period of the occurrence.
         data_type: string
+        dimension:
+          type: categorical
       - name: source_id
         description: Source identifier of the occurrence for lineage.
         data_type: string
@@ -251,7 +297,7 @@ models:
         description: >
           Habit value: 1.0/0.0 for tickbox habits, metric value for number and
           count habits.
-        data_type: numeric
+        data_type: numeric(38, 9)
       - name: is_complete
         description: >
           Whether the occurrence met its goal; null for count habits whose
@@ -269,8 +315,43 @@ models:
           association with person, group, and date keys.
     constraints:
       - type: primary_key
+        warn_unenforced: false
         columns:
           - engagement_key
+    semantic_model:
+      enabled: true
+      name: engagement_contacts
+    agg_time_dimension: engagement_date
+    metrics:
+      - name: engagement_count
+        description: Total count of distinct engagements
+        type: simple
+        agg: count_distinct
+        expr: engagement_id
+      - name: synchronous_engagements
+        description: Count of distinct synchronous engagements (calls, meetings)
+        type: simple
+        agg: count_distinct
+        expr: case when is_synchronous then engagement_id else null end
+      - name: asynchronous_engagements
+        description: Count of distinct asynchronous engagements (emails, etc.)
+        type: simple
+        agg: count_distinct
+        expr: case when not is_synchronous then engagement_id else null end
+      - name: contact_count
+        description: Count of distinct contacts involved in engagements
+        type: simple
+        agg: count_distinct
+        expr: person_key
+    derived_semantics:
+      dimensions:
+        - name: engagement_date
+          type: time
+          granularity: day
+          expr: cast(date_key as date)
+        - name: is_synchronous
+          type: categorical
+          expr: case when is_synchronous then 'synchronous' else 'asynchronous' end
     columns:
       - name: engagement_key
         description: Surrogate key uniquely identifying each engagement-contact row.
@@ -279,6 +360,9 @@ models:
           - unique
         constraints:
           - type: not_null
+        entity:
+          type: primary
+          name: engagement_contact
       - name: date_key
         description: Foreign key to dim_date for the engagement occurrence date.
         data_type: string
@@ -289,17 +373,28 @@ models:
         data_type: string
         constraints:
           - type: not_null
+        entity:
+          type: foreign
+          name: contact
       - name: group_key
         description: Foreign key to dim_group via the contact, or UNKNOWN_GROUP.
         data_type: string
         constraints:
           - type: not_null
+        entity:
+          type: foreign
+          name: company
       - name: engagement_id
         description: Degenerate natural engagement identifier.
         data_type: bigint
+        entity:
+          type: foreign
+          name: engagement
       - name: engagement_type
         description: Degenerate engagement channel (MEETING, CALL, COMMUNICATION).
         data_type: string
+        dimension:
+          type: categorical
       - name: is_synchronous
         description: Whether the engagement was a real-time meeting or call.
         data_type: boolean
@@ -309,6 +404,8 @@ models:
       - name: engagement_kind
         description: Degenerate classification of the engagement (1to1, group, unspecified).
         data_type: string
+        dimension:
+          type: categorical
   - name: fct_health_session
     description: >
       Health session fact, one row per sleep or exercise session disambiguated
@@ -321,6 +418,7 @@ models:
           disambiguated by session_kind.
     constraints:
       - type: primary_key
+        warn_unenforced: false
         columns:
           - session_key
     columns:
@@ -353,7 +451,7 @@ models:
         data_type: timestamp
       - name: duration_minutes
         description: Total session duration in minutes for both session kinds.
-        data_type: numeric
+        data_type: numeric(38, 9)
       - name: asleep_minutes
         description: Minutes recorded asleep, sleep sessions only.
         data_type: bigint
@@ -365,16 +463,16 @@ models:
         data_type: string
       - name: active_duration_minutes
         description: Active duration in minutes, exercise sessions only.
-        data_type: numeric
+        data_type: numeric(38, 9)
       - name: calories_kcal
         description: Calories burned in kcal, exercise sessions only.
         data_type: bigint
       - name: distance_meters
         description: Distance covered in metres, exercise sessions only.
-        data_type: numeric
+        data_type: numeric(38, 9)
       - name: pace_seconds_per_meter
         description: Average pace in seconds per metre, exercise sessions only.
-        data_type: numeric
+        data_type: numeric(38, 9)
       - name: step_count
         description: Steps recorded during the session, exercise sessions only.
         data_type: bigint

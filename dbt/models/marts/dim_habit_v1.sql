@@ -22,8 +22,8 @@ stg_notion__habit_reference as (
         frequency,
         habit_type,
         source,
-        cast(target_pct as numeric) as target_pct,
-        cast(threshold as numeric) as threshold,
+        cast(target_pct as numeric(38, 9)) as target_pct,
+        cast(threshold as numeric(38, 9)) as threshold,
         coalesce(is_below_threshold, false) as is_below_threshold,
         coalesce(is_active, false) as is_active,
         cast(start_date as date) as start_date
@@ -42,8 +42,8 @@ sentinel as (
         cast(null as string) as frequency,
         cast(null as string) as habit_type,
         cast(null as string) as source,
-        cast(null as numeric) as target_pct,
-        cast(null as numeric) as threshold,
+        cast(null as numeric(38, 9)) as target_pct,
+        cast(null as numeric(38, 9)) as threshold,
         false as is_below_threshold,
         false as is_active,
         cast(null as date) as start_date

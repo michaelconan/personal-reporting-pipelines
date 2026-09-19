@@ -30,7 +30,7 @@ with companies as (
         properties__hs_lastmodifieddate as updated_at,  -- When company was last modified
         -- Parse numeric tier value from string field (e.g., "tier_1" -> 1)
         -- Uses right() to get last character, then safely casts to integer
-        {{ cast_safe("right(cast(properties__hs_ideal_customer_profile as varchar), cast(1 as integer))", "integer") }}
+        {{ cast_safe("right(cast(properties__hs_ideal_customer_profile as string), cast(1 as integer))", "integer") }}
             as company_tier
     from
         {{ source('hubspot', 'companies') }}

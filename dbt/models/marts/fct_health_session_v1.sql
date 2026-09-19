@@ -68,14 +68,14 @@ sleep_sessions as (
             when is_nap then 'NAP'
             else 'OTHER'
         end as sleep_type,
-        cast(duration_minutes as numeric) as duration_minutes,
+        cast(duration_minutes as numeric(38, 9)) as duration_minutes,
         cast(asleep_minutes as bigint) as asleep_minutes,
         cast(null as string) as exercise_type,
         cast(null as string) as activity_name,
-        cast(null as numeric) as active_duration_minutes,
+        cast(null as numeric(38, 9)) as active_duration_minutes,
         cast(null as bigint) as calories_kcal,
-        cast(null as numeric) as distance_meters,
-        cast(null as numeric) as pace_seconds_per_meter,
+        cast(null as numeric(38, 9)) as distance_meters,
+        cast(null as numeric(38, 9)) as pace_seconds_per_meter,
         cast(null as bigint) as step_count,
         provider
     from core_sleep_sessions
@@ -91,14 +91,14 @@ exercise_sessions as (
         started_at,
         ended_at,
         'NOT_APPLICABLE' as sleep_type,
-        cast(active_duration_minutes as numeric) as duration_minutes,
+        cast(active_duration_minutes as numeric(38, 9)) as duration_minutes,
         cast(null as bigint) as asleep_minutes,
         exercise_type,
         activity_name,
-        cast(active_duration_minutes as numeric) as active_duration_minutes,
+        cast(active_duration_minutes as numeric(38, 9)) as active_duration_minutes,
         cast(calories_kcal as bigint) as calories_kcal,
-        cast(distance_meters as numeric) as distance_meters,
-        cast(pace_seconds_per_meter as numeric) as pace_seconds_per_meter,
+        cast(distance_meters as numeric(38, 9)) as distance_meters,
+        cast(pace_seconds_per_meter as numeric(38, 9)) as pace_seconds_per_meter,
         cast(step_count as bigint) as step_count,
         provider
     from core_exercise_sessions

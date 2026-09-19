@@ -1,10 +1,12 @@
 """Unit tests for the central pipeline runner and CLI interface."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import ANY, MagicMock, patch
 import pytest
 
+from dlt.destinations import databricks
+
 from pipelines.run_pipeline import parse_select, main
-from pipelines.runner import refresh_pipeline, PIPELINE_CONFIG
+from pipelines.runner import refresh_pipeline, PIPELINE_CONFIG, get_databricks_staging_volume
 from pipelines import RAW_SCHEMA
 
 
@@ -87,9 +89,16 @@ def test_cli_main_exception(mock_refresh):
     assert code == 1
 
 
+@patch("pipelines.runner.dlt.secrets.get", return_value="workspace")
+def test_get_databricks_staging_volume(mock_dlt_secrets_get):
+    """Test that the staging volume derives from the target schema and catalog."""
+    assert get_databricks_staging_volume("raw_test") == "workspace.raw_test.staging"
+
+
+@patch("pipelines.runner.dlt.secrets.get", return_value="workspace")
 @patch("pipelines.runner.dlt.pipeline")
 @patch("pipelines.runner.validate_required_secrets")
-def test_runner_refresh_pipeline(mock_validate, mock_dlt_pipeline):
+def test_runner_refresh_pipeline(mock_validate, mock_dlt_pipeline, mock_dlt_secrets_get):
     """Test the centralized runner's refresh_pipeline and run_refresh dispatching."""
     mock_pipeline_instance = MagicMock()
     mock_dlt_pipeline.return_value = mock_pipeline_instance
@@ -143,11 +152,14 @@ def test_runner_refresh_pipeline(mock_validate, mock_dlt_pipeline):
         mock_dlt_pipeline.assert_called_once_with(
             pipeline_name="notion_habits_pipeline",
             dataset_name=RAW_SCHEMA,
-            destination="bigquery",
+            destination=ANY,  # databricks factory asserted below
             progress="log",
         )
+        destination = mock_dlt_pipeline.call_args.kwargs["destination"]
+        assert isinstance(destination, databricks)
+        assert destination.config_params["staging_volume_name"] == f"workspace.{RAW_SCHEMA}.staging"
         mock_pipeline_instance.run.assert_called_once_with(
             mock_notion_source,
             write_disposition=None,  # None for is_incremental=True as per get_write_disposition
-            loader_file_format="jsonl",
+            loader_file_format="parquet",
         )

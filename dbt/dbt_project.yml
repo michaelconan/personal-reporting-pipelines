@@ -7,9 +7,9 @@ analysis-paths: [analyses]
 test-paths: [tests]
 macro-paths: [macros]
 snapshot-paths: [snapshots]
+# directories to be removed by `dbt clean`
 clean-targets: [target, dbt_packages]
 
-  # directories to be removed by `dbt clean`
 flags:
   indirect_selection: cautious
 # Override configuration for dbt_utils macros to add duckdb support
@@ -42,3 +42,6 @@ models:
 # on BigQuery targets sources resolve to the raw schema.
 vars:
   dbt_date:time_zone: UTC
+  # Upper sanity cap for a single sleep session; sessions beyond this are
+  # treated as recording artifacts and dropped at staging.
+  max_sleep_hours: 15

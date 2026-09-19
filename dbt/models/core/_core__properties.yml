@@ -67,7 +67,13 @@ models:
         data_type: boolean
   - name: core_sleep_sessions
     description: Conformed sleep session entity, one row per sleep session regardless
-      of provider.
+      of provider. Overlapping duplicates are resolved to the single most robust
+      record (stage detail > main sleep > nap, then longer interval).
+    data_tests:
+      - expect_intervals_to_not_overlap:
+          arguments:
+            start_column_name: started_at
+            end_column_name: ended_at
     columns:
       - name: session_id
         description: The primary key for this table.
@@ -99,6 +105,7 @@ models:
               arguments:
                 min_value: 120  # 2 hours
                 max_value: 1080  # 18 hours
+                row_condition: is_nap is not true
       - name: asleep_minutes
         description: Minutes recorded asleep in the provider summary.
         data_type: bigint
@@ -126,7 +133,12 @@ models:
           - not_null
   - name: core_exercise_sessions
     description: Conformed exercise session entity, one row per exercise session regardless
-      of provider.
+      of provider. Overlapping duplicates are deduped to the longest interval.
+    data_tests:
+      - expect_intervals_to_not_overlap:
+          arguments:
+            start_column_name: started_at
+            end_column_name: ended_at
     columns:
       - name: session_id
         description: The primary key for this table.

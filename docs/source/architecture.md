@@ -3,15 +3,15 @@
 High-level architecture:
 
 Notion / HubSpot / Fitbit APIs
-    ↓ (dlt pipelines → BigQuery raw schema)
+    ↓ (dlt pipelines → Databricks raw schema)
 dbt Staging (views) → dbt Intermediate → dbt Marts (tables)
     ↓ MetricFlow semantic layer (optional)
 
 ## Components
 
-- dlt: extraction and raw-loading into BigQuery. Keeps incremental state and supports full refreshes.
+- dlt: extraction and direct-loading into Databricks. Keeps incremental state and supports full refreshes.
 - dbt: transformations layered into staging, intermediate, and marts. Seeds and macros enable local dev.
-- BigQuery: production data warehouse. DuckDB used for local dev target.
+- Databricks: ingestion destination (Unity Catalog); dlt stages parquet in a managed volume and COPY INTOs the raw schema. dbt transforms and marts currently run on BigQuery; DuckDB used for local dev target.
 - GitHub Actions: scheduling and orchestration for daily/weekly runs.
 
 ## Operational guidance

@@ -1,0 +1,10 @@
+[destination.databricks]
+# The staging volume for direct load is resolved at runtime from the pipeline's
+# target schema (<catalog>.<dataset>.staging, see get_databricks_staging_volume
+# in pipelines/runner.py) and must pre-exist for each environment.
+# Keep staged parquet files in the volume after load. Databricks direct load
+# succeeds with keep_staged_files = false, but the post-load directory REMOVE
+# fails with 404 (FILES_API_FILE_NOT_FOUND) via databricks-sql-connector 4.x,
+# which dlt treats as a transient load failure. Staged files are written under
+# a unique per-load folder, so leaving them does not affect later loads.
+keep_staged_files = true

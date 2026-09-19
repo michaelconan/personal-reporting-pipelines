@@ -43,7 +43,16 @@ unique_sleep_sessions as (
         partition_by='sleep_id',
         order_by='updated_at desc'
     ) }}
+),
+
+final as (
+-- CTE: Plausibility cap
+-- Purpose: Drop sessions longer than max_sleep_hours (project var). Sessions of
+--          that length are recording artifacts, not real sleep.
+    select *
+    from unique_sleep_sessions
+    where sleep_minutes <= {{ var('max_sleep_hours') }} * 60.0
 )
 
--- Final output: Clean, deduplicated sleep session data
-select * from unique_sleep_sessions
+-- Final output: Clean, deduplicated, plausible sleep session data
+select * from final

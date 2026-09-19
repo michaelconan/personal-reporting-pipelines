@@ -19,10 +19,20 @@ with monthly_habits as (
 
 ),
 
+valid_monthly_habits as (
+-- Drop placeholder/junk pages (no title or no date) so they never pollute the
+-- habit grain downstream even if an import accidentally lacks the filter.
+    select *
+    from monthly_habits
+    where page_date is not null
+      and page_name is not null
+      and page_name != ''
+),
+
 unique_monthly_habits as (
 
     {{ dbt_utils.deduplicate(
-        relation='monthly_habits',
+        relation='valid_monthly_habits',
         partition_by='page_id',
         order_by='updated_at desc'
       )

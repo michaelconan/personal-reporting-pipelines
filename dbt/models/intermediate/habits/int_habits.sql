@@ -61,7 +61,7 @@ habit_events as (
         event_date as habit_date,
         period as habit_period,
         habit,
-        cast(event_value as numeric) as habit_value
+        cast(event_value as numeric(38, 9)) as habit_value
     from
         core_habit_events
     where
@@ -81,7 +81,7 @@ sleep_habits as (
         session_date as habit_date,
         'day' as habit_period,
         'sleep_minutes' as habit,
-        cast(sum(duration_minutes) as numeric) as habit_value
+        cast(sum(duration_minutes) as numeric(38, 9)) as habit_value
     from
         core_sleep_sessions
     group by
@@ -99,7 +99,7 @@ step_habits as (
         activity_date as habit_date,
         'day' as habit_period,
         'steps' as habit,
-        cast(step_count as numeric) as habit_value
+        cast(step_count as numeric(38, 9)) as habit_value
     from
         core_daily_steps
 
@@ -139,7 +139,7 @@ community_habits as (
             when contact_count = 1 then 'met_1to1'
             else 'met_group'
         end as habit,
-        cast(1.0 as numeric) as habit_value
+        cast(1.0 as numeric(38, 9)) as habit_value
     from
         community_meetings
 

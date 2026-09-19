@@ -1,7 +1,7 @@
 """Configuration and fixtures for DLT end-to-end tests.
 
 This module configures end-to-end testing environment with real external
-services like Google Cloud and BigQuery.
+services like Databricks and the source APIs.
 """
 
 # base imports
@@ -29,14 +29,13 @@ os.environ["DLT_TELEMETRY_DISABLED"] = "1"
 def check_config():
     """Verify dlt configuration for end-to-end tests.
 
-    Ensures that Google Secrets provider is properly configured
-    and available for accessing real credentials during E2E testing.
+    Ensures that the Google Secrets provider is properly configured
+    and available when Google Secrets are used for credential access.
     """
-    # Required for BigQuery and Google Secrets
-    assert os.path.exists(os.environ["GOOGLE_APPLICATION_CREDENTIALS"])
-
-    # Validate provider if using Google Secrets
+    # Google Cloud credentials are only required by the Google Secrets store.
     if SECRET_STORE == "google":
+        assert os.path.exists(os.environ["GOOGLE_APPLICATION_CREDENTIALS"])
+
         # Get providers of dlt secrets
         providers = dlt.secrets.config_providers
         # Environment, Secrets.toml, Google Secrets
@@ -47,12 +46,13 @@ def check_config():
 
 
 @pytest.fixture(scope="class")
-def bigquery_pipeline() -> Generator[dlt.Pipeline, None, None]:
-    """Pytest fixture providing a BigQuery pipeline for E2E testing.
+def databricks_pipeline() -> Generator[dlt.Pipeline, None, None]:
+    """Pytest fixture providing a Databricks pipeline for E2E testing.
 
-    Creates a DLT pipeline configured to use BigQuery as the destination
-    for end-to-end testing with real cloud services. The pipeline is
-    automatically cleaned up after each test class.
+    Creates a DLT pipeline configured to use Databricks (direct load via a
+    Unity Catalog managed volume) as the destination for end-to-end testing
+    with real cloud services. The pipeline is automatically cleaned up after
+    each test class.
 
     Yields:
         dlt.Pipeline: Configured DLT pipeline for E2E testing.
@@ -60,7 +60,7 @@ def bigquery_pipeline() -> Generator[dlt.Pipeline, None, None]:
     # Test pipeline
     pipeline = dlt.pipeline(
         pipeline_name="live_e2e_test",
-        destination="bigquery",
+        destination="databricks",
         dataset_name="live_data",
         dev_mode=True,
     )

@@ -19,10 +19,20 @@ with daily_habits as (
 
 ),
 
+valid_daily_habits as (
+-- Drop placeholder/junk pages (no title or no date) so they never pollute the
+-- habit grain downstream even if an import accidentally lacks the filter.
+    select *
+    from daily_habits
+    where page_date is not null
+      and page_name is not null
+      and page_name != ''
+),
+
 unique_daily_habits as (
 
     {{ dbt_utils.deduplicate(
-        relation='daily_habits',
+        relation='valid_daily_habits',
         partition_by='page_id',
         order_by='updated_at desc'
       )

@@ -18,6 +18,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+      # Skip the semantic-manifest validation notice (no dbt_cloud.yml in this project)
+      DBT_ENGINE_NO_WARN_SEMANTIC_MANIFEST_VALIDATION: '1'
     steps:
       - name: checkout code
         uses: actions/checkout@v5

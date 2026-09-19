@@ -18,11 +18,11 @@ personal:
         TimeZone: UTC
     dev:
       <<: *bigquery_config
-      dataset: dev_{{ env_var('DBT_SCHEMA', 'reporting') }}
+      dataset: "{{ env_var('DBT_SCHEMA', 'reporting') }}_dev"
       threads: 4
     test:
       <<: *bigquery_config
-      dataset: test_{{ env_var('DBT_SCHEMA', 'reporting') }}
+      dataset: "{{ env_var('DBT_SCHEMA', 'reporting') }}_test"
       threads: 4
     prod:
       <<: *bigquery_config

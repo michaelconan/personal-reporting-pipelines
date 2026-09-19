@@ -1,12 +1,12 @@
 # Personal Reporting Pipelines - AI Agent Context
 
 ## Project Overview
-Personal data integration and analytics platform tracking personal disciplines/habits across three sources. Uses dlt for extraction into BigQuery and dbt for transformation.
+Personal data integration and analytics platform tracking personal disciplines/habits across three sources. Uses dlt for extraction into Databricks (Unity Catalog) and dbt for transformation.
 
 ## Architecture
 ```
 Notion / HubSpot / Google Health APIs
-    ↓ (dlt pipelines → BigQuery raw schema)
+    ↓ (dlt pipelines → Databricks raw schema)
 dbt Staging (views) → dbt Intermediate → dbt Marts (tables)
     ↓ MetricFlow semantic layer
 ```

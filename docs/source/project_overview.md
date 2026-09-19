@@ -1,14 +1,14 @@
 # Project Overview
 
-This repository contains the infrastructure and workflows for a personal data platform. It leverages Google Cloud Platform services including BigQuery for data warehousing and Secret Manager for secure credential management, with automated orchestration through GitHub Actions.
+This repository contains the infrastructure and workflows for a personal data platform. It uses Databricks for raw data ingestion and storage and GCP Secret Manager for secure credential management, with automated orchestration through GitHub Actions.
 
 ## Architecture
 
 ### Data Pipeline Stack
 
-1.  **[dlt hub](https://dlthub.com/docs/intro)** - Extract, load, and transform source data into BigQuery raw layer
+1.  **[dlt hub](https://dlthub.com/docs/intro)** - Extract, load, and transform source data into Databricks raw layer
 2.  **[dbt core](https://docs.getdbt.com/)** - Transform raw data into analytics-ready models and views
-3.  **[BigQuery](https://cloud.google.com/bigquery)** - Cloud data warehouse for storage and analysis
+3.  **[Databricks](https://www.databricks.com/)** - Lakehouse platform for storage and analysis
 4.  **[GCP Secret Manager](https://cloud.google.com/secret-manager)** - Secure credential management for API keys and connections
 5.  **[GitHub Actions](https://github.com/features/actions)** - Automated orchestration and scheduling of data pipelines
 
