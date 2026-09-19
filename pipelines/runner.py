@@ -11,6 +11,7 @@ from logging import getLogger
 from typing import Any, Callable
 
 import dlt
+from dlt.destinations import databricks
 
 from pipelines import RAW_SCHEMA, SECRET_STORE
 from pipelines.common.utils import (
@@ -69,6 +70,17 @@ PIPELINE_CONFIG: dict[str, PipelineConfig] = {
 }
 
 
+def get_databricks_staging_volume(dataset_name: str) -> str:
+    """Return the Databricks staging volume for the pipeline's target schema.
+
+    Derives ``<catalog>.<dataset>.staging`` from the catalog configured in the
+    databricks destination credentials and the schema the pipeline loads into,
+    so each environment stages into its own volume instead of a hardcoded one.
+    """
+    catalog = dlt.secrets.get("destination.databricks.credentials.catalog")
+    return f"{catalog}.{dataset_name}.staging"
+
+
 def run_refresh(
     *,
     source_factory: Callable,
@@ -122,7 +134,9 @@ def run_refresh(
         pipeline = dlt.pipeline(
             pipeline_name=pipeline_name,
             dataset_name=RAW_SCHEMA,
-            destination="databricks",
+            destination=databricks(
+                staging_volume_name=get_databricks_staging_volume(RAW_SCHEMA),
+            ),
             progress=progress,
         )
 

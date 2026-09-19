@@ -1,7 +1,7 @@
 [destination.databricks]
-# Unity Catalog managed volume used as temporary staging for direct load.
-# Format: <catalog>.<schema>.<volume>. The volume must already exist.
-staging_volume_name = "workspace.test_raw.staging"
+# The staging volume for direct load is resolved at runtime from the pipeline's
+# target schema (<catalog>.<dataset>.staging, see get_databricks_staging_volume
+# in pipelines/runner.py) and must pre-exist for each environment.
 # Keep staged parquet files in the volume after load. Databricks direct load
 # succeeds with keep_staged_files = false, but the post-load directory REMOVE
 # fails with 404 (FILES_API_FILE_NOT_FOUND) via databricks-sql-connector 4.x,

@@ -14,12 +14,12 @@ SECRET_STORE = os.getenv("SECRET_STORE", default="1password")
 
 # Load and set dynamic schema and table variables based on DBT target
 DBT_TARGET = os.getenv("DBT_TARGET", default="prod")
-prefix = f"{DBT_TARGET}_" if DBT_TARGET != "prod" else ""
+suffix = f"_{DBT_TARGET}" if DBT_TARGET != "prod" else ""
 
 # Define raw and DBT schemas
 DBT_SCHEMA_NAME = os.getenv("DBT_SCHEMA_NAME", default="reporting")
-DBT_SCHEMA = prefix + DBT_SCHEMA_NAME
-RAW_SCHEMA = prefix + os.getenv("RAW_SCHEMA_NAME", default="raw")
+DBT_SCHEMA = DBT_SCHEMA_NAME + suffix
+RAW_SCHEMA = os.getenv("RAW_SCHEMA_NAME", default="raw") + suffix
 
 # Set environment variables for schemas
 os.environ["DBT_SCHEMA"] = DBT_SCHEMA

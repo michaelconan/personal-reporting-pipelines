@@ -53,7 +53,7 @@ Each source file (`test_notion_unit.py`, `test_hubspot_unit.py`, `test_google_he
 
 ### Runner / utils / mock-tooling unit tests
 
-- `test_runner_cli.py`: `parse_select()` parsing, `main()` CLI success/unknown-pipeline/exception paths (mocked `refresh_pipeline`), and `refresh_pipeline()` dispatch (source factory args, `with_resources()`, `dlt.pipeline(..., dataset_name=RAW_SCHEMA, destination="databricks")`, `write_disposition`).
+- `test_runner_cli.py`: `parse_select()` parsing, `main()` CLI success/unknown-pipeline/exception paths (mocked `refresh_pipeline`), and `refresh_pipeline()` dispatch (source factory args, `with_resources()`, `dlt.pipeline(..., dataset_name=RAW_SCHEMA, destination=<databricks factory with per-schema staging volume>)`, `write_disposition`).
 - `test_utils.py`: `should_force_full_refresh()` / `get_refresh_mode()` env-var matrix (`FORCE_FULL_REFRESH`, `<PIPELINE>_FULL_REFRESH`).
 - `tests/unit/scripts/test_export_mock_responses.py`: pure-function tests for `scripts/fixtures/export_mock_responses.py` — response capture, paginator override (single-page), incremental-limit override, wide export date ranges, dlt-metadata URL matching, cursor sorting, PII scrubbing, 3/2/1 split validation, registry-driven dispatch, and `save_captured_responses()` end-to-end to `tmp_path`.
 - `tests/unit/scripts/test_export_mock_seeds.py`: offline tests for `scripts/fixtures/export_mock_seeds.py` with a stubbed BigQuery client — env config, dynamic source discovery from `*_sources.yml`, BigQuery type normalization, scrubbed CSV export, parallel `export_all()` summary, and CLI wiring.
@@ -93,7 +93,7 @@ Cloud tests against real APIs + Databricks. `conftest.py` re-enables Google Secr
 | Target | Adapter | Dataset/schema | Source/seeds behaviour (`dbt_project.yml`) |
 | ------ | ------- | -------------- | ------------------------------------------ |
 | `mock` | DuckDB (`dbt.duckdb`) | `reporting` | sources **disabled** (`enabled: "{{ target.name != 'mock' }}"`); `mock_sources` seeds **enabled**, schema `mock`; models read seeds via `make_source()` → `ref()` |
-| `dev` / `test` | BigQuery (service account) | `dev_reporting` / `test_reporting` | sources enabled; models read raw schema via `make_source()` → `source()` |
+| `dev` / `test` | BigQuery (service account) | `reporting_dev` / `reporting_test` | sources enabled; models read raw schema via `make_source()` → `source()` |
 | `prod` | BigQuery | `reporting` | same as dev/test |
 
 `make_source(source_name, relation_name)` is adapter-aware, so **mock seed filenames must match raw table names** (`{source}__{table}.csv` in `dbt/seeds/mock_sources/{notion,hubspot,google_health}/`). Key consequence, not just convention: a renamed raw table breaks `mock` builds.

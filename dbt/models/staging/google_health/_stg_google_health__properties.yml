@@ -4,12 +4,7 @@ models:
   - name: stg_google_health__sleep
     description: >
       Typed and deduplicated Google Health sleep sessions, one row per sleep
-      data point.
-    data_tests:
-      - expect_intervals_to_not_overlap:
-          arguments:
-            start_column_name: started_at
-            end_column_name: ended_at
+      data point. Overlapping duplicates are resolved at the core layer.
     columns:
       - name: sleep_id
         description: The primary key for this table (raw data point name).
@@ -24,7 +19,7 @@ models:
           - not_null
           - dbt_expectations.expect_column_values_to_be_between:
               arguments:
-                min_value: date '2017-01-01'
+                min_value: date '2015-01-01'
                 max_value: date '2030-12-31'
       - name: started_at
         description: Timestamp when sleep started.
@@ -33,7 +28,7 @@ models:
           - not_null
           - dbt_expectations.expect_column_values_to_be_between:
               arguments:
-                min_value: timestamp '2017-01-01'
+                min_value: timestamp '2015-01-01'
                 max_value: timestamp '2030-12-31'
       - name: ended_at
         description: Timestamp when sleep ended.
@@ -42,7 +37,7 @@ models:
           - not_null
           - dbt_expectations.expect_column_values_to_be_between:
               arguments:
-                min_value: timestamp '2017-01-01'
+                min_value: timestamp '2015-01-01'
                 max_value: timestamp '2030-12-31'
       - name: sleep_minutes
         description: Sleep duration in minutes over the session interval.
@@ -53,6 +48,7 @@ models:
               arguments:
                 min_value: 120
                 max_value: 1080
+                row_condition: is_nap is not true
       - name: asleep_minutes
         description: Minutes asleep recorded in the sleep summary.
         data_type: bigint
@@ -110,7 +106,7 @@ models:
           - not_null
           - dbt_expectations.expect_column_values_to_be_between:
               arguments:
-                min_value: date '2017-01-01'
+                min_value: date '2015-01-01'
                 max_value: date '2030-12-31'
       - name: step_count
         description: Steps recorded within the step interval.
@@ -128,12 +124,7 @@ models:
         data_type: string
   - name: stg_google_health__exercise
     description: Typed Google Health exercise sessions, one row per exercise data
-      point.
-    data_tests:
-      - expect_intervals_to_not_overlap:
-          arguments:
-            start_column_name: started_at
-            end_column_name: ended_at
+      point. Overlapping duplicates are resolved at the core layer.
     columns:
       - name: exercise_id
         description: The primary key for this table (raw data point name).

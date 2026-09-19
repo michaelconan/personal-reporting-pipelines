@@ -6,8 +6,11 @@
 --       schema for downstream compatibility.
 -- ============================================================================
 
-select
-    cast(null as varchar) as row_id,
-    cast(null as integer) as engagement_id,
-    cast(null as integer) as company_id
-where false
+with empty_schema as (
+    select
+        cast(null as string) as row_id,
+        cast(null as string) as engagement_id,
+        cast(null as string) as company_id
+    from (select 1 as _dummy)
+)
+select * from empty_schema where false

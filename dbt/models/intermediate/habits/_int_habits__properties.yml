@@ -39,10 +39,11 @@ models:
         description: >
           The value of the habit tracked (1.0/0.0 for tickbox habits, metric
           values for number habits).
-        data_type: numeric
+        data_type: numeric(38, 9)
         constraints:
           - type: not_null
     constraints:
       - type: primary_key
+        warn_unenforced: false
         columns:
           - habit_key

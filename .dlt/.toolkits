@@ -57,3 +57,36 @@ rest-api-pipeline:
       sha3_256: abc665bce9b9056fbfc3e66d2b0ea1269f7bd078aa4985a9e01dd4d22146a295
     .agents\skills\rest-api-pipeline-workflow\SKILL.md:
       sha3_256: a1046863425ca3e64c3801ff6c1e9e3f0ddf2dd30448e3b56daf482ad3cf8b88
+  name: rest-api-pipeline
+transformations:
+  version: 0.1.1
+  description: Transform raw dlt pipeline data into a Canonical Data Model. Build
+    an ontology, design a CDM with Kimball dimensional modeling, write @dlt.hub.transformation
+    functions, and validate the output.
+  tags:
+  - dlthub
+  - transformation
+  - cdm
+  - kimball
+  - ibis
+  - dimensional-modeling
+  dependencies:
+  - init
+  workflow_entry_skill: annotate-sources
+  installed_at: '2026-09-18T21:32:41.986322+00:00'
+  agent: codex
+  files:
+    .agents\skills\annotate-sources\SKILL.md:
+      sha3_256: d7766c301565b8a56e6ad1b898545e6caad3cfeb64f55a478eda73556e65e0e0
+    .agents\skills\create-ontology\SKILL.md:
+      sha3_256: 8dc55f6cdc55fe8451770fbb1e0e25075b5e0596e8e12bdb4f8eb36f39ec56f5
+    .agents\skills\create-transformation\SKILL.md:
+      sha3_256: 2793e09561ec7ff702a980b6b6c4f489294afe34c07c4d062166da80ad989995
+    .agents\skills\debug-transformation\SKILL.md:
+      sha3_256: ab51da140129f7badd1b18904b97fa22dc3442444c89bdb869124470d2ceb31c
+    .agents\skills\generate-cdm\SKILL.md:
+      sha3_256: 70b5cd0ce5942087f9badff51deabdb58eaea11186ece0b1613910f6681b7b1c
+    .agents\skills\incremental-transformation\SKILL.md:
+      sha3_256: 73965652d809c9a86fca5ed2a42c84265a9c4e26576ca754e943484e373225ac
+    .agents\skills\transformations-workflow\SKILL.md:
+      sha3_256: a9e78bca9ef1577732f8cd3cd1a65d86ed81fb4ca1736c17785bd1c0b977a46f
