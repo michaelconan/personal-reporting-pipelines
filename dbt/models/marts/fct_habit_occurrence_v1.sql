@@ -52,7 +52,7 @@ final as (
         coalesce(g.habit_key, 'UNKNOWN_HABIT') as habit_key,
         h.habit_period,
         h.source_id,
-        cast(h.habit_value as numeric) as habit_value,
+        cast(h.habit_value as numeric(38, 9)) as habit_value,
         case
             when g.habit_type = 'tickbox'
                 then h.habit_value = 1.0

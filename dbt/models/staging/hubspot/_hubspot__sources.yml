@@ -21,7 +21,7 @@ sources:
       # On DuckDB (mock) targets each table is read directly from its test
       # fixture CSV as an external location; on BigQuery targets the key is
       # inert and {identifier} is ignored.
-      external_location: dbt/test_fixtures/hubspot/{identifier}.csv
+      external_location: test_fixtures/hubspot/{identifier}.csv
     tables:
       - name: companies
         identifier: hubspot__companies

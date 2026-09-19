@@ -21,7 +21,7 @@ sources:
       # On DuckDB (mock) targets each table is read directly from its test
       # fixture CSV as an external location; on BigQuery targets the key is
       # inert and {identifier} is ignored.
-      external_location: dbt/test_fixtures/notion/{identifier}.csv
+      external_location: test_fixtures/notion/{identifier}.csv
     tables:
       - name: data_source_daily_habits
         identifier: notion__data_source_daily_habits

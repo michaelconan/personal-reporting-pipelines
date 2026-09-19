@@ -6,6 +6,7 @@ models:
       metrics.
     constraints:
       - type: primary_key
+        warn_unenforced: false
         columns:
           - date_day
     time_spine:
