@@ -48,8 +48,9 @@ services:
     environment:
       SSH_AUTH_SOCK: /run/host-services/ssh-auth.sock
       # Non-sensitive configuration
-      ANTHROPIC_BASE_URL: https://opencode.ai/zen
-      OPENAI_BASE_URL: https://opencode.ai/zen/v1
+      ANTHROPIC_BASE_URL: https://opencode.ai/zen/go/v1
+      OPENAI_BASE_URL: https://opencode.ai/zen/go/v1
+      ANTHROPIC_MODEL: gpt-5.6-luna
       GITHUB_NAME: ${GITHUB_NAME:-}
       GITHUB_EMAIL: ${GITHUB_EMAIL:-}
       DBT_TARGET: ${DBT_TARGET:-}
