@@ -14,12 +14,12 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends nodejs openssh-client && \
     rm -rf /var/lib/apt/lists/*
 
-# GitHub CLI (gh)
-RUN ARCH="$(dpkg --print-architecture)" && \
-    curl -fsSL "https://github.com/cli/cli/releases/latest/download/gh_2.67.0_linux_${ARCH}.tar.gz" -o /tmp/gh.tar.gz && \
-    tar -xzf /tmp/gh.tar.gz -C /tmp && \
-    install -m 0755 /tmp/gh_*/bin/gh /usr/local/bin/gh && \
-    rm -rf /tmp/gh /tmp/gh.tar.gz && \
+# GitHub CLI (gh) - install from official apt repo
+RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg && \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" > /etc/apt/sources.list.d/github-cli.list && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends gh && \
+    rm -rf /var/lib/apt/lists/* && \
     gh --version
 
 # 1Password CLI via direct download (avoids the gpg/debsig apt-repo ceremony)

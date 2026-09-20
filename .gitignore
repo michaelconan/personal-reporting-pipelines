@@ -30,7 +30,7 @@ docs/source/dbt.html
 
 .env
 .env.databricks
-.secrets/*.json
+.secrets/
 */secrets.toml
 
 # IDE / Editor

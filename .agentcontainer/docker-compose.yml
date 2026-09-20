@@ -32,22 +32,18 @@ services:
         source: ~/.config/opencode
         target: /home/agent/.config/opencode
         read_only: true
-        required: false
       - type: bind
         source: ~/.claude
         target: /home/agent/.host-claude
         read_only: true
-        required: false
       - type: bind
         source: ~/.codex
         target: /home/agent/.host-codex
         read_only: true
-        required: false
       - type: bind
         source: ~/.agents
         target: /home/agent/.agents
         read_only: true
-        required: false
     working_dir: /workspaces
     environment:
       SSH_AUTH_SOCK: /run/host-services/ssh-auth.sock
@@ -65,8 +61,8 @@ services:
 
 secrets:
   opencode_api_key:
-    environment: OPENCODE_API_KEY
+    file: ../.secrets/opencode_api_key
   github_token:
-    environment: GITHUB_TOKEN
+    file: ../.secrets/github_token
   op_service_account_token:
-    environment: OP_SERVICE_ACCOUNT_TOKEN
+    file: ../.secrets/op_service_account_token

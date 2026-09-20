@@ -9,6 +9,10 @@ export HOME="${HOME:-/home/agent}"
 # In docker-compose, secrets are mounted as files under /run/secrets/.
 # The AI agent CLIs expect env vars, so we read and export them here.
 # Falls back gracefully if running outside compose (e.g. devcontainer).
+# Persist secrets to a file sourced by interactive shells
+SECRETS_ENV_FILE="$HOME/.secrets_env"
+: > "$SECRETS_ENV_FILE"
+
 if [[ -d /run/secrets ]]; then
     for secret_file in /run/secrets/*; do
         [[ -f "$secret_file" ]] || continue
@@ -20,15 +24,30 @@ if [[ -d /run/secrets ]]; then
                 export OPENCODE_API_KEY="$secret_value"
                 export ANTHROPIC_API_KEY="$secret_value"
                 export OPENAI_API_KEY="$secret_value"
+                echo "export OPENCODE_API_KEY=\"$secret_value\"" >> "$SECRETS_ENV_FILE"
+                echo "export ANTHROPIC_API_KEY=\"$secret_value\"" >> "$SECRETS_ENV_FILE"
+                echo "export OPENAI_API_KEY=\"$secret_value\"" >> "$SECRETS_ENV_FILE"
                 ;;
             github_token)
                 export GITHUB_TOKEN="$secret_value"
+                echo "export GITHUB_TOKEN=\"$secret_value\"" >> "$SECRETS_ENV_FILE"
                 ;;
             op_service_account_token)
                 export OP_SERVICE_ACCOUNT_TOKEN="$secret_value"
+                echo "export OP_SERVICE_ACCOUNT_TOKEN=\"$secret_value\"" >> "$SECRETS_ENV_FILE"
                 ;;
         esac
     done
+fi
+
+# Source the persisted secrets for the current shell
+[[ -f "$SECRETS_ENV_FILE" ]] && source "$SECRETS_ENV_FILE"
+
+# Ensure future interactive shells load the secrets
+if [[ -f "$HOME/.bashrc" ]]; then
+    grep -q "source $SECRETS_ENV_FILE" "$HOME/.bashrc" || echo "source $SECRETS_ENV_FILE" >> "$HOME/.bashrc"
+else
+    echo "source $SECRETS_ENV_FILE" > "$HOME/.bashrc"
 fi
 
 # ---------------------------------------------------------------------------
