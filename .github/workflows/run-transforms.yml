@@ -17,7 +17,6 @@ jobs:
   run-pipeline:
     runs-on: ubuntu-latest
     env:
-      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
       # Skip the semantic-manifest validation notice (no dbt_cloud.yml in this project)
       DBT_ENGINE_NO_WARN_SEMANTIC_MANIFEST_VALIDATION: '1'
     steps:
@@ -39,26 +38,20 @@ jobs:
         run: |
           make install
 
+      - name: install 1password cli
+        uses: 1password/install-cli-action@v3
+
+      - name: inject Databricks credentials
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+        run: |
+          op inject -f -i .env.databricks.tpl -o .env.databricks
+          set -a && source .env.databricks && set +a
+
       - name: install dbt dependencies
         run: |
           uv run dbt deps --project-dir dbt --profiles-dir dbt
 
-      - name: set environment variables
-        run: |
-          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/sa_key.json" >> $GITHUB_ENV
-
-      - name: write keyfile
-        run: |
-          cat << 'EOF' > $GOOGLE_APPLICATION_CREDENTIALS
-          ${{ secrets.GCP_SVC_KEY }}
-          EOF
-
       - name: run dbt build
         run: |
           uv run dbt build --project-dir dbt --profiles-dir dbt --target prod ${{ inputs.force_full_refresh && '--full-refresh' || '' }}
-
-      - name: remove keyfile and secrets
-        if: always()
-        run: |
-          rm -f $GOOGLE_APPLICATION_CREDENTIALS
-          rm -f .dlt/secrets.toml
