@@ -1,0 +1,4 @@
+# Keep the small build context clean and avoid pulling in anything unexpected
+.env
+*~
+*.swp
