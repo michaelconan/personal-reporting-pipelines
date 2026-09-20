@@ -3,13 +3,9 @@ FROM python:3.13-slim
 ARG UID=1000
 ARG GID=1000
 ARG OP_VERSION=2.32.0
-# Service-account token for the op CLI, injected at build time from the local
-# 1Password CLI (e.g. `OP_SERVICE_ACCOUNT_TOKEN="$(op read op://...)" docker compose build`).
-ARG OP_SERVICE_ACCOUNT_TOKEN
 
 ENV DEBIAN_FRONTEND=noninteractive \
-    PATH="/home/agent/.local/bin:${PATH}" \
-    OP_SERVICE_ACCOUNT_TOKEN="${OP_SERVICE_ACCOUNT_TOKEN}"
+    PATH="/home/agent/.local/bin:${PATH}"
 
 # System packages: git, curl, unzip (op job), Node 22, OpenSSH client for SSH signing
 RUN apt-get update && \

@@ -6,11 +6,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        # Injected at build time from the local 1Password CLI, e.g.:
-        #   OP_SERVICE_ACCOUNT_TOKEN="$(op read 'op://Vault/Service Account/credential')" \
-        #     docker compose -f .agentcontainer/docker-compose.yml build
-        OP_SERVICE_ACCOUNT_TOKEN: ${OP_SERVICE_ACCOUNT_TOKEN:-}
     image: personal-reporting-agentcontainer:local
 
     init: true
@@ -30,19 +25,48 @@ services:
         source: /run/host-services/ssh-auth.sock
         target: /run/host-services/ssh-auth.sock
         read_only: true
+      # User-level agent configs (read-only, optional).
+      # Claude and Codex mount to a staging path; the entrypoint copies
+      # config files only (not session/state) into the writable home.
+      - type: bind
+        source: ~/.config/opencode
+        target: /home/agent/.config/opencode
+        read_only: true
+        required: false
+      - type: bind
+        source: ~/.claude
+        target: /home/agent/.host-claude
+        read_only: true
+        required: false
+      - type: bind
+        source: ~/.codex
+        target: /home/agent/.host-codex
+        read_only: true
+        required: false
+      - type: bind
+        source: ~/.agents
+        target: /home/agent/.agents
+        read_only: true
+        required: false
     working_dir: /workspaces
     environment:
       SSH_AUTH_SOCK: /run/host-services/ssh-auth.sock
-      # Model access for opencode, claude and codex (OpenCode Zen/Go catalog).
-      # claude and codex are routed through the Zen gateway using the same key.
-      OPENCODE_API_KEY: ${OPENCODE_API_KEY:-}
-      ANTHROPIC_API_KEY: ${OPENCODE_API_KEY:-}
+      # Non-sensitive configuration
       ANTHROPIC_BASE_URL: https://opencode.ai/zen
-      OPENAI_API_KEY: ${OPENCODE_API_KEY:-}
       OPENAI_BASE_URL: https://opencode.ai/zen/v1
-      # Convenience for git/GitHub operations by the agents
-      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
       GITHUB_NAME: ${GITHUB_NAME:-}
       GITHUB_EMAIL: ${GITHUB_EMAIL:-}
       DBT_TARGET: ${DBT_TARGET:-}
+    secrets:
+      - opencode_api_key
+      - github_token
+      - op_service_account_token
     command: ["sleep", "infinity"]
+
+secrets:
+  opencode_api_key:
+    environment: OPENCODE_API_KEY
+  github_token:
+    environment: GITHUB_TOKEN
+  op_service_account_token:
+    environment: OP_SERVICE_ACCOUNT_TOKEN

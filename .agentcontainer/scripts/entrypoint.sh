@@ -3,6 +3,83 @@ set -euo pipefail
 
 export HOME="${HOME:-/home/agent}"
 
+# ---------------------------------------------------------------------------
+# 1. Load Docker secrets into environment variables
+# ---------------------------------------------------------------------------
+# In docker-compose, secrets are mounted as files under /run/secrets/.
+# The AI agent CLIs expect env vars, so we read and export them here.
+# Falls back gracefully if running outside compose (e.g. devcontainer).
+if [[ -d /run/secrets ]]; then
+    for secret_file in /run/secrets/*; do
+        [[ -f "$secret_file" ]] || continue
+        secret_name="$(basename "$secret_file")"
+        secret_value="$(cat "$secret_file")"
+
+        case "$secret_name" in
+            opencode_api_key)
+                export OPENCODE_API_KEY="$secret_value"
+                export ANTHROPIC_API_KEY="$secret_value"
+                export OPENAI_API_KEY="$secret_value"
+                ;;
+            github_token)
+                export GITHUB_TOKEN="$secret_value"
+                ;;
+            op_service_account_token)
+                export OP_SERVICE_ACCOUNT_TOKEN="$secret_value"
+                ;;
+        esac
+    done
+fi
+
+# ---------------------------------------------------------------------------
+# 2. Copy user-level agent config files from host mounts
+# ---------------------------------------------------------------------------
+# Claude and Codex use their home directories for both config AND writable
+# session/state data. We mount host configs to staging paths and copy only
+# the config files, leaving agents free to write state to their home dirs.
+
+# --- Claude Code ---
+HOST_CLAUDE="/home/agent/.host-claude"
+if [[ -d "$HOST_CLAUDE" ]]; then
+    mkdir -p "$HOME/.claude"
+
+    # Config files
+    for f in settings.json CLAUDE.md keybindings.json; do
+        [[ -f "$HOST_CLAUDE/$f" ]] && cp -p "$HOST_CLAUDE/$f" "$HOME/.claude/$f"
+    done
+
+    # Config directories
+    for d in themes rules skills agents workflows output-styles; do
+        [[ -d "$HOST_CLAUDE/$d" ]] && cp -rp "$HOST_CLAUDE/$d" "$HOME/.claude/$d"
+    done
+fi
+
+# --- Codex CLI ---
+HOST_CODEX="/home/agent/.host-codex"
+if [[ -d "$HOST_CODEX" ]]; then
+    mkdir -p "$HOME/.codex"
+
+    # Config files
+    for f in config.toml hooks.json AGENTS.md; do
+        [[ -f "$HOST_CODEX/$f" ]] && cp -p "$HOST_CODEX/$f" "$HOME/.codex/$f"
+    done
+
+    # Named profile configs (*.config.toml)
+    for f in "$HOST_CODEX"/*.config.toml; do
+        [[ -f "$f" ]] && cp -p "$f" "$HOME/.codex/$(basename "$f")"
+    done
+fi
+
+# --- OpenCode ---
+# Config is already in ~/.config/opencode/ via direct read-only mount.
+# No copy needed — state lives separately at ~/.local/share/opencode/.
+
+# --- dlthub skills ---
+# Already mounted directly at ~/.agents/ (read-only). No copy needed.
+
+# ---------------------------------------------------------------------------
+# 3. SSH agent forwarding & git config
+# ---------------------------------------------------------------------------
 mkdir -p "${HOME}/.ssh"
 chmod 700 "${HOME}/.ssh"
 
