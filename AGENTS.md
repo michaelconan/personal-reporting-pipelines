@@ -215,6 +215,14 @@ GCP Secret Manager or 1Password (configured via `SECRET_STORE` env var). For loc
 - **Local**: `make databricks-env-export` (eval output) or `source .env.databricks` after `make inject`
 - **CI**: 1Password service account token injects `.env.databricks.tpl` → `.env.databricks` in workflow steps
 
+## Agent Container (`.agentcontainer/`)
+Least-privilege sandbox for agentic coding (`opencode`, `claude`, `codex`) — separate from the full-access human `.devcontainer/`. Full guide: `docs/source/agent_container.md`.
+
+- **Hardening**: non-root `agent` user (no sudo), `read_only: true`, `cap_drop: [ALL]`, `no-new-privileges`, ephemeral `tmpfs` for `/tmp` and `/home/agent`, no published ports / Docker socket. Image: `personal-reporting-agentcontainer:local` (`python:3.13-slim` + git/curl/unzip, Node 22, `openssh-client`, `gh`, `op` 2.32.0, `opencode-ai`/`claude-code`/`codex`, `uv`).
+- **Build/run**: `cd .agentcontainer && docker compose build && GITHUB_NAME="..." GITHUB_EMAIL="..." docker compose up -d && docker compose exec agent bash`. Needs `.secrets/opencode_api_key`, `.secrets/github_token`, `.secrets/op_service_account_token` (gitignored).
+- **Inside**: entrypoint (`scripts/entrypoint.sh`) exports `/run/secrets/*` to env (`OPENCODE_API_KEY`/`ANTHROPIC_API_KEY`/`OPENAI_API_KEY`, `GITHUB_TOKEN`, `OP_SERVICE_ACCOUNT_TOKEN`), copies host agent configs only (claude/codex via `.host-*` staging paths; opencode config stays mounted, dlthub skills stay on `~/.agents` mount), sets git identity from `GITHUB_NAME`/`GITHUB_EMAIL` + SSH signing via forwarded `SSH_AUTH_SOCK` (no keys in image). Repo at `/workspaces` persists; home state is rebuilt each start.
+- **Use**: `uv sync` (or `make install`), `make inject` when warehouse creds are needed, then e.g. `opencode run "..."`. Agent wiring: `opencode.json` + `.codex/config.toml` (`dlt-workspace-mcp`), `.agents/skills/`, `AGENTS.md`/`CLAUDE.md`. Validate with `make test-local` and `uv run dbt build --project-dir dbt --profiles-dir dbt --target mock`.
+
 ## toolkits — match intent → install → open the entry skill (no discovery round-trip needed)
 Workflow toolkits are installed on demand. This index is authoritative for shipped toolkits: match the user's intent, run the install command, confirm from its output (`dlthub ai status` only if unclear), then hand over to the entry skill. No discovery call needed for these.
 <!-- This shipped index can drift from the live catalog on a user's machine until runtime refresh lands; tracked in dlt-hub/dlthub-ai-workbench-internal#71. -->
