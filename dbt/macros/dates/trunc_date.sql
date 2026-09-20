@@ -1,4 +1,4 @@
--- Adapter-aware macro to normalize date_trunc across BigQuery and DuckDB
+-- Adapter-aware macro to normalize date_trunc across BigQuery, DuckDB, and Databricks
 -- Usage: {{ trunc_date('\'month\'', 'my_date_column') }}
 -- Note: pass the `part` argument as a quoted literal (e.g. 'month', 'day', 'year')
 
@@ -15,5 +15,11 @@
 {% macro duckdb__trunc_date(part, column_name) -%}
     {# DuckDB expects date_trunc('<part>', timestamp) with the part as a string (lowercase is OK) #}
     {% set _part = part.replace("'", "").replace('"', '') | lower %}
+    date_trunc('{{ _part }}', {{ column_name }})
+{%- endmacro %}
+
+{% macro databricks__trunc_date(part, column_name) -%}
+    {# Databricks uses date_trunc(part, timestamp) with part as string literal #}
+    {% set _part = part.replace("'", "").replace('"', '') | upper %}
     date_trunc('{{ _part }}', {{ column_name }})
 {%- endmacro %}

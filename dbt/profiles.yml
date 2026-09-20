@@ -1,6 +1,17 @@
 ---
 anchors:
-  # reuse bigquery authentication and project across different schemas for targets
+  # Databricks Unity Catalog configuration (primary target) - OAuth with service principal
+  - &databricks_config
+    type: databricks
+    host: "{{ env_var('DATABRICKS_HOST') }}"
+    http_path: "{{ env_var('DATABRICKS_HTTP_PATH') }}"
+    client_id: "{{ env_var('DATABRICKS_CLIENT_ID') }}"
+    client_secret: "{{ env_var('DATABRICKS_CLIENT_SECRET') }}"
+    auth_type: oauth
+    catalog: "{{ env_var('DATABRICKS_CATALOG', 'reporting') }}"
+    schema: "{{ env_var('DBT_SCHEMA', 'reporting') }}"
+    threads: 4
+  # BigQuery configuration retained for rollback path
   - &bigquery_config
     type: bigquery
     method: service-account
@@ -13,18 +24,29 @@ personal:
       type: duckdb
       path: dbt.duckdb
       schema: "{{ env_var('DBT_SCHEMA', 'reporting') }}"
-      # Pin the session timezone so timestamp→date casts match BigQuery (UTC)
+      # Pin the session timezone so timestamp→date casts match Databricks (UTC)
       settings:
         TimeZone: UTC
+    # Primary targets - Databricks Unity Catalog
     dev:
+      <<: *databricks_config
+      schema: "{{ env_var('DBT_SCHEMA', 'reporting') }}_dev"
+    test:
+      <<: *databricks_config
+      schema: "{{ env_var('DBT_SCHEMA', 'reporting') }}_test"
+    prod:
+      <<: *databricks_config
+      schema: "{{ env_var('DBT_SCHEMA', 'reporting') }}"
+    # Rollback targets - BigQuery (retained for easy rollback path)
+    dev-bigquery:
       <<: *bigquery_config
       dataset: "{{ env_var('DBT_SCHEMA', 'reporting') }}_dev"
       threads: 4
-    test:
+    test-bigquery:
       <<: *bigquery_config
       dataset: "{{ env_var('DBT_SCHEMA', 'reporting') }}_test"
       threads: 4
-    prod:
+    prod-bigquery:
       <<: *bigquery_config
       dataset: "{{ env_var('DBT_SCHEMA', 'reporting') }}"
       threads: 4

@@ -1,5 +1,5 @@
 -- Macro to extract and concatenate the plain text from Notion's Rich Text / Title JSON array
--- Works with both BigQuery and DuckDB using adapter dispatch pattern
+-- Works with BigQuery, DuckDB, and Databricks using adapter dispatch pattern
 
 {% macro extract_notion_title(column_name) -%}
     {{ return(adapter.dispatch('extract_notion_title')(column_name)) }}
@@ -11,4 +11,13 @@
 
 {% macro duckdb__extract_notion_title(column_name) -%}
     list_aggregate(list_transform(json_transform({{ column_name }}, '[{"plain_text": "VARCHAR"}]'), x -> x.plain_text), 'string_agg', '')
+{%- endmacro %}
+
+{% macro databricks__extract_notion_title(column_name) -%}
+    aggregate(
+        from_json({{ column_name }}, 'array<struct<plain_text:string>>'),
+        '',
+        (acc, x) -> concat(acc, x.plain_text),
+        acc -> acc
+    )
 {%- endmacro %}

@@ -22,3 +22,10 @@
         as date
     )
 {%- endmacro %}
+
+{% macro databricks__date_from_offset_seconds(timestamp_expr, offset_seconds_expr) -%}
+    date(
+        {{ timestamp_expr }} + 
+        make_interval(0, 0, 0, 0, 0, 0, coalesce(cast(replace({{ offset_seconds_expr }}, 's', '') as int), 0))
+    )
+{%- endmacro %}

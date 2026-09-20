@@ -39,9 +39,14 @@ models:
         enforced: true
 # Sources are enabled for all targets: on DuckDB (mock) each source table is
 # read from its test fixture via the `external_location` meta on the source;
-# on BigQuery targets sources resolve to the raw schema.
+# on Databricks targets sources resolve to the raw schema in Unity Catalog.
 vars:
   dbt_date:time_zone: UTC
   # Upper sanity cap for a single sleep session; sessions beyond this are
   # treated as recording artifacts and dropped at staging.
   max_sleep_hours: 15
+
+# Databricks-specific configurations
+# These configs apply when targeting Databricks (dev/test/prod targets)
+# BigQuery targets (dev-bigquery/test-bigquery/prod-bigquery) are retained
+# for easy rollback path

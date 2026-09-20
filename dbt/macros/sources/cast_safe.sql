@@ -12,3 +12,7 @@
 {% macro duckdb__cast_safe(column_name, data_type) -%}
     TRY_CAST({{ column_name }} AS {{ data_type }})
 {%- endmacro %}
+
+{% macro databricks__cast_safe(column_name, data_type) -%}
+    TRY_CAST({{ column_name }} AS {{ data_type }})
+{%- endmacro %}

@@ -386,7 +386,7 @@ models:
           name: company
       - name: engagement_id
         description: Degenerate natural engagement identifier.
-        data_type: bigint
+        data_type: string
         entity:
           type: foreign
           name: engagement

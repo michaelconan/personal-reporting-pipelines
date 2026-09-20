@@ -12,3 +12,7 @@
 {% macro duckdb__date_from_parts(year_expr, month_expr, day_expr) -%}
     make_date({{ year_expr }}, {{ month_expr }}, {{ day_expr }})
 {%- endmacro %}
+
+{% macro databricks__date_from_parts(year_expr, month_expr, day_expr) -%}
+    make_date({{ year_expr }}, {{ month_expr }}, {{ day_expr }})
+{%- endmacro %}

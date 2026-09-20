@@ -18,3 +18,4 @@ with spine as (
 select cast(date_day as date) as date_day
 from
     spine
+where date_day is not null

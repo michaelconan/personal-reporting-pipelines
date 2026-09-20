@@ -9,6 +9,9 @@ models:
         warn_unenforced: false
         columns:
           - date_day
+      - type: not_null
+        columns:
+          - date_day
     time_spine:
       standard_granularity_column: date_day
     columns:

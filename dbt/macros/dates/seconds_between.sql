@@ -12,3 +12,7 @@
 {% macro duckdb__seconds_between(start_expr, end_expr) -%}
     date_diff('second', {{ start_expr }}, {{ end_expr }})
 {%- endmacro %}
+
+{% macro databricks__seconds_between(start_expr, end_expr) -%}
+    (unix_timestamp({{ end_expr }}) - unix_timestamp({{ start_expr }}))
+{%- endmacro %}
