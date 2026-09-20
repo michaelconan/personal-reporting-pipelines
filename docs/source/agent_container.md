@@ -24,7 +24,7 @@ This page describes the limited-access agent container in `.agentcontainer/` —
   - Forwards the host SSH agent (`/run/host-services/ssh-auth.sock`, read-only) — no private keys enter the container.
   - Mounts host agent configs read-only: `~/.config/opencode`, `~/.claude` → `/home/agent/.host-claude`, `~/.codex` → `/home/agent/.host-codex`, `~/.agents` → `/home/agent/.agents`.
   - Consumes three Docker secrets from `../.secrets/`: `opencode_api_key`, `github_token`, `op_service_account_token`.
-  - Sets non-sensitive env: `ANTHROPIC_BASE_URL` / `OPENAI_BASE_URL` (opencode zen proxy), `ANTHROPIC_MODEL=gpt-5.6-luna`, `GITHUB_NAME` / `GITHUB_EMAIL`, `DBT_TARGET`.
+  - Sets non-sensitive env: `ANTHROPIC_BASE_URL` / `OPENAI_BASE_URL` (opencode zen proxy), `ANTHROPIC_MODEL=qwen-3.8-flash`, `GITHUB_NAME` / `GITHUB_EMAIL`, `DBT_TARGET`.
 - **Entrypoint** (`scripts/entrypoint.sh`) runs on every start:
   1. Reads `/run/secrets/*` into env (`OPENCODE_API_KEY` + `ANTHROPIC_API_KEY` + `OPENAI_API_KEY`, `GITHUB_TOKEN`, `OP_SERVICE_ACCOUNT_TOKEN`), persists them to `~/.secrets_env`, and wires `~/.bashrc` to source it.
   2. Copies **config files only** (no session/state) from the host mounts into the writable home: claude `settings.json` / `CLAUDE.md` / `keybindings.json` plus `themes rules skills agents workflows output-styles` dirs; codex `config.toml` / `hooks.json` / `AGENTS.md` plus `*.config.toml` profiles. OpenCode needs no copy (config stays on its read-only mount, state lives in `~/.local/share/opencode/`); dlthub skills stay on the `~/.agents` mount.

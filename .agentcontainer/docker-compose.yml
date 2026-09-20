@@ -50,7 +50,7 @@ services:
       # Non-sensitive configuration
       ANTHROPIC_BASE_URL: https://opencode.ai/zen/go/v1
       OPENAI_BASE_URL: https://opencode.ai/zen/go/v1
-      ANTHROPIC_MODEL: gpt-5.6-luna
+      ANTHROPIC_MODEL: qwen-3.8-flash
       GITHUB_NAME: ${GITHUB_NAME:-}
       GITHUB_EMAIL: ${GITHUB_EMAIL:-}
       DBT_TARGET: ${DBT_TARGET:-}
