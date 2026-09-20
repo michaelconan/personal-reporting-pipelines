@@ -75,7 +75,7 @@ final as (
                 then {{ dbt_utils.generate_surrogate_key(['ct.company_id']) }}
             else 'UNKNOWN_GROUP'
         end as group_key,
-        e.engagement_id,
+        cast(e.engagement_id as varchar) as engagement_id,
         e.engagement_type,
         e.is_synchronous,
         coalesce(cc.associate_count, 0) as associate_count,
