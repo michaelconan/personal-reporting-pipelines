@@ -29,6 +29,7 @@ docs/_build/
 docs/source/dbt.html
 
 .env
+.env.databricks
 .secrets/*.json
 */secrets.toml
 

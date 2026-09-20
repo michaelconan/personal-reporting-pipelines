@@ -6,10 +6,17 @@ Personal data integration and analytics platform tracking personal disciplines/h
 ## Architecture
 ```
 Notion / HubSpot / Google Health APIs
-    ↓ (dlt pipelines → Databricks raw schema)
+    ↓ (dlt pipelines → Databricks raw schema / Unity Catalog)
 dbt Staging (views) → dbt Intermediate → dbt Marts (tables)
     ↓ MetricFlow semantic layer
 ```
+
+## Target Configuration
+**Primary target**: Databricks Unity Catalog (`dev`, `test`, `prod` targets)
+**Rollback targets**: BigQuery (`dev-bigquery`, `test-bigquery`, `prod-bigquery` targets) — retained for easy rollback path
+**Local development**: DuckDB (`mock` target) with CSV test fixtures
+
+Default target is `dev` (Databricks). Use `DBT_TARGET` env var to override.
 
 ## GitHub Agentic Workflows (gh-aw)
 Scheduled AI-driven automation uses [gh-aw](https://github.com/github/gh-aw). Each workflow is a `.md` source file (frontmatter + agent prompt) compiled to a `.lock.yml` GitHub Actions file. Engine for this project: **Gemini** (`GEMINI_API_KEY` secret required).
@@ -29,12 +36,13 @@ Current agentic workflow: `weekly-doc-updater` — runs every Monday, opens a PR
 - `pipelines/__init__.py` — Shared constants: BASE_DATE, RAW_SCHEMA, DBT_SCHEMA
 - `dbt/seeds/group_connect_cadence.csv` — Target connection cadence per group tier
 - `dbt/dbt_project.yml` — dbt config (profile, materializations, vars)
-- `dbt/profiles.yml` — dev=duckdb, test/prod=BigQuery
+- `dbt/profiles.yml` — dev/test/prod=Databricks, dev-bigquery/test-bigquery/prod-bigquery=BigQuery (rollback), mock=DuckDB
 
 ## Source Resolution (no make_source macro)
 There is no `make_source` macro. Models call `{{ source(source_name, relation_name) }}` directly for every target:
 - **mock (DuckDB)**: each source reads its test fixture via `config.external_location: dbt/test_fixtures/{source}/{identifier}.csv`.
-- **dev/test/prod (BigQuery)**: sources resolve to the raw schema.
+- **dev/test/prod (Databricks)**: sources resolve to the raw schema in Unity Catalog.
+- **dev-bigquery/test-bigquery/prod-bigquery (BigQuery)**: sources resolve to the raw schema (rollback path).
 
 **Consequence**: fixtures in `dbt/test_fixtures/{source}/` MUST be named after the source identifiers in `_*sources.yml`.
 
@@ -129,19 +137,21 @@ Note: habit completions and thresholds come from the Notion habit reference data
 - `make docs` — dbt docs site (v2 SPA) + Sphinx docs
 - `uv run dbt build --project-dir dbt --profiles-dir dbt --target mock` — local dbt build (DuckDB + CSV test fixtures)
 - `uv run dbt run --project-dir dbt --profiles-dir dbt --select <model> --target mock` — run specific model
+- `uv run dbt build --project-dir dbt --profiles-dir dbt --target dev` — build against Databricks dev target
 - SQL linting: `uv run dbt lint --project-dir dbt --profiles-dir dbt --target mock` (dbt 2.x built-in linter — rust parser with real dbt templating, reuses `dbt/.sqlfluff` rule config). Verified: full-project run exits 0 (warnings only). The `sqlfluff`/`sqlfluff-templater-dbt` PyPI packages are NOT installed — `sqlfluff-templater-dbt` requires Python `dbt-core` and cannot coexist with the dbt 2.x `dbt` package, and standalone sqlfluff (jinja templater) cannot resolve package macros like `dbt_utils.surrogate_key`, so `dbt lint` is the only reliable lint path.
 
 ## dbt 2.x Notes (Rust engine, `dbt~=2.0`)
 - dbt-bouncer gets `catalog.json` only from `dbt compile --write-catalog` — `dbt docs generate` no longer writes it.
 - `dbt docs generate --static` no longer exists; v2 emits a static SPA (`index.html` + `assets/` + `info_schema/*.parquet`) into `dbt/target/` which `make docs` copies to `docs/_build/html/dbt/`.
 - Source-level `freshness` and `meta: external_location` at the top level are rejected by the strict v2 parser (`dbt1060`) — they must live under each source's `config:`. Freshness uses `loaded_at_query` joining `_dlt_loads` on `_dlt_load_id` (`where status = 0`); do not coalesce NULL to `current_timestamp()` (NULL = failed freshness).
+- Databricks profile keys `catalog`/`schema` are used for Unity Catalog (interchangeable with `database`/`schema` in other adapters).
 - BigQuery profile keys `project`/`dataset` remain valid in the dbt 2.x bigquery adapter (documented as interchangeable with `database`/`schema`).
-- Adapters are bundled with the `dbt` distribution (no separate `dbt-duckdb`/`dbt-bigquery` PyPI packages needed), so `profiles.yml` still uses `type: duckdb` / `type: bigquery`.
+- Adapters are bundled with the `dbt` distribution (no separate `dbt-duckdb`/`dbt-bigquery`/`dbt-databricks` PyPI packages needed), so `profiles.yml` still uses `type: duckdb` / `type: bigquery` / `type: databricks`.
 
 ## Tech Stack
 - **Data Ingestion**: dlt (Python)
 - **Data Transformation**: dbt 2.x (Rust engine, installed via the `dbt` PyPI distribution)
-- **Data Warehouse**: Google BigQuery
+- **Data Warehouse**: Databricks Unity Catalog (primary), Google BigQuery (rollback)
 - **Orchestration**: GitHub Actions
 - **Secret Management**: GCP Secret Manager or 1Password (configured via `SECRET_STORE` env var)
 - **Development**: Python 3.12, uv, VSCode Dev Containers
@@ -156,7 +166,7 @@ Note: habit completions and thresholds come from the Notion habit reference data
 - All pipeline functions accept `is_incremental: Optional[bool] = None`; use `get_refresh_mode()` when `None`
 
 ### SQL (SQLFluff)
-- Dialect: BigQuery (prod), DuckDB (dev)
+- Dialect: BigQuery (rollback targets), DuckDB (dev), Databricks (primary)
 - Keywords: lowercase; identifiers: lowercase with underscores
 - Line length: 80; indentation: 4 spaces; trailing commas; explicit aliasing
 
@@ -199,8 +209,11 @@ they are essential for ANY work in this project
 - `transformations-workflow`
 - `rest-api-pipeline-workflow`
 
-## Security
-CRITICAL: never ask for credentials in chat. Always let the user edit secrets directly and do not attempt to read them.
+## Secret Management
+GCP Secret Manager or 1Password (configured via `SECRET_STORE` env var). For local development and CI, Databricks credentials are loaded from 1Password using `op inject` with `.env.databricks.tpl` template.
+
+- **Local**: `make databricks-env-export` (eval output) or `source .env.databricks` after `make inject`
+- **CI**: 1Password service account token injects `.env.databricks.tpl` → `.env.databricks` in workflow steps
 
 ## toolkits — match intent → install → open the entry skill (no discovery round-trip needed)
 Workflow toolkits are installed on demand. This index is authoritative for shipped toolkits: match the user's intent, run the install command, confirm from its output (`dlthub ai status` only if unclear), then hand over to the entry skill. No discovery call needed for these.

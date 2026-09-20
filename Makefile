@@ -33,8 +33,17 @@ install: ## Install Python dependencies using uv
 	@uv sync
 
 .PHONY: inject
-inject:
+inject: ## Inject all secrets from 1Password templates
 	@op inject -f -i .dlt/secrets.toml.tpl -o .dlt/secrets.toml
+	@op inject -f -i .env.databricks.tpl -o .env.databricks
+
+.PHONY: databricks-env
+databricks-env: inject ## Load Databricks env vars for dbt (source this output)
+	@cat .env.databricks
+
+.PHONY: databricks-env-export
+databricks-env-export: inject ## Export Databricks env vars for dbt (eval this output)
+	@set -a && source .env.databricks && set +a
 
 ## Testing
 .PHONY: test-e2e
