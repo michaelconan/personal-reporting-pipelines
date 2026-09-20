@@ -31,14 +31,12 @@ import argparse
 import copy
 import json
 import logging
-import os
 import sys
-
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
-import requests
 import dlt
+import requests
 
 sys.path.insert(0, str(Path(__file__).parents[1]))
 
@@ -55,21 +53,23 @@ class ResponseCaptureSession(requests.Session):
 
     def __init__(self) -> None:
         super().__init__()
-        self.captured_responses: List[Tuple[str, Any, Dict[str, Any]]] = []
+        self.captured_responses: list[tuple[str, Any, dict[str, Any]]] = []
 
         def capture_hook(response: requests.Response, *args: Any, **kwargs: Any) -> None:
             if response.status_code == 200:
                 try:
                     payload = response.json()
-                    url = response.config.get("url") if hasattr(response, "config") else response.url
+                    url = (
+                        response.config.get("url") if hasattr(response, "config") else response.url
+                    )
                     self.captured_responses.append((url, payload, getattr(response, "headers", {})))
                 except Exception:
-                    pass
+                    logger.debug("Failed to capture response", exc_info=True)
 
         self.hooks["response"].append(capture_hook)
 
 
-def detect_data_field(payload: Dict[str, Any]) -> Optional[str]:
+def detect_data_field(payload: dict[str, Any]) -> str | None:
     """Detect the key containing record lists in an API response payload."""
     for field in ["results", "sleep", "activities", "dataPoints"]:
         if field in payload and isinstance(payload[field], list):
@@ -77,7 +77,7 @@ def detect_data_field(payload: Dict[str, Any]) -> Optional[str]:
     return None
 
 
-def pad_records(records: List[Dict[str, Any]], target_count: int = 6) -> List[Dict[str, Any]]:
+def pad_records(records: list[dict[str, Any]], target_count: int = 6) -> list[dict[str, Any]]:
     """Ensure records list has at least target_count items by deep-copying and updating IDs."""
     if not records:
         return []
@@ -94,7 +94,7 @@ def pad_records(records: List[Dict[str, Any]], target_count: int = 6) -> List[Di
     return result
 
 
-def advance_timestamps(record: Dict[str, Any]) -> Dict[str, Any]:
+def advance_timestamps(record: dict[str, Any]) -> dict[str, Any]:
     """Advance timestamp/date values in a record for incremental run2 testing."""
     rec = copy.deepcopy(record)
     date_fields = [
@@ -117,8 +117,8 @@ def advance_timestamps(record: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def process_and_split_payload(
-    payload: Dict[str, Any], endpoint_name: str
-) -> Dict[str, Dict[str, Any]]:
+    payload: dict[str, Any], endpoint_name: str
+) -> dict[str, dict[str, Any]]:
     """Split captured API response payload into run1-page1, run1-page2, and run2 structures."""
     data_field = detect_data_field(payload)
     if not data_field:
@@ -243,7 +243,7 @@ def run_google_health_export(session: requests.Session, dry_run: bool) -> None:
         )
         return
 
-    from pipelines.sources.google_health import google_health_source, get_google_health_token
+    from pipelines.sources.google_health import get_google_health_token, google_health_source
 
     try:
         access_token = get_google_health_token()
@@ -260,9 +260,7 @@ def run_google_health_export(session: requests.Session, dry_run: bool) -> None:
         logger.warning(f"Google Health extraction completed with exception: {e}")
 
 
-def save_captured_responses(
-    captured: List[Tuple[str, Any, Dict[str, Any]]], dry_run: bool
-) -> None:
+def save_captured_responses(captured: list[tuple[str, Any, dict[str, Any]]], dry_run: bool) -> None:
     """Save captured response bodies to tests/mock_data in standardized format."""
     MOCK_DATA_DIR.mkdir(parents=True, exist_ok=True)
     processed_count = 0

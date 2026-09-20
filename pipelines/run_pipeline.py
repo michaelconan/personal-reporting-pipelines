@@ -14,14 +14,13 @@ from __future__ import annotations
 import argparse
 import logging
 import sys
-from typing import List
 
 from pipelines.runner import PIPELINE_CONFIG, refresh_pipeline
 
 logger = logging.getLogger(__name__)
 
 
-def parse_select(values: List[str] | None) -> list[str] | None:
+def parse_select(values: list[str] | None) -> list[str] | None:
     if not values:
         return None
     # support repeated --select and comma-separated values
@@ -32,7 +31,7 @@ def parse_select(values: List[str] | None) -> list[str] | None:
     return out if out else None
 
 
-def main(argv: List[str] | None = None) -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="run_pipeline")
     parser.add_argument(
         "pipeline",
@@ -91,8 +90,8 @@ def main(argv: List[str] | None = None) -> int:
     except KeyError:
         logger.error("Unknown pipeline: %s", args.pipeline)
         return 2
-    except Exception as e:
-        logger.exception("Pipeline run failed: %s", e)
+    except Exception:
+        logger.exception("Pipeline run failed")
         return 1
 
     return 0

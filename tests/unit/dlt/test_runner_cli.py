@@ -1,13 +1,13 @@
 """Unit tests for the central pipeline runner and CLI interface."""
 
 from unittest.mock import ANY, MagicMock, patch
-import pytest
 
+import pytest
 from dlt.destinations import databricks
 
-from pipelines.run_pipeline import parse_select, main
-from pipelines.runner import refresh_pipeline, PIPELINE_CONFIG, get_databricks_staging_volume
 from pipelines import RAW_SCHEMA
+from pipelines.run_pipeline import main, parse_select
+from pipelines.runner import PIPELINE_CONFIG, get_databricks_staging_volume, refresh_pipeline
 
 
 def test_parse_select():

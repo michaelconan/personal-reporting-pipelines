@@ -1,16 +1,16 @@
 # base imports
-from typing import Callable
+from collections.abc import Callable
 from urllib.parse import parse_qs, urlparse
+
+import dlt
 
 # PyPI imports
 import pytest
 from pytest import MonkeyPatch
-import dlt
 
 # local imports
 from pipelines.sources.google_health import google_health_source
-from tests.unit.dlt.conftest import sample_response, sample_resource
-
+from tests.unit.dlt.conftest import sample_resource, sample_response
 
 pytestmark = pytest.mark.local
 
@@ -31,7 +31,7 @@ def mock_google_health_apis(monkeypatch: MonkeyPatch, mock_responses) -> Callabl
         counts = getattr(cursor_callback, "call_counts", None)
         if counts is None:
             counts = {"sleep": 0, "steps": 0, "exercise": 0}
-            setattr(cursor_callback, "call_counts", counts)
+            cursor_callback.call_counts = counts
         counts[resource] += 1
         # Inspect filter param to detect incremental refreshes. The pipeline
         # passes a filter containing an ISO date (YYYY-MM-DD). If the filter's
@@ -52,11 +52,11 @@ def mock_google_health_apis(monkeypatch: MonkeyPatch, mock_responses) -> Callabl
             m = re.search(r"(\d{4}-\d{2}-\d{2})", filter_val)
             if m:
                 try:
-                    d = datetime.strptime(m.group(1), "%Y-%m-%d").date()
+                    d = datetime.strptime(m.group(1), "%Y-%m-%d").date()  # noqa: DTZ007
                     # If the filter date is not the initial default (1970-01-01),
                     # treat this as a subsequent run and return run2 so the
                     # incremental row is appended.
-                    if d != datetime(1970, 1, 1).date():
+                    if d != datetime(1970, 1, 1).date():  # noqa: DTZ001
                         return sample_response(f"google_health__{resource}-run2.json")
                 except Exception:
                     pass
@@ -70,12 +70,14 @@ def mock_google_health_apis(monkeypatch: MonkeyPatch, mock_responses) -> Callabl
         # Default: first page of run1
         return sample_response(f"google_health__{resource}-run1_page1.json")
 
-    def setup(endpoints=[]):
+    def setup(endpoints=None):
         """Nested function to only register mock endpoints for tests.
 
         Args:
-            endpoints (list, optional): Specific endpoints to register. Defaults to [] (all).
+            endpoints (list, optional): Specific endpoints to register. Defaults to None (all).
         """
+        if endpoints is None:
+            endpoints = []
         # Mock the API responses
         if not endpoints or "sleep" in endpoints:
             mock_responses.add_callback(

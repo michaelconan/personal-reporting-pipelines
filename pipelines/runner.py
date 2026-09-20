@@ -6,26 +6,27 @@ and refresh execution are centralized.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from logging import getLogger
-from typing import Any, Callable
+from typing import Any
 
 import dlt
 from dlt.destinations import databricks
 
 from pipelines import RAW_SCHEMA, SECRET_STORE
 from pipelines.common.utils import (
-    validate_required_secrets,
     get_refresh_mode,
     get_write_disposition,
     log_refresh_mode,
+    validate_required_secrets,
 )
-from pipelines.sources.notion import notion_source
-from pipelines.sources.hubspot import hubspot_source
 from pipelines.sources.google_health import (
-    google_health_source,
     get_google_health_token,
+    google_health_source,
 )
+from pipelines.sources.hubspot import hubspot_source
+from pipelines.sources.notion import notion_source
 
 logger = getLogger(__name__)
 

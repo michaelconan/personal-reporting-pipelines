@@ -44,13 +44,13 @@ def validate_required_secrets(
     if secret_store == "google":
         credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
         if not credentials_path:
-            raise EnvironmentError(
+            raise OSError(
                 "SECRET_STORE is 'google' but GOOGLE_APPLICATION_CREDENTIALS is not set.",
             )
     elif secret_store == "1password":
         op_token = os.getenv("OP_SERVICE_ACCOUNT_TOKEN")
         if not op_token:
-            raise EnvironmentError(
+            raise OSError(
                 "SECRET_STORE is '1password' but OP_SERVICE_ACCOUNT_TOKEN is not set.",
             )
 
@@ -61,7 +61,7 @@ def validate_required_secrets(
 
     if missing_keys:
         missing = ", ".join(sorted(missing_keys))
-        raise EnvironmentError(
+        raise OSError(
             f"Missing required secrets for {pipeline_name} "
             f"(SECRET_STORE={secret_store}): {missing}",
         )

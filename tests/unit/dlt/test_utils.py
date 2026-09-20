@@ -8,8 +8,8 @@ from unittest.mock import patch
 
 # Local imports
 from pipelines.common.utils import (
-    should_force_full_refresh,
     get_refresh_mode,
+    should_force_full_refresh,
 )
 
 

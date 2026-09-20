@@ -1,18 +1,18 @@
 # base imports
+import json
 import os
 import re
-import json
-from typing import Callable
+from collections.abc import Callable
+
+import dlt
 
 # PyPI imports
 import pytest
 from pytest import MonkeyPatch
-import dlt
 
 # local imports
 from pipelines.sources.hubspot import hubspot_source, iso_to_unix
-from tests.unit.dlt.conftest import sample_data, sample_response, sample_resource, resolve_mock_path
-
+from tests.unit.dlt.conftest import resolve_mock_path, sample_data, sample_resource, sample_response
 
 pytestmark = pytest.mark.local
 
@@ -54,7 +54,7 @@ def mock_hs_apis(monkeypatch: MonkeyPatch, mock_responses) -> Callable:
         payload = json.loads(request.body)
         after = payload.get("after")
         filters = payload["filterGroups"][0]["filters"]
-        start_filter = [f for f in filters if f["operator"] == "GTE"][0]
+        start_filter = next(f for f in filters if f["operator"] == "GTE")
         if after is None:
             file_name = f"hubspot__{object}-run1_page1.json"
         elif int(start_filter["value"]) > iso_to_unix("2025-01-01"):
@@ -69,12 +69,15 @@ def mock_hs_apis(monkeypatch: MonkeyPatch, mock_responses) -> Callable:
             return (200, {}, json.dumps({"total": 0, "results": []}))
         return sample_response(file_name)
 
-    def setup(endpoints=[]):
+    def setup(endpoints=None):
         """Nested function to only register mock endpoints for tests.
 
         Args:
-            endpoints (list, optional): Specific endpoints to register. Defaults to [] (all).
+            endpoints (list, optional): Specific endpoints to register. Defaults to None (all).
         """
+        if endpoints is None:
+            endpoints = []
+
         # Mock association endpoints for full pipeline only — individual resource
         # tests use with_resources() which does not fetch association child resources
         if not endpoints:

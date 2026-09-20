@@ -4,7 +4,8 @@ Data scrubbing utilities using Faker to sanitize PII and sensitive text
 in mock dbt seeds and mock API response bodies.
 """
 
-from typing import Any, List, Union
+from typing import Any
+
 from faker import Faker
 
 fake = Faker()
@@ -40,7 +41,7 @@ TEXT_KEYS = {
 }
 
 
-def apply_fakes_to_rows(data_rows: List[dict]) -> None:
+def apply_fakes_to_rows(data_rows: list[dict]) -> None:
     """Replace designated columns in BigQuery/seed rows with realistic fake data.
 
     Args:
@@ -58,7 +59,7 @@ def apply_fakes_to_rows(data_rows: List[dict]) -> None:
             row["properties__email"] = fake.email()
 
 
-def scrub_api_response(data: Union[dict, list, Any]) -> Any:
+def scrub_api_response(data: dict | list | Any) -> Any:
     """Recursively scrub PII and free-text fields in JSON API response objects.
 
     Args:

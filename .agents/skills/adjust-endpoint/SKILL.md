@@ -36,16 +36,16 @@ Load only new or updated records each run instead of re-fetching everything. In 
     "endpoint": {
         "path": "repos/{owner}/{repo}/issues",
         "params": {
-            "since": {                       # the API's "updated since" query param
+            "since": {  # the API's "updated since" query param
                 "type": "incremental",
-                "cursor_path": "updated_at", # field in each record to track
+                "cursor_path": "updated_at",  # field in each record to track
                 "initial_value": "2024-01-01T00:00:00Z",
-                "lag": 604800,               # re-load a trailing window (see below)
+                "lag": 604800,  # re-load a trailing window (see below)
             },
         },
     },
     "primary_key": "id",
-    "write_disposition": "merge",            # upsert on primary_key
+    "write_disposition": "merge",  # upsert on primary_key
 }
 ```
 

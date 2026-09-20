@@ -55,32 +55,40 @@ For `rest_api`, parallelize top-level resources at the **source level** — the 
 ```python
 source = rest_api_source(
     {"client": {"base_url": "https://api.example.com"}, "resources": ["repos", "issues"]},
-    parallelized=True,                       # parallelizes the top-level list endpoints
+    parallelized=True,  # parallelizes the top-level list endpoints
 )
 # equivalently: src = rest_api_source(cfg); [src.resources[n].parallelize() for n in ("repos", "issues")]
 ```
 
 For custom Python resources, pick one:
 ```python
-@dlt.resource(parallelized=True)      # sync generator runs in the extract thread pool
-def repos(): yield from fetch_repos()
+@dlt.resource(parallelized=True)  # sync generator runs in the extract thread pool
+def repos():
+    yield from fetch_repos()
 
-@dlt.resource                         # @dlt.defer: fan out one call per item
+
+@dlt.resource  # @dlt.defer: fan out one call per item
 def issues():
     @dlt.defer
-    def get(repo): return requests.get(repo["issues_url"]).json()
-    for repo in repo_list: yield get(repo)
+    def get(repo):
+        return requests.get(repo["issues_url"]).json()
 
-@dlt.resource                         # async: many awaits concurrent on one event loop
+    for repo in repo_list:
+        yield get(repo)
+
+
+@dlt.resource  # async: many awaits concurrent on one event loop
 async def stars():
-    async for page in fetch_pages(): yield page
+    async for page in fetch_pages():
+        yield page
 ```
 
 **Reuse a shared HTTP session** — pool connections so each request skips the TCP/TLS handshake; share one session across threads for concurrent resources:
 ```python
 import requests
+
 session = requests.Session()
-config = {"client": {"base_url": "<url>", "session": session}}   # rest_api client config
+config = {"client": {"base_url": "<url>", "session": session}}  # rest_api client config
 ```
 
 **Extract only what you need — `data_selector`** — a JSONPath that pulls just the records from each response, so dlt skips parsing irrelevant fields (less CPU and memory):

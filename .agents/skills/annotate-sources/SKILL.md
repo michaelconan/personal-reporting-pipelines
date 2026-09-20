@@ -70,12 +70,13 @@ Write the script to `tools/get_<source>_schema.py`:
 
 ```python
 """Get <source> schema from <destination> via dlt ibis and write as DBML."""
+
 import dlt
 
 pipeline = dlt.pipeline(
-    pipeline_name="<pipeline_name>",   # use the dataset name as pipeline name
-    destination="<destination>",        # e.g. "bigquery"
-    dataset_name="<dataset_name>",      # e.g. "luma_events_data"
+    pipeline_name="<pipeline_name>",  # use the dataset name as pipeline name
+    destination="<destination>",  # e.g. "bigquery"
+    dataset_name="<dataset_name>",  # e.g. "luma_events_data"
 )
 
 dataset = pipeline.dataset()

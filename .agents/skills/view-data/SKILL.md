@@ -32,6 +32,7 @@ Use `pipeline.dataset()` to access loaded data. This is **destination agnostic**
 ### Attach to pipeline and get dataset
 ```python
 import dlt
+
 pipeline = dlt.attach("<pipeline_name>")
 dataset = pipeline.dataset()
 ```
@@ -40,11 +41,11 @@ dataset = pipeline.dataset()
 Think about it as a subset of ibis with slightly different syntax.
 ```python
 table = dataset["my_table"]
-table.head().df()                              # first rows as pandas
-table.select("id", "name").limit(50).arrow()   # select columns, arrow format
-table.where("id", "in", [1, 2, 3]).df()        # parametric filter
-table.select("amount").max().fetchscalar()      # scalar aggregate
-dataset.row_counts().df()                       # row counts for all tables
+table.head().df()  # first rows as pandas
+table.select("id", "name").limit(50).arrow()  # select columns, arrow format
+table.where("id", "in", [1, 2, 3]).df()  # parametric filter
+table.select("amount").max().fetchscalar()  # scalar aggregate
+dataset.row_counts().df()  # row counts for all tables
 ```
 
 ### Ibis expressions (preferred for complex queries)

@@ -104,6 +104,7 @@ def hubspot_activity_schema(source_dataset: dlt.Dataset):
     yield dim_company(source_dataset)
     yield fact_activity(source_dataset)
 
+
 @dlt.hub.transformation
 def dim_company(dataset: dlt.Dataset):
     yield dataset("SELECT company_id, name FROM hubspot__companies")
@@ -175,8 +176,7 @@ For more complex ibis patterns (joins, aggregations, unions, `row_number`, windo
 @dlt.hub.transformation(
     write_disposition="replace",
 )
-def dim_person(dataset: dlt.Dataset):
-    ...
+def dim_person(dataset: dlt.Dataset): ...
 ```
 
 > For scheduled or high-volume pipelines, use the `incremental-transformation` skill to switch `replace` → incremental so only new/changed rows are processed on each run.
@@ -190,14 +190,13 @@ If ibis is needed for cross-source composition, initialise connections **before*
 @dlt.hub.transformation(
     write_disposition="replace",
     columns={
-        "company_sk":   {"data_type": "text",     "nullable": False},
-        "email_hash":   {"data_type": "text",     "nullable": True},  # md5()
-        "month_bucket": {"data_type": "text",     "nullable": True},  # strftime()
-        "event_count":  {"data_type": "bigint",   "nullable": True},  # COUNT() alias
+        "company_sk": {"data_type": "text", "nullable": False},
+        "email_hash": {"data_type": "text", "nullable": True},  # md5()
+        "month_bucket": {"data_type": "text", "nullable": True},  # strftime()
+        "event_count": {"data_type": "bigint", "nullable": True},  # COUNT() alias
     },
 )
-def dim_person(dataset: dlt.Dataset):
-    ...
+def dim_person(dataset: dlt.Dataset): ...
 ```
 
 `columns=` `data_type` values for keys must match the key type contract selected in Step 4.

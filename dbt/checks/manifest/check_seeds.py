@@ -9,11 +9,7 @@ def check_seed_has_unique_test(
     seed,
     ctx,
     *,
-    accepted_uniqueness_tests: list[str] | None = [  # noqa: RUF012
-        "dbt_expectations.expect_compound_columns_to_be_unique",
-        "dbt_utils.unique_combination_of_columns",
-        "unique",
-    ],
+    accepted_uniqueness_tests: list[str] | None = None,
 ):
     """Seeds must have a test for uniqueness of a column.
 
@@ -58,6 +54,12 @@ def check_seed_has_unique_test(
         ```
 
     """
+    if accepted_uniqueness_tests is None:
+        accepted_uniqueness_tests = [
+            "dbt_expectations.expect_compound_columns_to_be_unique",
+            "dbt_utils.unique_combination_of_columns",
+            "unique",
+        ]
     num_unique_tests = 0
     for test in ctx.tests_by_attached_node.get(seed.unique_id, []):
         test_metadata = getattr(test, "test_metadata", None)

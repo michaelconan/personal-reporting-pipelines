@@ -52,6 +52,7 @@ from typing import Any
 import pendulum
 import dlt
 
+
 @dlt.hub.transformation(write_disposition="merge", primary_key="date")
 def crawl_counts_by_date(
     dataset: dlt.Dataset,
@@ -72,6 +73,7 @@ Use when you want exactly the rows that arrived in new ingestion loads. dlthub j
 from typing import Any
 import pendulum
 import dlt
+
 
 @dlt.hub.transformation(write_disposition="append")
 def connectors_from_new_loads(
@@ -96,6 +98,7 @@ Use when the dltHub Platform scheduler sets the time window. `initial_value` set
 from typing import Any
 import pendulum
 import dlt
+
 
 @dlt.hub.transformation(write_disposition="append")
 def orders_window(

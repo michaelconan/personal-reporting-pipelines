@@ -7,17 +7,18 @@ API Resources:
 - `Query Data Source <https://developers.notion.com/reference/query-a-data-source>`_
 """
 
-from typing import Any, Generator
-import requests
+from collections.abc import Generator
 from logging import getLogger
+from typing import Any
 
 import dlt
-from dlt.sources.rest_api import rest_api_resources
-from dlt.sources.helpers.rest_client.paginators import JSONResponseCursorPaginator
+import requests
 from dlt.sources import DltResource
+from dlt.sources.helpers.rest_client.paginators import JSONResponseCursorPaginator
+from dlt.sources.rest_api import rest_api_resources
 
-from pipelines.common.utils import filter_fields
 from pipelines import BASE_DATE
+from pipelines.common.utils import filter_fields
 
 logger = getLogger(__name__)
 

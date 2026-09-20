@@ -45,6 +45,12 @@ exclude = [
     "docs",
 ]
 
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+"*.py" = ["EXE002"]
+"scripts/**/*.py" = ["BLE001", "S110"]
+"tests/**/*.py" = ["BLE001", "S110"]
+
 [tool.pytest.ini_options]
 markers = [
     "e2e: marks tests as end-to-end tests",

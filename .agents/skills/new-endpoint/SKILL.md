@@ -64,10 +64,10 @@ If the endpoint fits the existing client config (base_url, auth, paginator), add
     "endpoint": {
         "path": "orgs/{org}/members",
         "response_actions": [
-            {"status_code": 404, "action": "ignore"},          # org has no members — skip silently
-            {"content": "Not Found", "action": "ignore"},      # match response body substring
+            {"status_code": 404, "action": "ignore"},  # org has no members — skip silently
+            {"content": "Not Found", "action": "ignore"},  # match response body substring
             {"status_code": 200, "content": "error", "action": "ignore"},  # AND condition
-            set_encoding,                                       # callable — applied to every response
+            set_encoding,  # callable — applied to every response
         ],
     },
 }
@@ -83,7 +83,7 @@ Use `"ignore"` for optional endpoints that return 404 for some parent items (e.g
         "posts",
         {
             "name": "post_comments",
-            "parallelized": True,          # fetch comments for all posts concurrently
+            "parallelized": True,  # fetch comments for all posts concurrently
             "endpoint": {
                 "path": "posts/{resources.posts.id}/comments",
             },

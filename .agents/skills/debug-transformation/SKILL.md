@@ -173,15 +173,14 @@ Identify which computed columns are absent from the output schema. Each missing 
 @dlt.hub.transformation(
     write_disposition="replace",
     columns={
-        "company_sk":   {"data_type": "text",      "nullable": False},
-        "joined_at":    {"data_type": "timestamp",  "nullable": True},
-        "email_hash":   {"data_type": "text",       "nullable": True},   # md5() result
-        "month_bucket": {"data_type": "text",       "nullable": True},   # strftime() result
-        "event_count":  {"data_type": "bigint",     "nullable": True},   # COUNT() alias
+        "company_sk": {"data_type": "text", "nullable": False},
+        "joined_at": {"data_type": "timestamp", "nullable": True},
+        "email_hash": {"data_type": "text", "nullable": True},  # md5() result
+        "month_bucket": {"data_type": "text", "nullable": True},  # strftime() result
+        "event_count": {"data_type": "bigint", "nullable": True},  # COUNT() alias
     },
 )
-def dim_company(dataset: dlt.Dataset):
-    ...
+def dim_company(dataset: dlt.Dataset): ...
 ```
 
 `data_type` values must match the key type contract established during `create-transformation` (consistently `text` or `bigint` for surrogate keys).

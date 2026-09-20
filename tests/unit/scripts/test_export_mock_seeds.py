@@ -68,7 +68,7 @@ def _sample_rows():
             "id": 1,
             "properties__email": "real.person@example.com",
             "properties__hs_note_body": "caller discussed renewal terms",
-            "created": datetime.datetime(2024, 3, 10, 12, 30, 0, tzinfo=datetime.timezone.utc),
+            "created": datetime.datetime(2024, 3, 10, 12, 30, 0, tzinfo=datetime.UTC),
             "day": datetime.date(2024, 3, 10),
             "amount": Decimal("19.99"),
             "raw": b"bytes-value",
@@ -82,7 +82,7 @@ def _sample_rows():
             "id": i,
             "properties__email": f"user{i}@example.com",
             "properties__hs_note_body": f"note body {i}",
-            "created": datetime.datetime(2024, 3, 10 + i, 12, 30, 0, tzinfo=datetime.timezone.utc),
+            "created": datetime.datetime(2024, 3, 10 + i, 12, 30, 0, tzinfo=datetime.UTC),
             "day": datetime.date(2024, 3, 10 + i),
             "amount": Decimal(f"{i}.99"),
             "raw": f"bytes-{i}".encode(),
@@ -176,7 +176,7 @@ def test_load_source_definitions_discovers_tables_dynamically(tmp_path):
 
 def test_normalize_row_values_converts_bigquery_types():
     row = {
-        "when": datetime.datetime(2024, 1, 2, 3, 4, 5, tzinfo=datetime.timezone.utc),
+        "when": datetime.datetime(2024, 1, 2, 3, 4, 5, tzinfo=datetime.UTC),
         "day": datetime.date(2024, 1, 2),
         "amount": Decimal("3.5"),
         "raw": b"abc",

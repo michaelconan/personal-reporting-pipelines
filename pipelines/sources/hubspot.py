@@ -19,26 +19,27 @@ API Resources:
 """
 
 # Base
-from typing import Any, Generator
-from datetime import datetime, timezone
-
-# PyPI
-import yaml
-import requests
+from collections.abc import Generator
+from datetime import UTC, datetime
+from typing import Any
 
 # dlt
 import dlt
-from dlt.sources.rest_api import rest_api_resources
-from dlt.sources.helpers.rest_client.paginators import JSONResponseCursorPaginator
+import requests
+
+# PyPI
+import yaml
 from dlt.sources import DltResource
+from dlt.sources.helpers.rest_client.paginators import JSONResponseCursorPaginator
+from dlt.sources.rest_api import rest_api_resources
 
 
 def iso_to_unix(iso_date: str) -> int:
     """Convert ISO date string to Unix timestamp in milliseconds."""
     if len(iso_date) == 10:
-        dt = datetime.strptime(iso_date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+        dt = datetime.strptime(iso_date, "%Y-%m-%d").replace(tzinfo=UTC)
     else:
-        dt = datetime.fromisoformat(iso_date.replace("Z", "+00:00"))
+        dt = datetime.fromisoformat(iso_date)
     return int(dt.timestamp() * 1000)
 
 

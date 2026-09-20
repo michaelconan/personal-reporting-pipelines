@@ -537,28 +537,25 @@ def advance_timestamps(record: dict[str, Any], cursor_path: str | None = None) -
         if key in candidate_keys:
             return True
         tail = key_lower.split(".")[-1]
-        return (
-            tail.startswith("date")
-            or tail.startswith("time")
-            or tail.startswith("updated")
-            or tail.startswith("created")
-            or tail.startswith("modified")
-            or tail.startswith("edited")
-            or tail.startswith("start")
-            or tail.startswith("end")
+        return tail.startswith(
+            ("date", "time", "updated", "created", "modified", "edited", "start", "end")
         )
 
     for key, val in rec.items():
         if isinstance(val, dict):
             rec[key] = advance_timestamps(val, cursor_path=cursor_path)
-        elif isinstance(val, str) and _should_advance(key) and looks_like_datetime_value(val):
-            if "202" in val or "201" in val:
-                rec[key] = re.sub(
-                    r"20\d{2}",
-                    lambda match: str(int(match.group()) + 1),
-                    val,
-                    count=1,
-                )
+        elif (
+            isinstance(val, str)
+            and _should_advance(key)
+            and looks_like_datetime_value(val)
+            and ("202" in val or "201" in val)
+        ):
+            rec[key] = re.sub(
+                r"20\d{2}",
+                lambda match: str(int(match.group()) + 1),
+                val,
+                count=1,
+            )
     return rec
 
 

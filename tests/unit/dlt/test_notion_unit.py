@@ -1,17 +1,17 @@
 # base imports
-import re
 import json
-from typing import Callable
+import re
+from collections.abc import Callable
+
+import dlt
 
 # PyPI imports
 import pytest
 from pytest import MonkeyPatch
-import dlt
 
 # local imports
 from pipelines.sources.notion import notion_source
-from tests.unit.dlt.conftest import sample_response, sample_resource
-
+from tests.unit.dlt.conftest import sample_resource, sample_response
 
 pytestmark = pytest.mark.local
 
@@ -64,12 +64,14 @@ def mock_notion_apis(monkeypatch: MonkeyPatch, mock_responses) -> Callable:
         ]
         return status, headers, json.dumps(response)
 
-    def setup(endpoints=[]):
+    def setup(endpoints=None):
         """Nested function to only register mock endpoints for tests.
 
         Args:
-            endpoints (list, optional): Specific endpoints to register. Defaults to [] (all).
+            endpoints (list, optional): Specific endpoints to register. Defaults to None (all).
         """
+        if endpoints is None:
+            endpoints = []
         # Mock the API responses
         if not endpoints or "data_sources" in endpoints:
             mock_responses.add_callback(

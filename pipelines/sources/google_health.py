@@ -17,15 +17,13 @@ API Resources:
 from typing import Any
 
 import dlt
-from dlt.sources.rest_api import rest_api_source
-from dlt.sources.helpers.rest_client.paginators import JSONResponseCursorPaginator
-from google.cloud import secretmanager_v1
 import google.auth
-from google.oauth2.credentials import Credentials
-from google.auth.transport.requests import Request
-
-
 import requests
+from dlt.sources.helpers.rest_client.paginators import JSONResponseCursorPaginator
+from dlt.sources.rest_api import rest_api_source
+from google.auth.transport.requests import Request
+from google.cloud import secretmanager_v1
+from google.oauth2.credentials import Credentials
 
 from pipelines import SECRET_STORE
 

@@ -5,16 +5,19 @@ services like Databricks and the source APIs.
 """
 
 # base imports
-import os
 import logging
-from typing import Generator
+import os
+from collections.abc import Generator
+
+import dlt
 
 # PyPI imports
 import pytest
-import dlt
 from dlt.common.configuration.providers.google_secrets import GoogleSecretsProvider
 
 from pipelines import SECRET_STORE
+
+logger = logging.getLogger(__name__)
 
 # Ensure Google Secrets are enabled for E2E tests
 # This counteracts any unit test configuration that might disable them
@@ -64,8 +67,10 @@ def databricks_pipeline() -> Generator[dlt.Pipeline, None, None]:
         dataset_name="live_data",
         dev_mode=True,
     )
-    logging.info(
-        f"Running pipeline: {pipeline.pipeline_name} with dataset: {pipeline.dataset_name}",
+    logger.info(
+        "Running pipeline: %s with dataset: %s",
+        pipeline.pipeline_name,
+        pipeline.dataset_name,
     )
     yield pipeline
 

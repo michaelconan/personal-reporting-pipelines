@@ -5,15 +5,15 @@ for testing DLT (Data Load Tool) pipeline components.
 """
 
 # base imports
-import os
 import json
+import os
 from pathlib import Path
 from typing import Any
 
-# PyPI imports
-import pytest
 import dlt
 
+# PyPI imports
+import pytest
 
 MOCK_ROOT = Path(__file__).resolve().parents[2] / "fixtures"
 MOCK_FOLDER = str(MOCK_ROOT)
