@@ -13,6 +13,7 @@ Personal Reporting Documentation
    dbt_layers
    seeds_macros
    testing_ci
+   agentcontainer
    gh_aw
    personal_progress_datamart
    dbt

@@ -110,6 +110,15 @@ The project follows modern data engineering best practices with clear separation
 
 ### Local Development Setup
 
+#### Agent container authentication
+
+The agent container forwards the host SSH agent at
+`/run/host-services/ssh-auth.sock` for SSH Git operations and commit signing.
+Windows with Docker Desktop's WSL2 backend may require additional host-side
+agent bridging. See the [agent container authentication guide](docs/source/agentcontainer.md)
+for troubleshooting, 1Password references, and the supported `GITHUB_TOKEN`
+HTTPS fallback.
+
 1. **Clone and setup**:
    ```bash
    git clone <repository-url>

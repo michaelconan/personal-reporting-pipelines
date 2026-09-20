@@ -7,9 +7,9 @@
 	// Loosely follows the .devcontainer conventions. No sudo is granted.
 	// Docker secrets are used in compose for sensitive credentials; devcontainers
 	// don't support secrets natively, so env vars are passed directly here.
-	// The host SSH agent is forwarded via the docker-compose bind mount; the
-	// Windows SSH_AUTH_SOCK named pipe (openssh-ssh-agent) is bridged there by
-	// Docker Desktop/VsCode, so no keys enter the container.
+	// The host SSH agent is forwarded via the docker-compose bind mount when the
+	// host/editor exposes it. Windows + WSL2 may need separate agent bridging;
+	// see docs/source/agentcontainer.md. No keys enter the container.
 	"remoteEnv": {
 		"OPENCODE_API_KEY": "${localEnv:OPENCODE_API_KEY}",
 		"ANTHROPIC_API_KEY": "${localEnv:OPENCODE_API_KEY}",

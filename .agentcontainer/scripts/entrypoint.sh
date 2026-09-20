@@ -108,11 +108,30 @@ git config --global user.email "${GITHUB_EMAIL}"
 # SSH agent is forwarded from the host (docker-compose binds
 # /run/host-services/ssh-auth.sock and sets SSH_AUTH_SOCK). No keys are
 # copied into the container.
-if [[ -n "${SSH_AUTH_SOCK:-}" ]] && ssh-add -l >/dev/null 2>&1; then
+if [[ -z "${SSH_AUTH_SOCK:-}" ]]; then
+    echo "WARNING: SSH agent forwarding is not configured; SSH commit signing is disabled." >&2
+    echo "         Use GITHUB_TOKEN for HTTPS Git operations; see docs/source/agentcontainer.md." >&2
+elif [[ ! -S "$SSH_AUTH_SOCK" ]]; then
+    echo "WARNING: SSH agent socket is missing: $SSH_AUTH_SOCK" >&2
+    echo "         SSH commit signing is disabled. Restart Docker Desktop/Dev Containers after" >&2
+    echo "         configuring host forwarding, or use the GITHUB_TOKEN HTTPS fallback." >&2
+elif ssh-add -l >/dev/null 2>&1; then
     FIRST_KEY="$(ssh-add -L | head -n1 | awk '{print $1, $2}')"
     if [[ -n "${FIRST_KEY}" ]]; then
         git config --global gpg.format ssh
         git config --global user.signingkey "key::${FIRST_KEY}"
+    else
+        echo "WARNING: SSH agent returned no public key; SSH commit signing is disabled." >&2
+    fi
+else
+    SSH_ADD_STATUS=$?
+    if [[ "$SSH_ADD_STATUS" -eq 1 ]]; then
+        echo "WARNING: SSH agent socket is present but has no identities: $SSH_AUTH_SOCK" >&2
+        echo "         Load a key in the host agent and rebuild the container, or use the" >&2
+        echo "         GITHUB_TOKEN HTTPS fallback; see docs/source/agentcontainer.md." >&2
+    else
+        echo "WARNING: SSH agent could not be queried: $SSH_AUTH_SOCK" >&2
+        echo "         SSH commit signing is disabled; use the GITHUB_TOKEN HTTPS fallback." >&2
     fi
 fi
 
