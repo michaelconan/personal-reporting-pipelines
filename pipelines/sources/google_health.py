@@ -87,12 +87,12 @@ def google_health_source(
     end_ts = f"{end_date}T00:00:00Z" if end_date else None
     sleep_filter = 'sleep.interval.end_time >= "{incremental.start_value}"'
     steps_filter = 'steps.interval.start_time >= "{incremental.start_value}"'
-    exercise_filter = 'exercise.interval.civil_start_time >= "{incremental.start_value}"'
+    exercise_filter = 'exercise.interval.start_time >= "{incremental.start_value}"'
 
     if end_date:
         sleep_filter += ' AND sleep.interval.end_time < "{incremental.end_value}"'
         steps_filter += ' AND steps.interval.start_time < "{incremental.end_value}"'
-        exercise_filter += ' AND exercise.interval.civil_start_time < "{incremental.end_value}"'
+        exercise_filter += ' AND exercise.interval.start_time < "{incremental.end_value}"'
 
     api_config: dict[str, Any] = {
         "client": {
