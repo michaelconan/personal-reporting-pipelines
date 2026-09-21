@@ -105,10 +105,9 @@ chmod 700 "${HOME}/.ssh"
 git config --global user.name "${GITHUB_NAME}"
 git config --global user.email "${GITHUB_EMAIL}"
 
-# SSH agent is forwarded from the host (docker-compose binds
-# /run/host-services/ssh-auth.sock and sets SSH_AUTH_SOCK). No keys are
-# copied into the container.
-if [[ -n "${SSH_AUTH_SOCK:-}" ]] && ssh-add -l >/dev/null 2>&1; then
+# SSH agent forwarding is optional (requires Docker Desktop host services).
+# If SSH_AUTH_SOCK is set and the socket is accessible, configure git signing.
+if [[ -n "${SSH_AUTH_SOCK:-}" ]] && [[ -S "${SSH_AUTH_SOCK}" ]] && ssh-add -l >/dev/null 2>&1; then
     FIRST_KEY="$(ssh-add -L | head -n1 | awk '{print $1, $2}')"
     if [[ -n "${FIRST_KEY}" ]]; then
         git config --global gpg.format ssh

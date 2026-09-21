@@ -2,7 +2,7 @@ services:
   app:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.developer
 
     volumes:
       - ../..:/workspaces:cached
@@ -28,6 +28,69 @@ services:
 
     # Add "forwardPorts": ["5432"] to **devcontainer.json** to forward PostgreSQL locally.
     # (Adding the "ports" property to this file will not forward from a Codespace.)
+    
+  # Limited-access container for AI agents (opencode, claude, codex).
+  # Least privilege: non-root user, no sudo, read-only root fs, dropped caps,
+  # no published ports, no docker socket, no host network, ephemeral state.
+  agent:
+    build:
+      context: .
+      dockerfile: Dockerfile.agent
+
+    init: true
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:exec,uid=1000,gid=1000,mode=0770
+      - /home/agent:uid=1000,gid=1000,mode=0770
+
+    volumes:
+      - ../..:/workspaces:cached
+      # User-level agent configs: ~ expands to Windows paths (C:\Users\micha\...)
+      # when devcontainer CLI parses the compose file. Docker Desktop translates
+      # these to WSL2 paths automatically.
+      - type: bind
+        source: ~/.config/opencode
+        target: /home/agent/.config/opencode
+        read_only: true
+      - type: bind
+        source: ~/.claude
+        target: /home/agent/.host-claude
+        read_only: true
+      - type: bind
+        source: ~/.codex
+        target: /home/agent/.host-codex
+        read_only: true
+      - type: bind
+        source: ~/.agents
+        target: /home/agent/.agents
+        read_only: true
+
+    environment:
+      # Non-sensitive configuration
+      ANTHROPIC_BASE_URL: https://opencode.ai/zen/go/v1
+      OPENAI_BASE_URL: https://opencode.ai/zen/go/v1
+      ANTHROPIC_MODEL: qwen-3.8-flash
+      GITHUB_NAME: ${GITHUB_NAME:-}
+      GITHUB_EMAIL: ${GITHUB_EMAIL:-}
+      DBT_TARGET: ${DBT_TARGET:-}
+
+    secrets:
+      - opencode_api_key
+      - github_token
+      - op_service_account_token
+    command: ["sleep", "infinity"]
+
+secrets:
+  opencode_api_key:
+    file: ../.secrets/opencode_api_key
+  github_token:
+    file: ../.secrets/github_token
+  op_service_account_token:
+    file: ../.secrets/op_service_account_token
 
 volumes:
   postgres-data:
