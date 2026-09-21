@@ -126,10 +126,11 @@ The project follows modern data engineering best practices with clear separation
 
 ### Agent Container (agentic coding)
 
-`.agentcontainer/` is a hardened, least-privilege sandbox for AI coding agents
+The agent container is a hardened, least-privilege sandbox for AI coding agents
 (`opencode`, `claude`, `codex`) — non-root `agent` user with no sudo, read-only
-root filesystem, dropped capabilities, no published ports, ephemeral home.
-It is separate from the full-access human dev container in `.devcontainer/`.
+root filesystem, dropped capabilities, no published ports, ephemeral home. It is
+one of two configurations in the multi-devcontainer setup under
+`.devcontainer/` (alongside the full-access human "Reporting Developer" config).
 Full details: `docs/source/agent_container.md`.
 
 1. **Create secret files** (gitignored, never committed):
@@ -137,19 +138,20 @@ Full details: `docs/source/agent_container.md`.
    `.secrets/op_service_account_token`.
 2. **Build and start**:
    ```bash
-   cd .agentcontainer
-   docker compose build
-   GITHUB_NAME="Your Name" GITHUB_EMAIL="you@example.com" docker compose up -d
+   cd .devcontainer
+   docker compose build agent
+   GITHUB_NAME="Your Name" GITHUB_EMAIL="you@example.com" docker compose up -d agent
    docker compose exec agent bash
    ```
-   (VSCode alternative: reopen the repo with the
-   `.agentcontainer/devcontainer.json` configuration.)
+   (VSCode alternative: "Reopen in Container" and pick the
+   `.devcontainer/agent` "AI Agents" configuration — or `.devcontainer/developer`
+   for the human dev container.)
 3. **Use it**: inside the container run `uv sync` (`make install`), then
    `make inject` when warehouse credentials are needed, then an agent such as
    `opencode run "..."`. The entrypoint wires Docker secrets into env vars,
    copies host agent configs (opencode/claude/codex), and configures git
-   identity plus SSH commit signing via the forwarded SSH agent — no keys are
-   stored in the image.
+   identity — plus SSH commit signing when a usable `SSH_AUTH_SOCK` is
+   provided — with no keys stored in the image.
 
 ### GitHub Actions Setup
 
