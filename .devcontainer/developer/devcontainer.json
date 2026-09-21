@@ -1,0 +1,21 @@
+{
+	"name": "Reporting Developer",
+	"dockerComposeFile": "../docker-compose.yml",
+	"service": "app",
+	"workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+	"remoteUser": "vscode",
+	"customizations": {
+		"vscode": {
+			"settings": {
+				"terminal.integrated.defaultProfile.linux": "bash"
+			},
+			"extensions": [
+				"ms-python.python",
+				"ms-python.black-formatter",
+				"bierner.markdown-mermaid",
+				"njpwerner.autodocstring"
+			]
+		}
+	},
+	"postCreateCommand": "make install"
+}
