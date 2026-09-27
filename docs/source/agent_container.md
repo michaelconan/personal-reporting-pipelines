@@ -1,60 +1,157 @@
-# Agent Container (Agentic Coding)
+# Agentic Coding (Docker Sandbox + Fallback Devcontainer)
 
-This page describes the limited-access agent container — how it differs from the human development container, how to build and run it, and how to use it for agentic coding with `opencode`, `claude`, and `codex`.
+Primary path for AI agent development is **Docker AI Sandbox (`sbx` CLI)**
+with a **dedicated GitHub machine user** scoped to this repo. The restricted
+devcontainer under `.devcontainer/` is retained as a **fallback** when `sbx`
+cannot run.
 
-Both containers live in one **multi-devcontainer setup** under `.devcontainer/` (the former standalone `.agentcontainer/` directory was folded into it):
+Why `sbx` is primary:
+
+- Stronger isolation than the devcontainer: each sandbox is a microVM with its
+  own filesystem, Docker daemon, and network policy. Agent-installed packages,
+  images, and containers stay inside the sandbox.
+- Least-privilege GitHub access: the agent authenticates as the machine user,
+  never with your personal token. The machine user has access only to the
+  target repo.
+- Repeatable policy: global network presets (`Balanced` / `Locked Down`) plus
+  per-host allow rules via `sbx policy`, instead of hand-maintained Compose
+  hardening.
+
+Official docs: `https://docs.docker.com/ai/sandboxes/`.
+
+## 1. Machine user (one-time setup)
+
+Create a dedicated GitHub machine user (a separate GitHub account used only
+by agents, e.g. `YOUR-MACHINE-USER`) and grant it the minimum needed on this
+repo:
+
+1. Add it as a collaborator on the target repo only (Settings → Collaborators
+   and teams) with **Write** (not Admin/Maintain). No org-wide roles.
+2. Create a **fine-grained PAT** logged in as the machine user, scoped to the
+   single repo, short expiry, only:
+   `Contents: read/write`, `Pull requests: read/write`, `Metadata: read`.
+3. Store that PAT where `sbx` can resolve it without committing it — e.g. in
+   `gh auth` as the machine user, in 1Password (`op://...`), or another vault.
+   Never commit it, bake it into an image/kit, or reuse your personal token.
+
+Git identity inside sandboxes uses the machine user (`user.name` /
+`user.email`), so agent commits and PRs are attributable to it.
+
+## 2. `sbx` setup
+
+Install and sign in (see `https://docs.docker.com/ai/sandboxes/install/`):
+
+```bash
+# macOS
+brew trust docker/tap && brew install docker/tap/sbx
+# Windows (current user)
+winget install -h Docker.sbx
+# Ubuntu (sbx only, no Engine)
+curl -fsSL https://get.docker.com | sudo REPO_ONLY=1 sh
+sudo apt install docker-sbx
+
+sbx login
+```
+
+Local sandboxes need virtualization (Apple Silicon on macOS 14+, Hypervisor
+Platform on Windows 11, KVM + `kvm` group on Ubuntu 24.04+). Cloud sandboxes
+(`sbx --cloud`) are an option where local virtualization is unavailable.
+
+Authenticate the agent and GitHub (see
+`https://docs.docker.com/ai/sandboxes/get-started/`):
+
+```bash
+# Model provider, e.g. API key via sbx vault (or /login inside for Claude subscriptions)
+sbx secret set anthropic --command 'op read "op://Private/Anthropic/api-key"'
+
+# GitHub as the MACHINE user — resolve from its gh session or vault, never paste into the repo
+sbx secret set github --command 'gh auth token'
+```
+
+On first `sbx run`, pick the **Balanced** network preset (default-deny with
+common dev hosts allowed); use **Locked Down** when the task needs no extra
+network. Inspect/extend with `sbx policy ls` / `sbx policy allow network <host>`.
+
+## 3. Run an agent (primary path)
+
+From your repo checkout:
+
+```bash
+cd personal-reporting-pipelines
+
+# Single-branch, turn-by-turn work: mounts the host tree directly
+sbx run --name reporting-agent claude   # or: codex | opencode | gemini
+
+# Agent-driven branches (recommended for PR work): private clone inside the sandbox
+sbx run --name reporting-agent --clone claude .
+```
+
+`sbx run` with no workspace mounts the current directory read-write; `--clone`
+keeps agent edits in an in-sandbox clone until you fetch or the agent pushes.
+List / stop / remove with `sbx ls`, `sbx stop <name>`, `sbx rm <name>`.
+See `https://docs.docker.com/ai/sandboxes/workflows/git/` for direct vs clone
+vs host-worktree trade-offs.
+
+Inside the sandbox, the project workflow is unchanged:
+
+```bash
+uv sync            # or: make install
+make inject        # only when warehouse creds are needed (needs OP_SERVICE_ACCOUNT_TOKEN)
+opencode run "your task here"
+# claude -p "..." | codex exec "..." — per agent installed in the sandbox
+make test-local
+uv run dbt build --project-dir dbt --profiles-dir dbt --target mock
+uv run dbt lint --project-dir dbt --profiles-dir dbt --target mock
+```
+
+Git rules for agent work:
+
+- Prefer clone mode + one branch per task; ask the agent to create the branch
+  before editing.
+- Review from the host before pushing to origin:
+  `git fetch sandbox-<name>`, `git diff main..sandbox-<name>/feat/...`.
+- Push/PR as the machine user (`git push`, `gh pr create`). Keep work on
+  feature branches, never direct to `main`, never commit secrets
+  (`.secrets/`, `*/secrets.toml`, `.env.databricks`).
+- Default to `DBT_TARGET=mock` (DuckDB fixtures) inside sandboxes; touch
+  Databricks only when the task requires it.
+
+Optional: capture the setup in an `sbxenv.yaml` kept **outside** the mounted
+workspace so contributors share agent, secrets, and env without retyping flags
+(see `https://docs.docker.com/ai/sandboxes/configuration/environment-files/`):
+
+```yaml
+schemaVersion: "1"
+name: reporting-agent
+agent: claude
+workspace: ./personal-reporting-pipelines
+env:
+  DBT_TARGET: mock
+secrets:
+  github:
+    command: gh auth token   # run as the machine user on the host
+```
+
+Then `sbx env run`, `sbx env exec -- <cmd>`, `sbx env rm` from the directory
+holding the file.
+
+## 4. Fallback: restricted devcontainer
+
+Use the `agent` service in `.devcontainer/` only when `sbx` cannot run
+(unsupported OS/virtualization, offline work, or debugging the container
+itself). It provides the same project wiring with weaker isolation
+(non-root `agent` user, no sudo, `read_only: true`, `cap_drop: [ALL]`,
+`no-new-privileges`, ephemeral `tmpfs` for `/tmp` and `/home/agent`, no
+published ports / Docker socket).
 
 | Path | Role |
 |---|---|
-| `.devcontainer/docker-compose.yml` | Shared Compose file: `agent` service (sandbox), `app` service (developer), `db` service (Postgres sidecar), Docker secrets |
+| `.devcontainer/docker-compose.yml` | Shared Compose file: `agent` service (fallback sandbox), `app` service (developer), `db` service (Postgres sidecar), Docker secrets |
 | `.devcontainer/agent/devcontainer.json` | Devcontainer config **"AI Agents"** → `agent` service |
 | `.devcontainer/developer/devcontainer.json` | Devcontainer config **"Reporting Developer"** → `app` service |
 | `.devcontainer/Dockerfile.agent` | Agent image (least privilege) |
 | `.devcontainer/Dockerfile.developer` | Developer image (full access) |
 | `.devcontainer/scripts/entrypoint.sh` | Agent entrypoint (secrets, config copy, git identity) |
-
-## When to use which container
-
-|  | `.devcontainer/developer/` — "Reporting Developer" | `.devcontainer/agent/` — "AI Agents" |
-|---|---|---|
-| User | `vscode`, with passwordless `sudo` | `agent` (UID/GID 1000), **no sudo** |
-| Purpose | Full-access local development | Least-privilege sandbox for AI coding agents |
-| Workspace | `/workspaces/<repo>` plus Postgres sidecar (`db` service) | `/workspaces/<repo>`; no published ports, no host network, no Docker socket |
-| Secrets | 1Password CLI preinstalled; `op inject` writes `.dlt/secrets.toml` / `.env.databricks` | Docker secrets from repo-root `.secrets/`, exported by the entrypoint; the VS Code config also forwards host `OPENCODE_API_KEY` via `remoteEnv` |
-| Agent CLIs | Not preinstalled | `opencode-ai`, `@anthropic-ai/claude-code`, `@openai/codex` (global npm installs) plus `gh`, `op`, `uv` |
-| Hardening | None (dev convenience) | `read_only: true`, `cap_drop: [ALL]`, `no-new-privileges:true`, `init: true`, ephemeral `tmpfs` for `/tmp` and `/home/agent` |
-
-## What's inside
-
-- **Base**: `python:3.13-slim` (`.devcontainer/Dockerfile.agent`), `ENTRYPOINT [entrypoint.sh]`; Compose runs `sleep infinity`.
-- **System packages**: `git`, `curl`, `unzip`, `ca-certificates`, Node 22 (via nodesource), `openssh-client` (SSH signing only, keys never copied in).
-- **CLIs**: GitHub CLI (`gh`), 1Password CLI (`op`, pinned via `ARG OP_VERSION=2.32.0`), AI CLIs (`opencode-ai`, `claude-code`, `codex`), and `uv` (dlt/dbt workflows).
-- **Compose** (`agent` service in `.devcontainer/docker-compose.yml`; the image tag is generated by Compose — no fixed `image:` name):
-  - Binds the **parent of the repo** (`../..:/workspaces:cached`), so the checkout appears at `/workspaces/<repo-dir>` — matching `workspaceFolder: /workspaces/${localWorkspaceFolderBasename}` in both devcontainer configs — and edits land directly in your checkout.
-  - Mounts host agent configs read-only: `~/.config/opencode`, `~/.claude` → `/home/agent/.host-claude`, `~/.codex` → `/home/agent/.host-codex`, `~/.agents` → `/home/agent/.agents`.
-  - Consumes three Docker secrets from repo-root `.secrets/` (Compose paths `../.secrets/`): `opencode_api_key`, `github_token`, `op_service_account_token`.
-  - Sets non-sensitive env: `ANTHROPIC_BASE_URL` / `OPENAI_BASE_URL` = `https://opencode.ai/zen/go/v1` (opencode zen proxy), `ANTHROPIC_MODEL=qwen-3.8-flash`, `GITHUB_NAME` / `GITHUB_EMAIL`, `DBT_TARGET`.
-  - Does **not** forward a host SSH agent socket (the former `/run/host-services/ssh-auth.sock` bind is gone); the entrypoint still enables SSH commit signing opportunistically if you provide a usable `SSH_AUTH_SOCK`.
-- **Entrypoint** (`.devcontainer/scripts/entrypoint.sh`) runs on every start:
-  1. Reads `/run/secrets/*` into env (`OPENCODE_API_KEY` + `ANTHROPIC_API_KEY` + `OPENAI_API_KEY`, `GITHUB_TOKEN`, `OP_SERVICE_ACCOUNT_TOKEN`), persists them to `~/.secrets_env`, and wires `~/.bashrc` to source it.
-  2. Copies **config files only** (no session/state) from the host mounts into the writable home: claude `settings.json` / `CLAUDE.md` / `keybindings.json` plus `themes rules skills agents workflows output-styles` dirs; codex `config.toml` / `hooks.json` / `AGENTS.md` plus `*.config.toml` profiles. OpenCode needs no copy (config stays on its read-only mount, state lives in `~/.local/share/opencode/`); dlthub skills stay on the `~/.agents` mount.
-  3. Configures git identity from `GITHUB_NAME` / `GITHUB_EMAIL` and, when a usable SSH agent socket is available, enables SSH commit signing (`gpg.format ssh`, `user.signingkey key::<first-key>`).
-- **Devcontainer descriptors** (multi-config `.devcontainer/`):
-  - `.devcontainer/agent/devcontainer.json` (`"name": "AI Agents"`) reuses the compose `agent` service (`remoteUser: agent`, bash as default terminal, `sst-dev.opencode` extension) and sets `remoteEnv` for `OPENCODE_API_KEY` / `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` (from host `OPENCODE_API_KEY`) plus the zen-proxy base URLs.
-  - `.devcontainer/developer/devcontainer.json` (`"name": "Reporting Developer"`) targets the `app` service (`remoteUser: vscode`, `postCreateCommand: make install`) for full-access human development.
-
-Note: `/home/agent` is an ephemeral `tmpfs` — agent home state (copied configs, `~/.secrets_env`, tool caches) is rebuilt by the entrypoint on every start. The repo checkout (`/workspaces/<repo>`, including `.venv/`) persists via the bind mount.
-
-## Prerequisites
-
-- Docker (Desktop recommended on macOS/Windows) with Compose v2.
-- Three secret files in `.secrets/` at the repo root (gitignored, never committed):
-  - `.secrets/opencode_api_key`
-  - `.secrets/github_token`
-  - `.secrets/op_service_account_token`
-- Optional but recommended: host configs in `~/.config/opencode`, `~/.claude`, `~/.codex`, `~/.agents`, and `GITHUB_NAME` / `GITHUB_EMAIL` exported for commit attribution. An SSH agent socket is optional and not forwarded by default — without one, push over HTTPS with `GITHUB_TOKEN`.
-
-## Build and run
 
 ```bash
 cd .devcontainer
@@ -63,7 +160,7 @@ cd .devcontainer
 docker compose build agent
 
 # Start the sandbox (detached, sleeps forever)
-GITHUB_NAME="Your Name" GITHUB_EMAIL="you@example.com" docker compose up -d agent
+GITHUB_NAME="YOUR-MACHINE-USER" GITHUB_EMAIL="machine-user@example.com" docker compose up -d agent
 
 # Open a shell inside it (the checkout is at /workspaces/<repo-dir>)
 docker compose exec agent bash
@@ -73,48 +170,35 @@ cd /workspaces/personal-reporting   # your clone directory name
 docker compose down
 ```
 
-VSCode / devcontainers alternative: "Reopen in Container" and pick a configuration from the multi-devcontainer list — **AI Agents** (`.devcontainer/agent/`, attaches as `agent` with the same compose service, mounts, and env) or **Reporting Developer** (`.devcontainer/developer/`, the full-access human container). With the Devcontainer CLI:
+Notes:
 
-```bash
-devcontainer up --workspace-folder . --config .devcontainer/agent/devcontainer.json
-```
-
-## Use for agentic coding
-
-1. **Shell in** (`cd /workspaces/<repo-dir>` if needed), then confirm the tooling:
-   ```bash
-   opencode --version && claude --version && codex --version
-   gh --version && op --version && uv --version
-   env | grep -E '^(OPENCODE_API_KEY|GITHUB_TOKEN|OP_SERVICE_ACCOUNT_TOKEN|ANTHROPIC_BASE_URL|OPENAI_BASE_URL)' | sed 's/=.*/=<set>/'
-   ```
-2. **Sync project deps** (persists into the bind-mounted workspace):
-   ```bash
-   uv sync
-   # or: make install
-   ```
-3. **Inject data-warehouse credentials** when a task needs them (1Password token is already in env via the secret):
-   ```bash
-   make inject
-   # writes .dlt/secrets.toml and .env.databricks (both gitignored)
-   ```
-4. **Run an agent** from the repo checkout:
-   ```bash
-   opencode run "your task here"
-   claude -p "your task here"
-   codex exec "your task here"
-   ```
-   Project agent wiring the container picks up automatically:
-   - `opencode.json` — `dlt-workspace-mcp` MCP server (`uv run dlthub ai mcp --stdio`).
-   - `.codex/config.toml` — same `dlt-workspace-mcp` MCP server for Codex.
-   - `.agents/skills/` + `AGENTS.md` / `CLAUDE.md` — repo instructions and dlthub workflow skills; host-level skills arrive via the `~/.agents` mount.
-5. **Validate before finishing**: `make test-local` (Python units), `uv run dbt build --project-dir dbt --profiles-dir dbt --target mock` (dbt on DuckDB fixtures), `uv run dbt lint --project-dir dbt --profiles-dir dbt --target mock` (SQL lint). See {doc}`testing_ci` for details.
-6. **Commit from inside**: git identity is already configured by the entrypoint; push over HTTPS with `GITHUB_TOKEN` (SSH commit signing applies only if you supplied a usable `SSH_AUTH_SOCK`). Keep commits on feature branches — never commit secrets (`.secrets/`, `*/secrets.toml`, `.env.databricks`) or direct to `main`.
+- Secrets come from repo-root `.secrets/` (gitignored):
+  `.secrets/opencode_api_key`, `.secrets/github_token` (**machine-user PAT**),
+  `.secrets/op_service_account_token`. The entrypoint exports them to
+  `OPENCODE_API_KEY` / `ANTHROPIC_API_KEY` / `OPENAI_API_KEY`, `GITHUB_TOKEN`,
+  `OP_SERVICE_ACCOUNT_TOKEN`.
+- VSCode alternative: "Reopen in Container" → **AI Agents**
+  (`.devcontainer/agent/`) or **Reporting Developer**
+  (`.devcontainer/developer/`); or
+  `devcontainer up --workspace-folder . --config .devcontainer/agent/devcontainer.json`.
+- Inside: `uv sync` (`make install`), `make inject` when warehouse creds are
+  needed, then `opencode run "..."` / `claude -p "..."` / `codex exec "..."`.
+  Commit as the machine user on feature branches; push over HTTPS with
+  `GITHUB_TOKEN`.
 
 ## Troubleshooting
 
-- **Missing secrets**: `docker compose` fails if a file under `.secrets/` (repo root) is absent — create all three files first.
-- **No SSH signing / empty `ssh-add -l`**: expected — Compose does not forward a host SSH agent. Provide your own `SSH_AUTH_SOCK` if you need signing; otherwise push over HTTPS with `GITHUB_TOKEN`.
-- **Config not picked up**: the entrypoint copies only the listed config filenames/dirs — check spelling against `.devcontainer/scripts/entrypoint.sh`, then restart the container.
-- **Lost home state after restart**: expected (`tmpfs`). Re-runs of the entrypoint restore secrets, configs, and git identity; project files in `/workspaces/<repo>` are unaffected.
-- **Stale image after Dockerfile edits**: rerun `docker compose build agent` (from `.devcontainer/`) before `up`.
-- **Attached the wrong container**: pick `.devcontainer/agent/` ("AI Agents") vs `.devcontainer/developer/` ("Reporting Developer") in the multi-config devcontainer picker.
+- **`sbx` install / KVM errors**: follow
+  `https://docs.docker.com/ai/sandboxes/install/` per OS (KVM group +
+  re-login on Linux, Hypervisor Platform on Windows).
+- **Agent cannot reach a host**: check `sbx policy ls`; allow it with
+  `sbx policy allow network <host>`. Under Locked Down the model API is
+  blocked until allowed.
+- **GitHub auth as the wrong user**: confirm the `github` secret resolves the
+  machine-user PAT (`gh auth status` on the host first); never fall back to a
+  personal token with wider scopes.
+- **Fallback container — missing secrets**: `docker compose` fails if a file
+  under repo-root `.secrets/` is absent — create all three files first.
+- **Fallback container — lost home state after restart**: expected (`tmpfs`).
+  The entrypoint restores secrets, configs, and git identity; project files in
+  `/workspaces/<repo>` are unaffected.
