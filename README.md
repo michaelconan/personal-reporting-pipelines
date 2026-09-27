@@ -124,32 +124,36 @@ The project follows modern data engineering best practices with clear separation
    export RAW_SCHEMA_NAME=raw_data
    ```
 
-### Agent Container (agentic coding)
+### Agentic coding (Docker Sandbox, primary)
 
-`.agentcontainer/` is a hardened, least-privilege sandbox for AI coding agents
-(`opencode`, `claude`, `codex`) — non-root `agent` user with no sudo, read-only
-root filesystem, dropped capabilities, no published ports, ephemeral home.
-It is separate from the full-access human dev container in `.devcontainer/`.
-Full details: `docs/source/agent_container.md`.
+The primary path for AI coding agents (`opencode`, `claude`, `codex`) is
+**Docker AI Sandbox (`sbx` CLI)** with a **dedicated GitHub machine user**
+scoped to this repo — stronger microVM isolation plus least-privilege GitHub
+access. Full details: `docs/source/agent_container.md`.
 
-1. **Create secret files** (gitignored, never committed):
-   `.secrets/opencode_api_key`, `.secrets/github_token`,
-   `.secrets/op_service_account_token`.
-2. **Build and start**:
+1. **Machine user** (one-time): create a dedicated GitHub account, add it as a
+   collaborator on this repo only (**Write**, not Admin), and mint a
+   short-lived fine-grained PAT limited to this repo (`Contents: read/write`,
+   `Pull requests: read/write`, `Metadata: read`). Never use a personal token.
+2. **Install and sign in**:
+   `brew trust docker/tap && brew install docker/tap/sbx`
+   (or `winget install -h Docker.sbx` / `sudo apt install docker-sbx`),
+   then `sbx login`.
+3. **Store credentials**: `sbx secret set github --command 'gh auth token'`
+   (run as the machine user) plus your model key, e.g.
+   `sbx secret set anthropic --command '...'`.
+4. **Run an agent**:
    ```bash
-   cd .agentcontainer
-   docker compose build
-   GITHUB_NAME="Your Name" GITHUB_EMAIL="you@example.com" docker compose up -d
-   docker compose exec agent bash
+   sbx run --name reporting-agent --clone claude .   # or: codex | opencode
    ```
-   (VSCode alternative: reopen the repo with the
-   `.agentcontainer/devcontainer.json` configuration.)
-3. **Use it**: inside the container run `uv sync` (`make install`), then
-   `make inject` when warehouse credentials are needed, then an agent such as
-   `opencode run "..."`. The entrypoint wires Docker secrets into env vars,
-   copies host agent configs (opencode/claude/codex), and configures git
-   identity plus SSH commit signing via the forwarded SSH agent — no keys are
-   stored in the image.
+   Inside: `uv sync`, `make inject` only when warehouse creds are needed, then
+   `opencode run "..."`. Review via `git fetch sandbox-<name>` before push/PR.
+   Default to `DBT_TARGET=mock` inside sandboxes.
+
+Fallback: the restricted `.devcontainer/agent` "AI Agents" container
+(non-root, read-only root fs, no Docker socket) is retained for when `sbx`
+cannot run — see `docs/source/agent_container.md` §4. Its `github_token`
+secret must also be the machine-user PAT.
 
 ### GitHub Actions Setup
 
