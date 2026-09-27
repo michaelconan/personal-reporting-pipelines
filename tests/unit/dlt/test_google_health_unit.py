@@ -23,16 +23,13 @@ def mock_google_health_apis(monkeypatch: MonkeyPatch, mock_responses) -> Callabl
     monkeypatch.setenv("SOURCES__GOOGLE_HEALTH__CLIENT_ID", "dummy_client_id")
     monkeypatch.setenv("SOURCES__GOOGLE_HEALTH__CLIENT_SECRET", "dummy_secret")
 
+    # Track per-resource call counts so we can fall back to returning run2
+    # when a second full run occurs but the filter detection didn't match.
+    call_counts: dict[str, int] = {"sleep": 0, "steps": 0, "exercise": 0}
+
     def cursor_callback(request, resource: str):
         """Handle cursor-based pagination for Google Health APIs."""
-        # (debug prints removed)
-        # Track per-resource call counts so we can fall back to returning run2
-        # when a second full run occurs but the filter detection didn't match.
-        counts = getattr(cursor_callback, "call_counts", None)
-        if counts is None:
-            counts = {"sleep": 0, "steps": 0, "exercise": 0}
-            cursor_callback.call_counts = counts
-        counts[resource] += 1
+        call_counts[resource] += 1
         # Inspect filter param to detect incremental refreshes. The pipeline
         # passes a filter containing an ISO date (YYYY-MM-DD). If the filter's
         # start date is on/after 2026-08-31, return the run2 data for the
@@ -64,7 +61,7 @@ def mock_google_health_apis(monkeypatch: MonkeyPatch, mock_responses) -> Callabl
         # Fallback: if we've been called enough times for this resource,
         # return run2 to simulate a subsequent run. Use a slightly higher
         # threshold to avoid returning run2 during a single-run pagination.
-        if counts[resource] >= 4:
+        if call_counts[resource] >= 4:
             return sample_response(f"google_health__{resource}-run2.json")
 
         # Default: first page of run1

@@ -9,7 +9,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 # System packages: git, curl, unzip (op job), Node 22, OpenSSH client for SSH signing
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends git curl unzip ca-certificates && \
+    apt-get install -y --no-install-recommends git make curl unzip ca-certificates && \
     curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
     apt-get install -y --no-install-recommends nodejs openssh-client && \
     rm -rf /var/lib/apt/lists/*

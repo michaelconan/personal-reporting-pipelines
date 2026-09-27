@@ -142,8 +142,8 @@ def google_health_source(
                     "params": {"filter": exercise_filter, "pageSize": 25},
                     "incremental": {
                         "cursor_path": "exercise.interval.startTime",
-                        "initial_value": initial_ts[:-1],
-                        "end_value": end_ts[:-1] if end_ts else None,
+                        "initial_value": initial_ts,
+                        "end_value": end_ts,
                     },
                 },
             },
