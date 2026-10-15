@@ -94,6 +94,72 @@ VSCode alternative: open the repo with the `.agentcontainer/devcontainer.json` c
 5. **Validate before finishing**: `make test-local` (Python units), `uv run dbt build --project-dir dbt --profiles-dir dbt --target mock` (dbt on DuckDB fixtures), `uv run dbt lint --project-dir dbt --profiles-dir dbt --target mock` (SQL lint). See {doc}`testing_ci` for details.
 6. **Commit from inside**: git identity and SSH signing are already configured by the entrypoint; push over HTTPS with `GITHUB_TOKEN` or over SSH via the forwarded agent. Keep commits on feature branches — never commit secrets (`.secrets/`, `*/secrets.toml`, `.env.databricks`) or direct to `main`.
 
+## Preserve OpenCode session history
+
+The agent home directory is an ephemeral `tmpfs`, so OpenCode sessions under
+`~/.local/share/opencode/` are lost when the sandbox is removed. Export sessions
+to durable storage before teardown and import them after starting a new sandbox.
+OpenCode's [CLI documentation](https://opencode.ai/docs/cli/) describes the
+`session list`, `export`, and `import` commands.
+
+These examples require `jq` and the Google Cloud CLI with permission to access
+the bucket. They are not installed by the agent image; install them on the
+machine running the commands using the [jq installation
+instructions](https://jqlang.org/download/) and Google's [gcloud CLI
+installation guide](https://cloud.google.com/sdk/docs/install).
+
+The following example stops on command errors, verifies that the export is
+non-empty, and removes the local copy after upload. Replace the bucket name with
+a bucket to which the operator has access:
+
+```bash
+set -Eeuo pipefail
+
+bucket="gs://opencode-history"
+session_id="$(opencode session list --format json -n 1 | jq -r '.[0].id')"
+[[ -n "$session_id" && "$session_id" != "null" ]] || {
+    printf 'No OpenCode session found\n' >&2
+    exit 1
+}
+
+export_file="${session_id}.json"
+cleanup() { rm -f -- "$export_file"; }
+trap cleanup EXIT
+
+opencode export "$session_id" > "$export_file"
+[[ -s "$export_file" ]] || {
+    printf 'OpenCode export is empty: %s\n' "$export_file" >&2
+    exit 1
+}
+gcloud storage cp "$export_file" "$bucket/$export_file"
+```
+
+After creating the replacement sandbox, run the restore commands from the
+project directory where the session should be available:
+
+```bash
+set -Eeuo pipefail
+
+bucket="gs://opencode-history"
+session_id="ses_example"
+export_file="${session_id}.json"
+trap 'rm -f -- "$export_file"' EXIT
+
+gcloud storage cp "$bucket/$export_file" "$export_file"
+[[ -s "$export_file" ]] || {
+    printf 'Downloaded session is empty: %s\n' "$export_file" >&2
+    exit 1
+}
+opencode import "$export_file"
+```
+
+Treat exported JSON as sensitive: it contains the session transcript and may
+include file contents or other workspace data. Restrict the bucket's IAM access
+and retention policy, and do not commit exports to the repository. See Google's
+[Cloud Storage upload](https://cloud.google.com/storage/docs/uploading-objects)
+and [download](https://cloud.google.com/storage/docs/downloading-objects)
+documentation for the `gcloud storage cp` behavior.
+
 ## Troubleshooting
 
 - **Missing secrets**: `docker compose` fails if a file under `../.secrets/` is absent — create all three files first.
