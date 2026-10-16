@@ -1,0 +1,115 @@
+[tools]
+uv = "latest"
+python = "3.13"
+opencode = "1.19.0"
+"databricks-cli" = "latest"
+gcloud = "latest"
+
+[env]
+DBT_PROJECT_DIR = "{{ config_root }}/dbt"
+DBT_PROFILES_DIR = "{{ config_root }}/dbt"
+PYTHONUNBUFFERED = "1"
+RUNTIME__LOG_LEVEL = "INFO"
+_.file = [
+  { path = ".env", redact = true },
+]
+
+[tasks.setup]
+description = "Install Python dependencies"
+run = "uv sync"
+
+[tasks.test]
+description = "Run offline Python unit tests"
+run = "uv run pytest tests/unit --log-cli-level=INFO --cov --cov-append --cov-report=xml --junitxml=test-results-local.xml -v -s"
+
+[tasks.test-e2e]
+description = "Run cloud end-to-end tests (starts the Databricks warehouse)"
+depends = ["databricks-start"]
+raw_args = true
+run = "uv run pytest tests/e2e --log-cli-level=INFO --cov --cov-append --cov-report=xml --junitxml=test-results-e2e.xml -v -s"
+
+[tasks.test-live]
+description = "Run opt-in live API integration tests (uses source API credentials)"
+raw_args = true
+run = "env RUN_LIVE_API_TESTS=1 uv run pytest tests/integration --log-cli-level=INFO --cov --cov-append --cov-report=xml --junitxml=test-results-live.xml -v -s -m live"
+
+[tasks.test-all]
+description = "Run offline unit tests followed by cloud e2e tests"
+run = [
+  { task = "test" },
+  { task = "test-e2e" },
+]
+
+[tasks.pipeline]
+description = "Run a dlt pipeline by source name (notion, hubspot, google_health)"
+depends = ["databricks-start"]
+raw_args = true
+run = "uv run python -m pipelines.run_pipeline"
+
+[tasks.pipeline-all]
+description = "Run all dlt pipelines"
+run = [
+  'mise run pipeline -- notion',
+  'mise run pipeline -- hubspot',
+  'mise run pipeline -- google_health',
+]
+
+[tasks.databricks-start]
+description = "Start the Databricks SQL warehouse and wait until healthy"
+run = "uv run python scripts/databricks_warehouse.py"
+
+[tasks.dbt]
+description = "Run dbt from the project with profile and profile paths configured"
+dir = "dbt"
+raw_args = true
+run = "uv run dbt"
+
+[tasks.dbt-deps]
+description = "Install dbt packages"
+run = "uv run dbt deps --project-dir dbt --profiles-dir dbt"
+
+[tasks.dbt-build-mock]
+description = "Build dbt models and tests against local DuckDB fixtures"
+dir = "dbt"
+raw_args = true
+run = "uv run dbt build --project-dir . --profiles-dir . --target mock"
+
+[tasks.dbt-build-dev]
+description = "Build dbt models and tests against Databricks dev"
+depends = ["databricks-start"]
+raw_args = true
+run = 'op run --environment "$OP_ENVIRONMENT_ID" -- uv run dbt build --project-dir dbt --profiles-dir dbt --target dev'
+
+[tasks.dbt-build-prod]
+description = "Run dbt freshness and build against Databricks prod"
+depends = ["databricks-start"]
+raw_args = true
+run = [
+  'op run --environment "$OP_ENVIRONMENT_ID" -- uv run dbt source freshness --project-dir dbt --profiles-dir dbt --target prod',
+  'op run --environment "$OP_ENVIRONMENT_ID" -- uv run dbt build --project-dir dbt --profiles-dir dbt --target prod',
+]
+
+[tasks.dbt-lint]
+description = "Lint dbt SQL using the mock target"
+run = "uv run dbt lint --project-dir dbt --profiles-dir dbt --target mock"
+
+[tasks.dbt-parse-mock]
+description = "Parse dbt project using the mock target"
+run = "uv run dbt parse --project-dir dbt --profiles-dir dbt --target mock"
+
+[tasks.dbt-compile-mock]
+description = "Compile dbt project and write catalog.json for bouncer"
+run = "uv run dbt compile --project-dir dbt --profiles-dir dbt --target mock --write-catalog"
+
+[tasks.dbt-bouncer]
+description = "Run dbt-bouncer governance checks"
+
+[tasks.docs]
+description = "Build dbt and Sphinx documentation"
+run = [
+  "uv run dbt deps --project-dir dbt --profiles-dir dbt",
+  "uv run dbt docs generate --project-dir dbt --profiles-dir dbt --target mock",
+  "uv run sphinx-build -b html docs/source docs/_build/html",
+  "rm -rf docs/_build/html/dbt",
+  "mkdir -p docs/_build/html/dbt",
+]
