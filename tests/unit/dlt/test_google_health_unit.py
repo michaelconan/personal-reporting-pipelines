@@ -1,5 +1,8 @@
 # base imports
+import json
 from collections.abc import Callable
+from typing import Any
+from unittest.mock import MagicMock
 from urllib.parse import parse_qs, urlparse
 
 import dlt
@@ -9,10 +12,36 @@ import pytest
 from pytest import MonkeyPatch
 
 # local imports
-from pipelines.sources.google_health import google_health_source
-from tests.unit.dlt.conftest import sample_resource, sample_response
+from pipelines.sources.google_health import get_google_health_token, google_health_source
+from tests.unit.dlt.conftest import (
+    incremental_last_value,
+    sample_data,
+    sample_resource,
+    sample_response,
+)
 
 pytestmark = pytest.mark.local
+
+
+def test_google_health_token_uses_host_refreshed_access_token(monkeypatch: MonkeyPatch):
+    monkeypatch.setenv("SOURCES__GOOGLE_HEALTH__ACCESS_TOKEN", "host-refreshed-token")
+
+    assert get_google_health_token() == "host-refreshed-token"
+
+
+def test_google_health_refreshes_oauth_token_when_direct_token_is_also_set(
+    monkeypatch: MonkeyPatch,
+):
+    monkeypatch.setenv("SOURCES__GOOGLE_HEALTH__ACCESS_TOKEN", "possibly-stale-token")
+    monkeypatch.setenv("SOURCES__GOOGLE_HEALTH__REFRESH_TOKEN", "refresh-token")
+    monkeypatch.setenv("SOURCES__GOOGLE_HEALTH__CLIENT_ID", "client-id")
+    monkeypatch.setenv("SOURCES__GOOGLE_HEALTH__CLIENT_SECRET", "client-secret")
+    credentials = MagicMock(token="refreshed-token", refresh_token="refresh-token")
+    monkeypatch.setattr("pipelines.sources.google_health.Credentials", lambda **_: credentials)
+    monkeypatch.setattr("pipelines.sources.google_health.Request", lambda: object())
+
+    assert get_google_health_token() == "refreshed-token"
+    credentials.refresh.assert_called_once()
 
 
 @pytest.fixture
@@ -23,59 +52,39 @@ def mock_google_health_apis(monkeypatch: MonkeyPatch, mock_responses) -> Callabl
     monkeypatch.setenv("SOURCES__GOOGLE_HEALTH__CLIENT_ID", "dummy_client_id")
     monkeypatch.setenv("SOURCES__GOOGLE_HEALTH__CLIENT_SECRET", "dummy_secret")
 
+    initial_filters: dict[str, str] = {}
+    exercise_first_page_calls = 0
+    incremental_mode = True
+
     def cursor_callback(request, resource: str):
         """Handle cursor-based pagination for Google Health APIs."""
-        # (debug prints removed)
-        # Track per-resource call counts so we can fall back to returning run2
-        # when a second full run occurs but the filter detection didn't match.
-        counts = getattr(cursor_callback, "call_counts", None)
-        if counts is None:
-            counts = {"sleep": 0, "steps": 0, "exercise": 0}
-            cursor_callback.call_counts = counts
-        counts[resource] += 1
-        # Inspect filter param to detect incremental refreshes. The pipeline
-        # passes a filter containing an ISO date (YYYY-MM-DD). If the filter's
-        # start date is on/after 2026-08-31, return the run2 data for the
-        # subsequent run. Otherwise serve run1 pages and page2 when paginated.
+        nonlocal exercise_first_page_calls
         parsed_url = urlparse(request.url)
         params = parse_qs(parsed_url.query)
         page_token = params.get("pageToken", [""])[0]
-        # If a page token is present, return the second page of run1
-        if page_token:
-            return sample_response(f"google_health__{resource}-run1_page2.json")
-        # If filter contains a date >= 2026-08-31, treat as subsequent run
         filter_val = params.get("filter", [""])[0]
-        if filter_val:
-            import re
-            from datetime import datetime
-
-            m = re.search(r"(\d{4}-\d{2}-\d{2})", filter_val)
-            if m:
-                try:
-                    d = datetime.strptime(m.group(1), "%Y-%m-%d").date()  # noqa: DTZ007
-                    # If the filter date is not the initial default (1970-01-01),
-                    # treat this as a subsequent run and return run2 so the
-                    # incremental row is appended.
-                    if d != datetime(1970, 1, 1).date():  # noqa: DTZ001
-                        return sample_response(f"google_health__{resource}-run2.json")
-                except Exception:
-                    pass
-
-        # Fallback: if we've been called enough times for this resource,
-        # return run2 to simulate a subsequent run. Use a slightly higher
-        # threshold to avoid returning run2 during a single-run pagination.
-        if counts[resource] >= 4:
+        initial_filter = initial_filters.setdefault(resource, filter_val)
+        if page_token:
+            page1 = json.loads(sample_response(f"google_health__{resource}-run1_page1.json")[2])
+            assert page_token == page1["nextPageToken"]
+            return sample_response(f"google_health__{resource}-run1_page2.json")
+        if resource == "exercise" and not filter_val and incremental_mode:
+            exercise_first_page_calls += 1
+            if exercise_first_page_calls > 1:
+                return sample_response(f"google_health__{resource}-run2.json")
+        if filter_val != initial_filter:
             return sample_response(f"google_health__{resource}-run2.json")
-
-        # Default: first page of run1
         return sample_response(f"google_health__{resource}-run1_page1.json")
 
-    def setup(endpoints=None):
+    def setup(endpoints=None, incremental=True):
         """Nested function to only register mock endpoints for tests.
 
         Args:
             endpoints (list, optional): Specific endpoints to register. Defaults to None (all).
+            incremental: Whether the test run should return the next incremental page.
         """
+        nonlocal incremental_mode
+        incremental_mode = incremental
         if endpoints is None:
             endpoints = []
         # Mock the API responses
@@ -108,8 +117,8 @@ def mock_google_health_apis(monkeypatch: MonkeyPatch, mock_responses) -> Callabl
     ("resource", "expected_tables", "configs"),
     (
         ("sleep", 2, {"max_table_nesting": 2}),
-        ("steps", 1, {"max_table_nesting": 1}),
-        ("exercise", 1, {"max_table_nesting": 1}),
+        ("steps", 1, {"max_table_nesting": 4}),
+        ("exercise", 1, {"max_table_nesting": 2}),
     ),
 )
 class TestGoogleHealthPhases:
@@ -201,7 +210,7 @@ def test_google_health_refresh(
     increment: bool,
 ):
     # GIVEN (1)
-    mock_google_health_apis(endpoints=[resource])
+    mock_google_health_apis(endpoints=[resource], incremental=increment)
     expected_rows = 5  # 3 from page 1 + 2 from page 2
     dataset = duckdb_pipeline.dataset_name
     table = resource
@@ -216,6 +225,27 @@ def test_google_health_refresh(
     # THEN (1)
     assert info.first_run is True
     assert info.has_failed_jobs is False
+    cursor_path = {
+        "sleep": ("sleep", "interval", "endTime"),
+        "steps": ("steps", "interval", "startTime"),
+        "exercise": ("exercise", "interval", "startTime"),
+    }[resource]
+
+    def cursor(record: dict) -> str:
+        value: Any = record
+        for key in cursor_path:
+            value = value[key]
+        return value
+
+    expected_cursor = max(
+        cursor(item)
+        for page in ("run1_page1", "run1_page2")
+        for item in sample_data(f"google_health__{resource}-{page}.json")["dataPoints"]
+    )
+    assert (
+        incremental_last_value(duckdb_pipeline, f"google_health__{resource}", cursor_path[-1])
+        == expected_cursor
+    )
     with duckdb_pipeline.sql_client() as client:
         table_rows = client.execute_sql(f"SELECT 1 FROM {dataset}.google_health__{table}")
     assert len(table_rows) == expected_rows

@@ -4,12 +4,12 @@ This repo has two test systems: **pytest** for `pipelines/` (dlt) and **dbt buil
 
 | Layer | Location | Destination | pytest marker | Local command | CI workflow |
 | ----- | -------- | ----------- | ------------- | ------------- | ----------- |
-| dlt unit (offline) | `tests/unit/dlt/` | DuckDB (`local_unit_test` / `local_data`, `dev_mode=True`) | `local` | `make test-local` (`pytest tests/unit`) | `test-pipelines.yml` (always runs) |
-| Fixture-tooling unit | `tests/unit/scripts/` | none (pure functions, `tmp_path`, stubbed BQ client) | none | runs under `make test-local` | `test-pipelines.yml` via `test-local` |
+| dlt unit (offline) | `tests/unit/dlt/` | DuckDB (`local_unit_test` / `local_data`, `dev_mode=True`) | `local` | `mise run test` (`pytest tests/unit`) | `test-pipelines.yml` (always runs) |
+| Fixture-tooling unit | `tests/unit/scripts/` | none (pure functions, `tmp_path`, stubbed BQ client) | none | runs under `mise run test` | `test-pipelines.yml` via `test` |
 | dlt integration (live, opt-in) | `tests/integration/dlt/` | DuckDB / live APIs | `live` | `RUN_LIVE_API_TESTS=1 pytest tests/integration -m live` | not run in CI |
 | Fixture-tooling live | `tests/integration/scripts/` | DuckDB / live APIs | `live` | `RUN_LIVE_API_TESTS=1 pytest tests/integration -m live` | not run in CI |
-| dlt e2e (cloud) | `tests/e2e/dlt/` | Databricks (`live_e2e_test` / `live_data`, `dev_mode=True`) | `e2e` | `make test-e2e` (`pytest tests/e2e`) | `test-pipelines.yml` (only with secrets, skipped for dependabot) |
-| dbt transform tests | `dbt/models/**/_*.yml`, `dbt/tests/` | DuckDB (`mock` target) in CI, BigQuery otherwise | n/a (`dbt test` / `dbt build`) | `make dbt-build target=mock`, `make dbt-test target=mock` | `test-transforms.yml`, `lint.yml` |
+| dlt e2e (cloud) | `tests/e2e/dlt/` | Databricks (`live_e2e_test` / `live_data`, `dev_mode=True`) | `e2e` | `mise run test-e2e` (`pytest tests/e2e`) | `test-pipelines.yml` (only with 1Password Environment credentials, skipped for dependabot) |
+| dbt transform tests | `dbt/models/**/_*.yml`, `dbt/tests/` | DuckDB (`mock` target) in CI, Databricks otherwise | n/a (`dbt test` / `dbt build`) | `mise run dbt-build-mock`, `mise run dbt-build-dev` | `test-transforms.yml`, `lint.yml` |
 
 > **Note:** the Fitbit dlt pipeline was removed (Fitbit API deprecation), and the
 > dbt layer now models Google Health directly: `staging/google_health` models, the
@@ -32,7 +32,7 @@ Fully offline. `tests/unit/dlt/conftest.py` provides:
 
 - `PROVIDERS__ENABLE_GOOGLE_SECRETS=false`, `DLT_TELEMETRY_DISABLED=1`.
 - `mock_responses`: a `responses.RequestsMock` context for HTTP interception.
-- `duckdb_pipeline` (class-scoped): `pipelines_dir` pointed at a pytest temp dir (no state touches `~/.dlt`), `dlt.pipeline(pipeline_name="local_unit_test", destination="duckdb", dataset_name="local_data", dev_mode=True)`, dropped after each class.
+- `duckdb_pipeline` (class-scoped): both dlt state and the DuckDB file use pytest-managed temporary paths, then the pipeline is dropped after each class.
 - Helpers: `resolve_mock_path()` (resolves `tests/fixtures/<source>/` layout), `sample_data()`, `sample_response()` (200 + file body), `sample_resource()` (wraps a JSON fixture in a `@dlt.resource`).
 
 ### Per-source pattern: extract / normalize / load + refresh
@@ -47,29 +47,30 @@ Each source file (`test_notion_unit.py`, `test_hubspot_unit.py`, `test_google_he
 
 ### Mock strategy per source (`mock_*_apis` fixtures, `responses` callbacks)
 
-- **Notion** (`test_notion_unit.py`): `POST /v1/search` → `notion__data_sources.json`; `POST /v1/data_sources/<id>/query` cursor pagination (`start_cursor`, `last_edited_time.after` filter) → `notion__data_source_rows-run1_page1.json` (3) / `-run1_page2.json` (2) / `-run2.json` (1, detected by `after` date `2024-06-05`).
-- **HubSpot** (`test_hubspot_unit.py`): `POST /crm/v3/objects/<object>/search` for 9 `CRM_OBJECTS` (contacts, companies, meetings, calls, communications, tasks, notes, deals, tickets) → per-object `-run1_page1` (3) / `-run1_page2` (2) / `-run2` (1, detected by `GTE` filter value); `GET /crm/v4/objects/.../associations/...` stubbed to `{"results": []}` for full-pipeline runs only; `GET /crm-object-schemas/...` → `hubspot_schemas_contacts.json`. Missing fixture files fall back to `{"total": 0, "results": []}`.
-- **Google Health** (`test_google_health_unit.py`): `GET /v4/users/me/dataTypes/{sleep,steps,exercise}/dataPoints`, `pageToken` → page 2, `filter` ISO date (non-`1970-01-01`) → run 2, else page 1; call-count fallback (≥4 calls) → run 2.
+- **Notion** (`test_notion_unit.py`): `POST /v1/search` → `notion__data_sources.json`; `POST /v1/data_sources/<id>/query` uses the manifest cursor contract and supports both the normal and `end_date` filter shapes.
+- **HubSpot** (`test_hubspot_unit.py`): `POST /crm/v3/objects/<object>/search` validates the `after` cursor against page 1's advertised final id and selects run 2 from the advanced incremental start value, not a date sentinel.
+- **Google Health** (`test_google_health_unit.py`): `GET /v4/users/me/dataTypes/{sleep,steps,exercise}/dataPoints` validates `pageToken` against `nextPageToken` and selects run 2 from the changed incremental filter without call-count heuristics.
 
 ### Runner / utils / mock-tooling unit tests
 
 - `test_runner_cli.py`: `parse_select()` parsing, `main()` CLI success/unknown-pipeline/exception paths (mocked `refresh_pipeline`), and `refresh_pipeline()` dispatch (source factory args, `with_resources()`, `dlt.pipeline(..., dataset_name=RAW_SCHEMA, destination=<databricks factory with per-schema staging volume>)`, `write_disposition`).
 - `test_utils.py`: `should_force_full_refresh()` / `get_refresh_mode()` env-var matrix (`FORCE_FULL_REFRESH`, `<PIPELINE>_FULL_REFRESH`).
+- `test_e2e_cleanup.py`: asserts remote e2e schema deletion uses the fully qualified dataset and that local pipeline state is reset even when schema deletion raises.
 - `tests/unit/scripts/test_export_mock_responses.py`: pure-function tests for `scripts/fixtures/export_mock_responses.py` — response capture, paginator override (single-page), incremental-limit override, wide export date ranges, dlt-metadata URL matching, cursor sorting, PII scrubbing, 3/2/1 split validation, registry-driven dispatch, and `save_captured_responses()` end-to-end to `tmp_path`.
 - `tests/unit/scripts/test_export_mock_seeds.py`: offline tests for `scripts/fixtures/export_mock_seeds.py` with a stubbed BigQuery client — env config, dynamic source discovery from `*_sources.yml`, BigQuery type normalization, scrubbed CSV export, parallel `export_all()` summary, and CLI wiring.
 
 ## Fixtures (`tests/fixtures/`)
 
 - **Layout:** `tests/fixtures/<source>/` (`google_health/`, `hubspot/`, `notion/`), resolved by `resolve_mock_path()`.
-- **Naming:** `<table>-run1_page1.json` (3 records + pagination cursor), `<table>-run1_page2.json` (2 records, no more data), `<table>-run2.json` (1 record with a larger cursor value, e.g. date) — exactly the convention described in the original `TESTS.md` intro. Non-paginated resources (e.g. `notion__data_sources.json`, `hubspot_schemas_contacts.json`, `hubspot__*_to_contacts.json`) are single files.
+- **Naming:** `<table>-run1_page1.json` (3 records + pagination cursor), `<table>-run1_page2.json` (2 records, no more data), `<table>-run2.json` (1 new record with an advanced incremental cursor). The contract is declared in `tests/fixtures/manifest.yml` and checked by `test_fixture_manifest.py`; page identities must not overlap and HubSpot's page cursor must equal the final page-1 record id. Non-paginated resources use a single file.
 - **Generators (`scripts/fixtures/`):** `export_mock_responses.py` (live capture → sorted, scrubbed, 3/2/1-split fixtures via `process_and_split_payload()`; sources driven by `SOURCE_REGISTRY`, record keys detected dynamically), `scrub_data.py` (dynamic PII scrubbing by key-suffix heuristics + `resolve_project_root()`), `export_mock_seeds.py` (BigQuery raw tables → `dbt/seeds/mock_sources/*.csv`, parallel per-table export, `--source`/`--sample-rows`/`--dry-run` flags).
 - **Regeneration is opt-in** (requires real credentials); unit tests only read the checked-in fixtures.
 
 ## dlt integration tests (`tests/integration/dlt/`, marker `live`)
 
 Opt-in live API checks loading into local DuckDB (no GCP needed). Skipped
-unless `RUN_LIVE_API_TESTS=1`. Shared narrow 7-day window
-(`2025-06-01` → `2025-06-08`) lives in `tests/live_test_range.py` and is
+unless `RUN_LIVE_API_TESTS=1`. Shared three-week window
+(`2025-06-01` → `2025-06-22`) lives in `tests/test_live_test_range.py` and is
 reused by the e2e suite to keep runtimes low:
 
 - `test_notion_integration.py`: full `refresh_pipeline("notion")` → DuckDB, asserts no failed jobs and `notion__data_sources >= 1`.
@@ -80,11 +81,14 @@ reused by the e2e suite to keep runtimes low:
 
 ## dlt e2e tests (`tests/e2e/dlt/`, marker `e2e`)
 
-Cloud tests against real APIs + Databricks. `conftest.py` re-enables Google Secrets (`PROVIDERS__ENABLE_GOOGLE_SECRETS=true`, TOML fragments off, list-secrets on):
+Cloud tests against real APIs + Databricks. `mise run test-e2e` starts and
+waits for the warehouse first, then runs the tests inside the configured
+1Password Environment. `conftest.py` re-enables Google Secrets
+(`PROVIDERS__ENABLE_GOOGLE_SECRETS=true`, TOML fragments off, list-secrets on):
 
 - `check_config` (module autouse): asserts `GOOGLE_APPLICATION_CREDENTIALS` exists and the `GoogleSecretsProvider` is configured when `SECRET_STORE=google`.
-- `databricks_pipeline` (class-scoped): `dlt.pipeline(pipeline_name="live_e2e_test", destination="databricks", dataset_name="live_data", dev_mode=True)`; drops pipeline + dataset schema afterwards.
-- `test_load_pipelines.py::TestPipelines`: `REFRESH_ARGS = LIVE_REFRESH_ARGS` (narrow 7-day window from `tests/live_test_range.py`, shared with integration tests) and one test per pipeline (`notion`, `hubspot`, `google_health`) via `refresh_pipeline()`, asserting `info.has_failed_jobs is False`. Google Health pre-reads its refresh-token secret.
+- `databricks_pipeline` (class-scoped): `dlt.pipeline(pipeline_name="live_e2e_test", destination="databricks", dataset_name="live_data", dev_mode=True)`; `cleanup_databricks_pipeline()` drops the catalog-qualified, dev-mode schema with `DROP SCHEMA IF EXISTS ... CASCADE`, then resets local dlt state even if remote deletion fails.
+- `test_load_pipelines.py::TestPipelines`: `REFRESH_ARGS = LIVE_REFRESH_ARGS` (shared three-week window from `tests/test_live_test_range.py`) and one test per pipeline (`notion`, `hubspot`, `google_health`) via `refresh_pipeline()`, asserting `info.has_failed_jobs is False`. Google Health pre-reads its refresh-token secret.
 
 ## dbt tests
 
@@ -92,27 +96,32 @@ Cloud tests against real APIs + Databricks. `conftest.py` re-enables Google Secr
 
 | Target | Adapter | Dataset/schema | Source/seeds behaviour (`dbt_project.yml`) |
 | ------ | ------- | -------------- | ------------------------------------------ |
-| `mock` | DuckDB (`dbt.duckdb`) | `reporting` | sources **disabled** (`enabled: "{{ target.name != 'mock' }}"`); `mock_sources` seeds **enabled**, schema `mock`; models read seeds via `make_source()` → `ref()` |
-| `dev` / `test` | BigQuery (service account) | `reporting_dev` / `reporting_test` | sources enabled; models read raw schema via `make_source()` → `source()` |
-| `prod` | BigQuery | `reporting` | same as dev/test |
+| `mock` | DuckDB (`dbt.duckdb`) | `reporting` | sources **disabled**; mock sources/fixtures are used for local model builds |
+| `dev` / `test` | Databricks Unity Catalog | catalog `workspace`, schemas `reporting_dev` / `reporting_test` | sources enabled; models read raw schema via `source()` |
+| `prod` | Databricks Unity Catalog | catalog `workspace`, schema `reporting` | sources enabled; models read raw schema via `source()` |
 
-`make_source(source_name, relation_name)` is adapter-aware, so **mock seed filenames must match raw table names** (`{source}__{table}.csv` in `dbt/seeds/mock_sources/{notion,hubspot,google_health}/`). Key consequence, not just convention: a renamed raw table breaks `mock` builds.
+Models call `source(source_name, relation_name)` directly. Mock fixtures must
+match identifiers in `_*sources.yml`; local DuckDB inputs are wired through
+`dbt/test_fixtures/{source}/`.
 
 Other `dbt_project.yml` settings relevant to tests: staging/core = views, intermediate/marts = tables; `vars` (`dbt_date:time_zone`); `warn_error_options.silence` for disabled-source tests under `mock`; packages (`dbt_utils`, `dbt_expectations`, `dbt_date`).
 
-### Commands (`Makefile`, `DBTARGS = --project-dir dbt --profiles-dir dbt`)
+### mise commands
 
 ```bash
-make dbt-seed target=mock        # seeds only (excludes source:* on mock)
-make dbt-run target=mock select="stg_notion__daily_habits"
-make dbt-test target=mock        # dbt tests only
-make dbt-build target=mock       # seed + run + test (what CI runs)
-make dbt-build target=mock select="habits*" full=true  # full-refresh variant
-make dbt-docs target=mock
-make dbt-bouncer                  # manifest checks (dbt/dbt-bouncer.yml)
+mise run dbt-deps
+mise run dbt-build-mock                         # seed + run + test
+mise run dbt-build-mock -- --select "habits*" --full-refresh
+mise run dbt-build-dev                          # starts the Databricks SQL warehouse first
+mise run dbt -- run --target mock --select stg_notion__daily_habits
+mise run dbt -- test --target mock
+mise run dbt-lint
+mise run dbt-bouncer
 ```
 
-`DBT_EXCLUDE = --exclude "source:*"` applies automatically when `target=mock`.
+The dbt project and profiles directories are configured through `mise.toml`'s
+`[env]` settings. Mock builds target DuckDB; Databricks builds use catalog
+`workspace` and the selected reporting schema.
 
 ### Test layers
 
@@ -126,17 +135,22 @@ Mock source coverage lives in `dbt/test_fixtures/{google_health,hubspot,notion}/
 
 ## CI mapping
 
-- `test-pipelines.yml` (on `pipelines/**`, `tests/**` changes): `make install` → `make inject` (1Password, skipped for dependabot) → always `make test-local` → `make test-e2e` when secrets exist → Codecov coverage (`coverage.xml`) + test results (`test-results-*.xml`).
-- `test-transforms.yml` (on `dbt/**` changes): `make install` + `make dbt-deps` → `make dbt-build target=mock` (seed+run+test) → `make dbt-docs target=mock`.
+- `test-pipelines.yml` (on `pipelines/**`, `tests/**` changes): `mise run setup` → always `mise run test` → `mise run test-e2e` when the 1Password Environment is available → Codecov coverage + test results.
+- `test-transforms.yml` (on `dbt/**` changes): `mise run setup` + `mise run dbt-deps` → `mise run dbt-build-mock` → `mise run dbt-build-dev` when 1Password credentials are available.
 - `lint.yml` (every PR): `prek` (Python/ruff), `dbt lint` (SQLFluff engine, reuses `dbt/.sqlfluff`, `DBT_TARGET=mock`), `dbt parse` + `dbt compile --write-catalog` (produces `catalog.json` for bouncer; `docs generate` no longer emits one under dbt 2.x), `dbt-bouncer` checks.
+
+Credentialed tasks run inside `op run --environment "$OP_ENVIRONMENT_ID" -- ...`.
+The Databricks CLI starts the SQL warehouse and waits for `RUNNING`/`HEALTHY`
+before e2e tests and dlt pipeline runs.
 
 ## Quick reference
 
 ```bash
-make test-local                  # offline dlt unit tests (DuckDB + fixtures)
-make test-e2e                    # cloud dlt e2e tests (needs GCP + API secrets)
-RUN_LIVE_API_TESTS=1 uv run pytest tests/integration -m live -v -s  # opt-in live checks
-make dbt-build target=mock       # full local transform check (seed + run + test)
-make dbt-test target=mock select="stg_google_health__sleep"  # single-model dbt tests
-uv run dbt-bouncer --config-file dbt/dbt-bouncer.yml  # or: make dbt-bouncer
+mise run test                                      # offline dlt unit tests
+mise run test-live                                 # opt-in live API tests
+mise run test-e2e                                  # live API + Databricks tests
+mise run dbt-build-mock                            # local transform check
+mise run dbt -- test --target mock --select stg_google_health__sleep
+mise run dbt-bouncer                               # manifest checks
+mise run pipeline -- notion --full                 # starts warehouse before pipeline
 ```

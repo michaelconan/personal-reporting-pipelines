@@ -3,157 +3,12 @@
   "results": [
     {
       "object": "data_source",
-      "id": "17b04335-b725-4511-ae86-594ef725706c",
-      "cover": null,
-      "icon": {
-        "type": "icon",
-        "icon": {
-          "name": "repeat",
-          "color": "gray"
-        }
-      },
-      "created_time": "2024-03-22T04:55:00.000Z",
-      "created_by": {
-        "object": "user",
-        "id": "fbdc9b25-5a85-48b5-a55e-12f5ae5e5e10"
-      },
-      "last_edited_by": {
-        "object": "user",
-        "id": "fbdc9b25-5a85-48b5-a55e-12f5ae5e5e10"
-      },
-      "last_edited_time": "2026-09-02T06:02:00.000Z",
-      "title": [
-        {
-          "type": "text",
-          "text": {
-            "content": "Identify wall foot choose alone.",
-            "link": null
-          },
-          "annotations": {
-            "bold": false,
-            "italic": false,
-            "strikethrough": false,
-            "underline": false,
-            "code": false,
-            "color": "default"
-          },
-          "plain_text": "Daily Disciplines",
-          "href": null
-        }
-      ],
-      "description": [],
-      "is_inline": false,
-      "database_type": null,
-      "properties": {
-        "Prayer": {
-          "id": "%3E%5DYM",
-          "name": "Prayer",
-          "description": null,
-          "type": "checkbox",
-          "checkbox": {}
-        },
-        "Devotional": {
-          "id": "BKWk",
-          "name": "Devotional",
-          "description": null,
-          "type": "checkbox",
-          "checkbox": {}
-        },
-        "Read Bible": {
-          "id": "BXX%7C",
-          "name": "Read Bible",
-          "description": null,
-          "type": "checkbox",
-          "checkbox": {}
-        },
-        "Language": {
-          "id": "Ftpe",
-          "name": "Language",
-          "description": null,
-          "type": "checkbox",
-          "checkbox": {}
-        },
-        "Journal": {
-          "id": "L%5Bko",
-          "name": "Journal",
-          "description": null,
-          "type": "checkbox",
-          "checkbox": {}
-        },
-        "Last edited time": {
-          "id": "NWtw",
-          "name": "Last edited time",
-          "description": null,
-          "type": "last_edited_time",
-          "last_edited_time": {}
-        },
-        "Workout": {
-          "id": "%5DFhr",
-          "name": "Workout",
-          "description": null,
-          "type": "checkbox",
-          "checkbox": {}
-        },
-        "Discipline Analytics": {
-          "id": "gUOf",
-          "name": "Discipline Analytics",
-          "description": null,
-          "type": "relation",
-          "relation": {
-            "database_id": "9b48cbab-b06d-4b7e-aa18-0b92a34cf688",
-            "data_source_id": "1f9344f9-9353-411e-b44d-db2a16cca485",
-            "type": "dual_property",
-            "dual_property": {
-              "synced_property_name": "Daily Disciplines",
-              "synced_property_id": "yJv~"
-            }
-          }
-        },
-        "Completion Rate": {
-          "id": "nkLs",
-          "name": "Completion Rate",
-          "description": null,
-          "type": "formula",
-          "formula": {
-            "expression": "round(\n\t1000 *\n\tsum(\n\t\ttoNumber(prop(\"Prayer\")),\n\t\ttoNumber(prop(\"Read Bible\")),\n\t\ttoNumber(prop(\"Devotional\")),\n\t\ttoNumber(prop(\"Journal\")),\n\t\ttoNumber(prop(\"Workout\")),\n\t\t/* New goal Feb 2024 */\n\t\ttoNumber(prop(\"Language\"))\n\t) / \n\t/* Include new goal Feb 2024 */\n\tif(prop(\"Date\")>=parseDate(\"2024-02-17\"),6,5)\n) / 1000"
-          }
-        },
-        "Date": {
-          "id": "x_Rf",
-          "name": "Date",
-          "description": null,
-          "type": "date",
-          "date": {}
-        },
-        "Name": {
-          "id": "title",
-          "name": "Name",
-          "description": null,
-          "type": "title",
-          "title": {}
-        }
-      },
-      "parent": {
-        "type": "database_id",
-        "database_id": "10140b50-0f0d-43d2-905a-7ed714ef7f2c"
-      },
-      "database_parent": {
-        "type": "block_id",
-        "block_id": "7b732f27-16d2-4e8e-abc9-8d9320e247ab"
-      },
-      "url": "https://app.notion.com/p/10140b500f0d43d2905a7ed714ef7f2c",
-      "public_url": null,
-      "in_trash": false,
-      "archived": false
-    },
-    {
-      "object": "data_source",
       "id": "2ec09eb8-3f76-80de-85f4-000b2cd39a1f",
       "cover": null,
       "icon": {
         "type": "icon",
         "icon": {
-          "name": "reference",
+          "name": "Rebecca",
           "color": "gray"
         }
       },
@@ -166,12 +21,12 @@
         "object": "user",
         "id": "fbdc9b25-5a85-48b5-a55e-12f5ae5e5e10"
       },
-      "last_edited_time": "2026-03-17T00:12:00.000Z",
+      "last_edited_time": "2026-09-18T21:46:00.000Z",
       "title": [
         {
           "type": "text",
           "text": {
-            "content": "Us view door weight almost current maintain.",
+            "content": "Through become than well believe.",
             "link": null
           },
           "annotations": {
@@ -190,7 +45,7 @@
         {
           "type": "text",
           "text": {
-            "content": "Sport ready education future family hit attack sort.",
+            "content": "Resource after material voice end economy here big.",
             "link": null
           },
           "annotations": {
@@ -210,26 +65,26 @@
       "properties": {
         "Frequency": {
           "id": "%3BsQq",
-          "name": "Frequency",
+          "name": "Tracy",
           "description": null,
           "type": "select",
           "select": {
             "options": [
               {
                 "id": "1a4ad82f-20b3-415e-a6cd-cf0de7e66759",
-                "name": "Daily",
+                "name": "Jasmine",
                 "color": "red",
                 "description": null
               },
               {
                 "id": "cc514ff0-88ea-42ae-8132-006eceb8094b",
-                "name": "Weekly",
+                "name": "Edward",
                 "color": "brown",
                 "description": null
               },
               {
                 "id": "5c8998ad-22b4-4eae-a3cb-e81f76d4736f",
-                "name": "Monthly",
+                "name": "Jacqueline",
                 "color": "orange",
                 "description": null
               }
@@ -238,7 +93,7 @@
         },
         "Threshold": {
           "id": "CYyF",
-          "name": "Threshold",
+          "name": "Randall",
           "description": null,
           "type": "number",
           "number": {
@@ -247,14 +102,14 @@
         },
         "Description": {
           "id": "EtWY",
-          "name": "Description",
+          "name": "Carolyn",
           "description": null,
           "type": "rich_text",
           "rich_text": {}
         },
         "Target": {
           "id": "EzJ_",
-          "name": "Target",
+          "name": "Jason",
           "description": null,
           "type": "number",
           "number": {
@@ -263,34 +118,40 @@
         },
         "End Date": {
           "id": "Fkh%7D",
-          "name": "End Date",
+          "name": "Jeffrey",
           "description": null,
           "type": "date",
           "date": {}
         },
         "Source": {
           "id": "J%5DS%3F",
-          "name": "Source",
+          "name": "Kim",
           "description": null,
           "type": "select",
           "select": {
             "options": [
               {
                 "id": "6d19eff1-7a23-460a-892b-6a22cfd9b39d",
-                "name": "Notion",
+                "name": "Lisa",
                 "color": "purple",
                 "description": null
               },
               {
                 "id": "a51a3bcb-6c6a-44c3-91fc-2dfe11a2c43e",
-                "name": "Fitbit",
+                "name": "William",
                 "color": "orange",
                 "description": null
               },
               {
                 "id": "6cb84109-00f3-441b-935d-630f18288805",
-                "name": "Hubspot",
+                "name": "Bradley",
                 "color": "pink",
+                "description": null
+              },
+              {
+                "id": "750f20c4-d353-4fee-be95-aac3004307ba",
+                "name": "Dana",
+                "color": "red",
                 "description": null
               }
             ]
@@ -298,14 +159,14 @@
         },
         "Start Date": {
           "id": "OS%5CY",
-          "name": "Start Date",
+          "name": "Justin",
           "description": null,
           "type": "date",
           "date": {}
         },
         "Active": {
           "id": "OgL%3E",
-          "name": "Active",
+          "name": "Justin",
           "description": null,
           "type": "formula",
           "formula": {
@@ -314,20 +175,20 @@
         },
         "Type": {
           "id": "%5C%5Evw",
-          "name": "Type",
+          "name": "Hannah",
           "description": null,
           "type": "select",
           "select": {
             "options": [
               {
                 "id": "8c21f4d2-a320-47d7-badc-c0c97d414385",
-                "name": "Tickbox",
+                "name": "Barbara",
                 "color": "orange",
                 "description": null
               },
               {
                 "id": "6f4dfbca-ab80-41a9-88b1-a7fe7ee906aa",
-                "name": "Number",
+                "name": "Timothy",
                 "color": "blue",
                 "description": null
               }
@@ -336,45 +197,45 @@
         },
         "Below Threshold?": {
           "id": "%5EgeM",
-          "name": "Below Threshold?",
+          "name": "Amy",
           "description": null,
           "type": "checkbox",
           "checkbox": {}
         },
         "Category": {
           "id": "fn%3CP",
-          "name": "Category",
+          "name": "Zachary",
           "description": null,
           "type": "select",
           "select": {
             "options": [
               {
                 "id": "b05b19b3-ee8a-4c55-a350-cc6d62f7850b",
-                "name": "Faith",
+                "name": "Nicole",
                 "color": "purple",
                 "description": null
               },
               {
                 "id": "511863ba-9ba6-4b73-b7cf-013783597d0d",
-                "name": "Life",
+                "name": "Michael",
                 "color": "red",
                 "description": null
               },
               {
                 "id": "8dd52347-6597-4e35-9c62-32252064fe75",
-                "name": "Health",
+                "name": "Stephanie",
                 "color": "default",
                 "description": null
               },
               {
                 "id": "d3c8d33b-af6c-4bc8-b4d2-38e419a2d7c7",
-                "name": "Community",
+                "name": "Greg",
                 "color": "yellow",
                 "description": null
               },
               {
                 "id": "9f62f083-1bb9-44b8-8c8b-2d93a6ad3545",
-                "name": "Work",
+                "name": "Melody",
                 "color": "pink",
                 "description": null
               }
@@ -383,7 +244,7 @@
         },
         "Last edited time": {
           "id": "k%5EIz",
-          "name": "Last edited time",
+          "name": "William",
           "description": null,
           "type": "formula",
           "formula": {
@@ -392,7 +253,7 @@
         },
         "Name": {
           "id": "title",
-          "name": "Name",
+          "name": "Katherine",
           "description": null,
           "type": "title",
           "title": {}
@@ -413,12 +274,157 @@
     },
     {
       "object": "data_source",
+      "id": "17b04335-b725-4511-ae86-594ef725706c",
+      "cover": null,
+      "icon": {
+        "type": "icon",
+        "icon": {
+          "name": "Lori",
+          "color": "gray"
+        }
+      },
+      "created_time": "2024-03-22T04:55:00.000Z",
+      "created_by": {
+        "object": "user",
+        "id": "fbdc9b25-5a85-48b5-a55e-12f5ae5e5e10"
+      },
+      "last_edited_by": {
+        "object": "user",
+        "id": "fbdc9b25-5a85-48b5-a55e-12f5ae5e5e10"
+      },
+      "last_edited_time": "2026-09-02T06:02:00.000Z",
+      "title": [
+        {
+          "type": "text",
+          "text": {
+            "content": "Develop dog production peace also right service into enough leader.",
+            "link": null
+          },
+          "annotations": {
+            "bold": false,
+            "italic": false,
+            "strikethrough": false,
+            "underline": false,
+            "code": false,
+            "color": "default"
+          },
+          "plain_text": "Daily Disciplines",
+          "href": null
+        }
+      ],
+      "description": [],
+      "is_inline": false,
+      "database_type": null,
+      "properties": {
+        "Prayer": {
+          "id": "%3E%5DYM",
+          "name": "Sean",
+          "description": null,
+          "type": "checkbox",
+          "checkbox": {}
+        },
+        "Devotional": {
+          "id": "BKWk",
+          "name": "Kayla",
+          "description": null,
+          "type": "checkbox",
+          "checkbox": {}
+        },
+        "Read Bible": {
+          "id": "BXX%7C",
+          "name": "Jacob",
+          "description": null,
+          "type": "checkbox",
+          "checkbox": {}
+        },
+        "Language": {
+          "id": "Ftpe",
+          "name": "Ronald",
+          "description": null,
+          "type": "checkbox",
+          "checkbox": {}
+        },
+        "Journal": {
+          "id": "L%5Bko",
+          "name": "Michael",
+          "description": null,
+          "type": "checkbox",
+          "checkbox": {}
+        },
+        "Last edited time": {
+          "id": "NWtw",
+          "name": "Amanda",
+          "description": null,
+          "type": "last_edited_time",
+          "last_edited_time": {}
+        },
+        "Workout": {
+          "id": "%5DFhr",
+          "name": "Kelly",
+          "description": null,
+          "type": "checkbox",
+          "checkbox": {}
+        },
+        "Discipline Analytics": {
+          "id": "gUOf",
+          "name": "Ryan",
+          "description": null,
+          "type": "relation",
+          "relation": {
+            "database_id": "9b48cbab-b06d-4b7e-aa18-0b92a34cf688",
+            "data_source_id": "1f9344f9-9353-411e-b44d-db2a16cca485",
+            "type": "dual_property",
+            "dual_property": {
+              "synced_property_name": "Daily Disciplines",
+              "synced_property_id": "yJv~"
+            }
+          }
+        },
+        "Completion Rate": {
+          "id": "nkLs",
+          "name": "Thomas",
+          "description": null,
+          "type": "formula",
+          "formula": {
+            "expression": "round(\n\t1000 *\n\tsum(\n\t\ttoNumber(prop(\"Prayer\")),\n\t\ttoNumber(prop(\"Read Bible\")),\n\t\ttoNumber(prop(\"Devotional\")),\n\t\ttoNumber(prop(\"Journal\")),\n\t\ttoNumber(prop(\"Workout\")),\n\t\t/* New goal Feb 2024 */\n\t\ttoNumber(prop(\"Language\"))\n\t) / \n\t/* Include new goal Feb 2024 */\n\tif(prop(\"Date\")>=parseDate(\"2024-02-17\"),6,5)\n) / 1000"
+          }
+        },
+        "Date": {
+          "id": "x_Rf",
+          "name": "Jennifer",
+          "description": null,
+          "type": "date",
+          "date": {}
+        },
+        "Name": {
+          "id": "title",
+          "name": "Nicholas",
+          "description": null,
+          "type": "title",
+          "title": {}
+        }
+      },
+      "parent": {
+        "type": "database_id",
+        "database_id": "10140b50-0f0d-43d2-905a-7ed714ef7f2c"
+      },
+      "database_parent": {
+        "type": "block_id",
+        "block_id": "7b732f27-16d2-4e8e-abc9-8d9320e247ab"
+      },
+      "url": "https://app.notion.com/p/10140b500f0d43d2905a7ed714ef7f2c",
+      "public_url": null,
+      "in_trash": false,
+      "archived": false
+    },
+    {
+      "object": "data_source",
       "id": "3042e681-b85e-494e-b287-9aa80827cd81",
       "cover": null,
       "icon": {
         "type": "icon",
         "icon": {
-          "name": "repeat",
+          "name": "Randall",
           "color": "gray"
         }
       },
@@ -436,7 +442,7 @@
         {
           "type": "text",
           "text": {
-            "content": "Claim relationship phone tell may over answer win hope health.",
+            "content": "You thing customer plan child heart.",
             "link": null
           },
           "annotations": {
@@ -457,7 +463,7 @@
       "properties": {
         "Days Prayed": {
           "id": "CtRH",
-          "name": "Days Prayed",
+          "name": "Michael",
           "description": null,
           "type": "number",
           "number": {
@@ -466,7 +472,7 @@
         },
         "Next Weekly Discipline": {
           "id": "J%5DKO",
-          "name": "Next Weekly Discipline",
+          "name": "Heather",
           "description": null,
           "type": "relation",
           "relation": {
@@ -481,28 +487,28 @@
         },
         "Date Night": {
           "id": "Pb%3A%3A",
-          "name": "Date Night",
+          "name": "Wesley",
           "description": null,
           "type": "checkbox",
           "checkbox": {}
         },
         "Cardio": {
           "id": "Qx%7BM",
-          "name": "Cardio",
+          "name": "Tina",
           "description": null,
           "type": "checkbox",
           "checkbox": {}
         },
         "Notes": {
           "id": "R%40SE",
-          "name": "Notes",
+          "name": "Sandra",
           "description": null,
           "type": "rich_text",
           "rich_text": {}
         },
         "Tags": {
           "id": "SYg%3A",
-          "name": "Tags",
+          "name": "Austin",
           "description": null,
           "type": "multi_select",
           "multi_select": {
@@ -511,14 +517,14 @@
         },
         "Time Prayed": {
           "id": "U%40o%5C",
-          "name": "Time Prayed",
+          "name": "Megan",
           "description": null,
           "type": "rich_text",
           "rich_text": {}
         },
         "Prayer Label": {
           "id": "Z%5Cj%3A",
-          "name": "Prayer Label",
+          "name": "Robert",
           "description": null,
           "type": "formula",
           "formula": {
@@ -527,7 +533,7 @@
         },
         "Discipline Analytics": {
           "id": "alRm",
-          "name": "Discipline Analytics",
+          "name": "Sean",
           "description": null,
           "type": "relation",
           "relation": {
@@ -542,42 +548,42 @@
         },
         "Cook": {
           "id": "cwXD",
-          "name": "Cook",
+          "name": "Melissa",
           "description": null,
           "type": "checkbox",
           "checkbox": {}
         },
         "Fast": {
           "id": "dTxH",
-          "name": "Fast",
+          "name": "Cody",
           "description": null,
           "type": "checkbox",
           "checkbox": {}
         },
         "Last edited time": {
           "id": "g%5CWe",
-          "name": "Last edited time",
+          "name": "Erika",
           "description": null,
           "type": "last_edited_time",
           "last_edited_time": {}
         },
         "Community": {
           "id": "iMDk",
-          "name": "Community",
+          "name": "Frank",
           "description": null,
           "type": "checkbox",
           "checkbox": {}
         },
         "Date": {
           "id": "jmN%3A",
-          "name": "Date",
+          "name": "Chris",
           "description": null,
           "type": "date",
           "date": {}
         },
         "Prayer Minutes": {
           "id": "n%3DVJ",
-          "name": "Prayer Minutes",
+          "name": "Krista",
           "description": null,
           "type": "formula",
           "formula": {
@@ -586,7 +592,7 @@
         },
         "Screen Label": {
           "id": "oYum",
-          "name": "Screen Label",
+          "name": "Charlotte",
           "description": null,
           "type": "formula",
           "formula": {
@@ -595,7 +601,7 @@
         },
         "Completion Rate": {
           "id": "pC~O",
-          "name": "Completion Rate",
+          "name": "Matthew",
           "description": null,
           "type": "formula",
           "formula": {
@@ -604,21 +610,21 @@
         },
         "Church": {
           "id": "udDK",
-          "name": "Church",
+          "name": "Amy",
           "description": null,
           "type": "checkbox",
           "checkbox": {}
         },
         "Sabbath": {
           "id": "y%3F%7BU",
-          "name": "Sabbath",
+          "name": "David",
           "description": null,
           "type": "checkbox",
           "checkbox": {}
         },
         "Screen Minutes": {
           "id": "y%40pu",
-          "name": "Screen Minutes",
+          "name": "Earl",
           "description": null,
           "type": "number",
           "number": {
@@ -627,7 +633,7 @@
         },
         "Weekly Label": {
           "id": "%7BP%3CX",
-          "name": "Weekly Label",
+          "name": "Jennifer",
           "description": null,
           "type": "formula",
           "formula": {
@@ -636,7 +642,7 @@
         },
         "Prior Weekly Discipline": {
           "id": "%7CcpM",
-          "name": "Prior Weekly Discipline",
+          "name": "Bradley",
           "description": null,
           "type": "relation",
           "relation": {
@@ -651,7 +657,7 @@
         },
         "Name": {
           "id": "title",
-          "name": "Name",
+          "name": "Mary",
           "description": null,
           "type": "title",
           "title": {}
@@ -677,7 +683,7 @@
       "icon": {
         "type": "icon",
         "icon": {
-          "name": "repeat",
+          "name": "Micheal",
           "color": "gray"
         }
       },
@@ -695,7 +701,7 @@
         {
           "type": "text",
           "text": {
-            "content": "People through job fear second read run some oil method.",
+            "content": "Ball develop baby take position.",
             "link": null
           },
           "annotations": {
@@ -716,7 +722,7 @@
       "properties": {
         "Discipline Analytics": {
           "id": "%3A%3Dyq",
-          "name": "Discipline Analytics",
+          "name": "Denise",
           "description": null,
           "type": "relation",
           "relation": {
@@ -731,70 +737,70 @@
         },
         "Last edited time": {
           "id": "%3C%7D%60n",
-          "name": "Last edited time",
+          "name": "Eric",
           "description": null,
           "type": "last_edited_time",
           "last_edited_time": {}
         },
         "Training": {
           "id": "%3ElGC",
-          "name": "Training",
+          "name": "Regina",
           "description": null,
           "type": "checkbox",
           "checkbox": {}
         },
         "Blog": {
           "id": "%40%40qz",
-          "name": "Blog",
+          "name": "Mary",
           "description": null,
           "type": "checkbox",
           "checkbox": {}
         },
         "Date": {
           "id": "G%5BDm",
-          "name": "Date",
+          "name": "Shawn",
           "description": null,
           "type": "date",
           "date": {}
         },
         "Budget": {
           "id": "KYeU",
-          "name": "Budget",
+          "name": "Steven",
           "description": null,
           "type": "checkbox",
           "checkbox": {}
         },
         "Travel": {
           "id": "%5EqWK",
-          "name": "Travel",
+          "name": "James",
           "description": null,
           "type": "checkbox",
           "checkbox": {}
         },
         "Goal Review": {
           "id": "%60uw%3F",
-          "name": "Goal Review",
+          "name": "Paul",
           "description": null,
           "type": "checkbox",
           "checkbox": {}
         },
         "Notes": {
           "id": "bstF",
-          "name": "Notes",
+          "name": "Bryan",
           "description": null,
           "type": "rich_text",
           "rich_text": {}
         },
         "Serve": {
           "id": "srpS",
-          "name": "Serve",
+          "name": "Jessica",
           "description": null,
           "type": "checkbox",
           "checkbox": {}
         },
         "Completion Rate": {
           "id": "%7D%3B%3AH",
-          "name": "Completion Rate",
+          "name": "Ashley",
           "description": null,
           "type": "formula",
           "formula": {
@@ -803,7 +809,7 @@
         },
         "Name": {
           "id": "title",
-          "name": "Name",
+          "name": "Angela",
           "description": null,
           "type": "title",
           "title": {}
@@ -827,5 +833,5 @@
   "has_more": false,
   "type": "page_or_data_source",
   "page_or_data_source": {},
-  "request_id": "71a4650e-fef9-45ff-99f9-b12cbe54a5e3"
+  "request_id": "7b6a795c-5cef-4342-9cba-7561ca171f26"
 }

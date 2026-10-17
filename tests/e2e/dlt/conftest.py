@@ -16,6 +16,7 @@ import pytest
 from dlt.common.configuration.providers.google_secrets import GoogleSecretsProvider
 
 from pipelines import SECRET_STORE
+from tests.e2e.dlt.cleanup import cleanup_databricks_pipeline
 
 logger = logging.getLogger(__name__)
 
@@ -73,8 +74,4 @@ def databricks_pipeline() -> Generator[dlt.Pipeline, None, None]:
         pipeline.dataset_name,
     )
     yield pipeline
-
-    # Cleanup
-    pipeline.drop()
-    with pipeline.sql_client() as client:
-        client.execute_sql(f"DROP SCHEMA IF EXISTS {pipeline.dataset_name} CASCADE;")
+    cleanup_databricks_pipeline(pipeline)

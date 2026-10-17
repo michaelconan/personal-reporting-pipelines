@@ -17,8 +17,8 @@ dbt Staging (views) → dbt Intermediate → dbt Marts (tables)
 ## Operational guidance
 
 - Ingest first, then run dbt transforms (workflows configured to enforce this order).
-- Use `make dbt-build target=dev` to validate transformations against Databricks dev target locally.
-- Use `uv run dbt build --project-dir dbt --profiles-dir dbt --target mock` for local testing with CSV fixtures.
+- Use `mise run dbt-build-dev` to validate transformations against Databricks dev.
+- Use `mise run dbt-build-mock` for local testing with CSV fixtures in DuckDB.
 - Maintain group_connect_cadence.csv as the single source of truth for group tier cadence targets.
 
 ## Where to look in the repo

@@ -25,11 +25,13 @@ dlt writes raw tables with the convention: `{source}__{entity}` (e.g., `hubspot_
 
 ## Running pipelines
 
-Standard pattern (pipenv):
+Run pipelines through the central mise task so Databricks is started first and
+credentials come from the configured 1Password Environment:
 
 ```bash
-# run a pipeline module (uses environment for creds/profile)
-uv run python -m pipelines.hubspot
+mise run pipeline -- hubspot
+mise run pipeline -- notion --full
+mise run pipeline-all
 ```
 
 Programmatic usage (for local dev/test):
@@ -53,19 +55,20 @@ Three ways to force a full refresh:
 Examples:
 
 ```bash
-export FORCE_FULL_REFRESH=true
-uv run python -m pipelines.run_pipeline notion --full
+FORCE_FULL_REFRESH=true mise run pipeline -- notion
 
 # Or pipeline specific
 export PIPELINE_NAME=HUBSPOT
 export HUBSPOT_FULL_REFRESH=true
-uv run python -m pipelines.hubspot
+mise run pipeline -- hubspot
 ```
 
 ## Config and secrets
 
 - HubSpot object/property config: pipelines/hs_config.yml
-- Credentials and API keys: use GCP Secret Manager or local env vars depending on `SECRET_STORE` configuration.
+- Credentials and API keys: use GCP Secret Manager or the selected 1Password
+  Environment according to `SECRET_STORE`; credentialed tasks invoke
+  `op run --environment "$OP_ENVIRONMENT_ID" -- ...`.
 
 ## Operational notes
 

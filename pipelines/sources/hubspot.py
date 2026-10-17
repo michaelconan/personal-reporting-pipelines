@@ -21,6 +21,7 @@ API Resources:
 # Base
 from collections.abc import Generator
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
 
 # dlt
@@ -68,7 +69,7 @@ def hubspot_source(
     """
     api_key = dlt.secrets["sources.hubspot.api_key"]
 
-    with open("pipelines/sources/hs_config.yml", "rb") as fp:
+    with Path(__file__).with_name("hs_config.yml").open("rb") as fp:
         hs_config = yaml.safe_load(fp)
     crm_objects = hs_config["objects"]
 

@@ -99,7 +99,13 @@ def run_refresh(
     source_kwargs: dict | None = None,
     source_modifier: Callable | None = None,
 ):
-    if required_secret_keys:
+    direct_google_health_token = (
+        dlt.secrets.get("sources.google_health.access_token")
+        if token_getter is get_google_health_token
+        else None
+    )
+
+    if required_secret_keys and not direct_google_health_token:
         validate_required_secrets(
             secret_store=SECRET_STORE,
             required_secret_keys=required_secret_keys,

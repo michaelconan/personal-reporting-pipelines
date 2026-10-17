@@ -1,4 +1,5 @@
 {
+  "nextPageToken": "Xm5hr8GFoSZxIlRuWjF5ZXF_bYu7p5XWJ2SQs5uuZg",
   "dataPoints": [
     {
       "dataSource": {
@@ -10,9 +11,9 @@
       },
       "steps": {
         "interval": {
-          "startTime": "2026-07-18T07:56:00Z",
+          "startTime": "2026-07-18T07:53:00Z",
           "startUtcOffset": "-25200s",
-          "endTime": "2026-07-18T07:57:00Z",
+          "endTime": "2026-07-18T07:54:00Z",
           "endUtcOffset": "-25200s",
           "civilStartTime": {
             "date": {
@@ -21,7 +22,7 @@
               "day": 18
             },
             "time": {
-              "minutes": 56
+              "minutes": 53
             }
           },
           "civilEndTime": {
@@ -31,7 +32,7 @@
               "day": 18
             },
             "time": {
-              "minutes": 57
+              "minutes": 54
             }
           }
         },
@@ -48,9 +49,9 @@
       },
       "steps": {
         "interval": {
-          "startTime": "2026-07-18T07:56:00Z",
+          "startTime": "2026-07-18T07:54:00Z",
           "startUtcOffset": "-25200s",
-          "endTime": "2026-07-18T07:57:00Z",
+          "endTime": "2026-07-18T07:55:00Z",
           "endUtcOffset": "-25200s",
           "civilStartTime": {
             "date": {
@@ -59,7 +60,7 @@
               "day": 18
             },
             "time": {
-              "minutes": 56
+              "minutes": 54
             }
           },
           "civilEndTime": {
@@ -69,7 +70,7 @@
               "day": 18
             },
             "time": {
-              "minutes": 57
+              "minutes": 55
             }
           }
         },
@@ -86,9 +87,9 @@
       },
       "steps": {
         "interval": {
-          "startTime": "2026-07-18T07:57:00Z",
+          "startTime": "2026-07-18T07:55:00Z",
           "startUtcOffset": "-25200s",
-          "endTime": "2026-07-18T07:58:00Z",
+          "endTime": "2026-07-18T07:56:00Z",
           "endUtcOffset": "-25200s",
           "civilStartTime": {
             "date": {
@@ -97,7 +98,7 @@
               "day": 18
             },
             "time": {
-              "minutes": 57
+              "minutes": 55
             }
           },
           "civilEndTime": {
@@ -107,13 +108,12 @@
               "day": 18
             },
             "time": {
-              "minutes": 58
+              "minutes": 56
             }
           }
         },
-        "count": "145"
+        "count": "119"
       }
     }
-  ],
-  "nextPageToken": "Xm5h_-2FoSZxIlRuWjF5ZXF_bYu7p5XWJ2SQs5uuZg"
+  ]
 }

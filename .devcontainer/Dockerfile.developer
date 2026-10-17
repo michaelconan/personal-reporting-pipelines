@@ -1,0 +1,38 @@
+FROM python:3.13-slim
+
+# User and Group identifiers
+ARG UID=1000
+ARG GID=1000
+ARG OP_VERSION=latest-beta
+
+# Add local bin to PATH
+ENV PATH="/home/vscode/.local/bin:${PATH}"
+
+# Install mise and the 1Password CLI beta (needed for 1Password Environments).
+RUN set -eu; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends git sudo curl unzip ca-certificates; \
+    curl -fsSL https://mise.run | MISE_INSTALL_PATH=/usr/local/bin/mise MISE_INSTALL_HELP=0 sh; \
+    if [ "${OP_VERSION}" = "latest-beta" ]; then \
+      OP_VERSION="$(curl -fsSL https://app-updates.agilebits.com/latest | python -c 'import json,sys; print(json.load(sys.stdin)["CLI2"]["beta"]["version"])')"; \
+    fi; \
+    OP_ARCH="$(dpkg --print-architecture)"; \
+    curl -fsSL "https://cache.agilebits.com/dist/1P/op2/pkg/${OP_VERSION}/op_linux_${OP_ARCH}_${OP_VERSION}.zip" -o /tmp/op.zip; \
+    unzip -q /tmp/op.zip -d /tmp/op; \
+    install -m 0755 /tmp/op/op /usr/local/bin/op; \
+    rm -rf /tmp/op /tmp/op.zip /var/lib/apt/lists/*; \
+    op --version; \
+    mise --version
+
+# Install duckdb for local development
+RUN curl https://install.duckdb.org | sh
+
+# Create non-root user (GID 1000 is already in use, so use 1001)
+RUN groupadd --gid 1001 vscode && \
+    useradd --uid 1000 --gid 1001 --shell /bin/bash --create-home vscode
+
+# Allow the non-root user to run sudo without a password
+RUN echo "vscode ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/vscode \
+    && chmod 0440 /etc/sudoers.d/vscode
+
+USER vscode

@@ -4,7 +4,7 @@ This dbt project is designed to transform and model data from various sources, i
 
 ## Data Ingestion
 
-The raw data is ingested using `dlt` (data load tool), which means that the raw tables have a specific structure that the staging models are designed to handle. The raw data is loaded into the `raw` schema in the production environment (BigQuery). For local testing, source tables are read directly from CSV test fixtures in `dbt/test_fixtures/` via DuckDB external locations (configured through each source's `config.external_location`).
+The raw data is ingested using `dlt` (data load tool), which means that the raw tables have a specific structure that the staging models are designed to handle. The primary destination is Databricks Unity Catalog (`workspace` catalog, `raw` schema in production); BigQuery targets remain available as a rollback path. For local testing, source tables are read directly from CSV test fixtures in `dbt/test_fixtures/` via DuckDB external locations (configured through each source's `config.external_location`).
 
 ## Layers
 
@@ -50,11 +50,20 @@ Conventions:
 ## Local Testing
 
 This project is set up with a local testing environment using DuckDB. To run the project locally, you need to:
-1.  Run `uv sync` to install Python dependencies.
-2.  Run `uv run dbt build --project-dir dbt --profiles-dir dbt --target mock` to exercise the models and tests against the `dbt/test_fixtures/` CSVs.
-3.  Optionally run `make docs` for the dbt + Sphinx docs site and `uv run dbt-bouncer --config-file dbt/dbt-bouncer.yml` (from `dbt/`) for governance checks.
+1.  Run `mise install` and `mise run setup` to install the toolchain and Python dependencies.
+2.  Run `mise run dbt-build-mock` to exercise models and tests against the `dbt/test_fixtures/` CSVs.
+3.  Run `mise run docs` for the dbt + Sphinx docs site or `mise run dbt-bouncer` for governance checks.
 
 The local testing setup uses a `profiles.yml` file located in `dbt/profiles.yml`, which is configured to use a local DuckDB database file (`dbt.duckdb`).
+
+## Databricks authentication
+
+The `dev` target uses the dlt destination's access token. The `test` and `prod`
+targets use Databricks OAuth M2M with `DATABRICKS_CLIENT_ID` and
+`DATABRICKS_CLIENT_SECRET`. The dlt destination and warehouse preflight use
+`DESTINATION__DATABRICKS__CREDENTIALS__CLIENT_ID` and
+`DESTINATION__DATABRICKS__CREDENTIALS__CLIENT_SECRET`; configure both naming
+forms in the credential environment when running dbt `test` or `prod`.
 
 ## Data Quality
 

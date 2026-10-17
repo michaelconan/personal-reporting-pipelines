@@ -4,50 +4,28 @@ set -euo pipefail
 export HOME="${HOME:-/home/agent}"
 
 # ---------------------------------------------------------------------------
-# 1. Load Docker secrets into environment variables
+# 1. Load the combined agent environment file
 # ---------------------------------------------------------------------------
-# In docker-compose, secrets are mounted as files under /run/secrets/.
-# The AI agent CLIs expect env vars, so we read and export them here.
-# Falls back gracefully if running outside compose (e.g. devcontainer).
-# Persist secrets to a file sourced by interactive shells
-SECRETS_ENV_FILE="$HOME/.secrets_env"
-: > "$SECRETS_ENV_FILE"
+# Docker Compose mounts the host agent .env file as /run/secrets/agent_env.
+# Export every assignment for this process and its child processes without
+# copying the secret values into the container's writable filesystem.
+AGENT_ENV_FILE="/run/secrets/agent_env"
+if [[ -f "$AGENT_ENV_FILE" ]]; then
+    set -a
+    # The mounted file is a trusted, shell-compatible KEY=value environment file.
+    # shellcheck disable=SC1090
+    source "$AGENT_ENV_FILE"
+    set +a
 
-if [[ -d /run/secrets ]]; then
-    for secret_file in /run/secrets/*; do
-        [[ -f "$secret_file" ]] || continue
-        secret_name="$(basename "$secret_file")"
-        secret_value="$(cat "$secret_file")"
-
-        case "$secret_name" in
-            opencode_api_key)
-                export OPENCODE_API_KEY="$secret_value"
-                export ANTHROPIC_API_KEY="$secret_value"
-                export OPENAI_API_KEY="$secret_value"
-                echo "export OPENCODE_API_KEY=\"$secret_value\"" >> "$SECRETS_ENV_FILE"
-                echo "export ANTHROPIC_API_KEY=\"$secret_value\"" >> "$SECRETS_ENV_FILE"
-                echo "export OPENAI_API_KEY=\"$secret_value\"" >> "$SECRETS_ENV_FILE"
-                ;;
-            github_token)
-                export GITHUB_TOKEN="$secret_value"
-                echo "export GITHUB_TOKEN=\"$secret_value\"" >> "$SECRETS_ENV_FILE"
-                ;;
-            op_service_account_token)
-                export OP_SERVICE_ACCOUNT_TOKEN="$secret_value"
-                echo "export OP_SERVICE_ACCOUNT_TOKEN=\"$secret_value\"" >> "$SECRETS_ENV_FILE"
-                ;;
-        esac
-    done
-fi
-
-# Source the persisted secrets for the current shell
-[[ -f "$SECRETS_ENV_FILE" ]] && source "$SECRETS_ENV_FILE"
-
-# Ensure future interactive shells load the secrets
-if [[ -f "$HOME/.bashrc" ]]; then
-    grep -q "source $SECRETS_ENV_FILE" "$HOME/.bashrc" || echo "source $SECRETS_ENV_FILE" >> "$HOME/.bashrc"
-else
-    echo "source $SECRETS_ENV_FILE" > "$HOME/.bashrc"
+    # VS Code starts interactive shells separately from the entrypoint process.
+    # Source the mounted file there as well so those shells inherit the variables.
+    AGENT_ENV_SOURCE="set -a; source $AGENT_ENV_FILE; set +a"
+    if [[ -f "$HOME/.bashrc" ]]; then
+        grep -Fq "$AGENT_ENV_SOURCE" "$HOME/.bashrc" || \
+            printf '\n%s\n' "$AGENT_ENV_SOURCE" >> "$HOME/.bashrc"
+    else
+        printf '%s\n' "$AGENT_ENV_SOURCE" > "$HOME/.bashrc"
+    fi
 fi
 
 # ---------------------------------------------------------------------------
@@ -105,10 +83,9 @@ chmod 700 "${HOME}/.ssh"
 git config --global user.name "${GITHUB_NAME}"
 git config --global user.email "${GITHUB_EMAIL}"
 
-# SSH agent is forwarded from the host (docker-compose binds
-# /run/host-services/ssh-auth.sock and sets SSH_AUTH_SOCK). No keys are
-# copied into the container.
-if [[ -n "${SSH_AUTH_SOCK:-}" ]] && ssh-add -l >/dev/null 2>&1; then
+# SSH agent forwarding is optional (requires Docker Desktop host services).
+# If SSH_AUTH_SOCK is set and the socket is accessible, configure git signing.
+if [[ -n "${SSH_AUTH_SOCK:-}" ]] && [[ -S "${SSH_AUTH_SOCK}" ]] && ssh-add -l >/dev/null 2>&1; then
     FIRST_KEY="$(ssh-add -L | head -n1 | awk '{print $1, $2}')"
     if [[ -n "${FIRST_KEY}" ]]; then
         git config --global gpg.format ssh
