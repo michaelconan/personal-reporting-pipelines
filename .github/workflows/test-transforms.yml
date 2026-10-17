@@ -49,4 +49,5 @@ jobs:
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
           OP_ENVIRONMENT_ID: ${{ vars.OP_ENVIRONMENT_ID }}
-        run: op run --environment "$OP_ENVIRONMENT_ID" -- mise run dbt-build-dev
+        run:
+          op run --environment "$OP_ENVIRONMENT_ID" -- mise run dbt-build-test
