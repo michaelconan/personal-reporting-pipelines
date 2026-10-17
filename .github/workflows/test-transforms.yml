@@ -19,7 +19,7 @@ jobs:
     env:
       DBT_PROJECT_DIR: dbt
       DBT_PROFILES_DIR: dbt
-      MISE_ENABLE_TOOLS: uv,python,github:databricks/cli
+      MISE_ENABLE_TOOLS: uv,python,databricks-cli
       # Skip the semantic-manifest validation notice (no dbt_cloud.yml in this project)
       DBT_ENGINE_NO_WARN_SEMANTIC_MANIFEST_VALIDATION: '1'
     steps:

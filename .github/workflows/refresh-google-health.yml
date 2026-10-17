@@ -17,7 +17,7 @@ jobs:
   run-pipeline:
     runs-on: ubuntu-latest
     env:
-      MISE_ENABLE_TOOLS: uv,python,github:databricks/cli
+      MISE_ENABLE_TOOLS: uv,python,databricks-cli
     steps:
       - name: checkout code
         uses: actions/checkout@v5

@@ -20,7 +20,7 @@ jobs:
     timeout-minutes: 20
     runs-on: ubuntu-latest
     env:
-      MISE_ENABLE_TOOLS: uv,python,github:databricks/cli
+      MISE_ENABLE_TOOLS: uv,python,databricks-cli
     steps:
       - name: checkout code
         uses: actions/checkout@v5
