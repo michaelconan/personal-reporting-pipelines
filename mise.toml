@@ -26,12 +26,12 @@ run = "uv run pytest tests/unit --log-cli-level=INFO --cov --cov-append --cov-re
 description = "Run cloud end-to-end tests (starts the Databricks warehouse)"
 depends = ["databricks-start"]
 raw_args = true
-run = "uv run pytest tests/e2e --log-cli-level=INFO --cov --cov-append --cov-report=xml --junitxml=test-results-e2e.xml -v -s"
+run = 'op run --environment "$OP_ENVIRONMENT_ID" -- uv run pytest tests/e2e --log-cli-level=INFO --cov --cov-append --cov-report=xml --junitxml=test-results-e2e.xml -v -s'
 
 [tasks.test-live]
 description = "Run opt-in live API integration tests (uses source API credentials)"
 raw_args = true
-run = "env RUN_LIVE_API_TESTS=1 uv run pytest tests/integration --log-cli-level=INFO --cov --cov-append --cov-report=xml --junitxml=test-results-live.xml -v -s -m live"
+run = 'op run --environment "$OP_ENVIRONMENT_ID" -- env RUN_LIVE_API_TESTS=1 uv run pytest tests/integration -m live -v -s'
 
 [tasks.test-all]
 description = "Run offline unit tests followed by cloud e2e tests"
@@ -44,7 +44,7 @@ run = [
 description = "Run a dlt pipeline by source name (notion, hubspot, google_health)"
 depends = ["databricks-start"]
 raw_args = true
-run = "uv run python -m pipelines.run_pipeline"
+run = 'op run --environment "$OP_ENVIRONMENT_ID" -- uv run python -m pipelines.run_pipeline'
 
 [tasks.pipeline-all]
 description = "Run all dlt pipelines"
@@ -56,10 +56,10 @@ run = [
 
 [tasks.databricks-start]
 description = "Start the Databricks SQL warehouse and wait until healthy"
-run = "uv run python scripts/databricks_warehouse.py"
+run = 'op run --environment "$OP_ENVIRONMENT_ID" -- uv run python scripts/databricks_warehouse.py'
 
 [tasks.dbt]
-description = "Run dbt from the project with profile and profile paths configured"
+description = "Run dbt from the project with profile and project paths configured"
 dir = "dbt"
 raw_args = true
 run = "uv run dbt"
@@ -103,6 +103,18 @@ run = "uv run dbt compile --project-dir dbt --profiles-dir dbt --target mock --w
 
 [tasks.dbt-bouncer]
 description = "Run dbt-bouncer governance checks"
+run = "uv run dbt-bouncer --config-file dbt/dbt-bouncer.yml"
+
+[tasks.lint]
+description = "Run repository prek checks"
+run = "uv run prek run -c prek.yml --all-files"
+
+[tasks.coverage]
+description = "Show Python coverage and generate the HTML report"
+run = [
+  "uv run coverage report --show-missing",
+  "uv run coverage html",
+]
 
 [tasks.docs]
 description = "Build dbt and Sphinx documentation"
@@ -112,4 +124,21 @@ run = [
   "uv run sphinx-build -b html docs/source docs/_build/html",
   "rm -rf docs/_build/html/dbt",
   "mkdir -p docs/_build/html/dbt",
+  "cp -r dbt/target/index.html dbt/target/assets dbt/target/info_schema docs/_build/html/dbt/",
 ]
+
+[tasks.clean]
+description = "Remove generated local test, build, and documentation artifacts"
+run = [
+  "find . -type f -name '*.pyc' -delete",
+  "find . -type d -name __pycache__ -prune -exec rm -rf {} +",
+  "find . -type d -name '*.egg-info' -prune -exec rm -rf {} +",
+  "find . -type f -name '*.pyo' -delete",
+  "find . -type f -name '.DS_Store' -delete",
+  "rm -rf .pytest_cache .coverage.* htmlcov build dist docs/_build",
+  "rm -f test-results-*.xml",
+]
+
+[tasks.dlt-clean]
+description = "Remove local dlt state and DuckDB files"
+run = "rm -rf ~/.dlt *.duckdb"

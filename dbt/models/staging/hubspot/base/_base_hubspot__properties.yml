@@ -61,3 +61,9 @@ models:
         data_type: bigint
         data_tests:
           - not_null
+      - name: updated_at
+        description: The timestamp when the source HubSpot engagement was last updated.
+        data_type: timestamp
+      - name: _dlt_load_id
+        description: The dlt load identifier for the latest source association row.
+        data_type: string

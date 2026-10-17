@@ -10,6 +10,7 @@ repos:
     hooks:
       - id: name-tests-test
         args: [--pytest-test-first]
+        exclude: ^tests/(\w+/)*(cleanup|fixture_router)\.py$
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.9.10
     hooks:

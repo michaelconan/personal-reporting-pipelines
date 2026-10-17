@@ -7,7 +7,8 @@ This page documents seed usage and important dbt macros in the project.
 Seeds provide deterministic inputs for local development and testing.
 
 - Location: `dbt/seeds/` and `dbt/seeds/mock_sources/`
-- Naming: mock source seeds must follow `{source}__{table}.csv` to align with `make_source` behavior.
+- Naming: mock fixture filenames must match identifiers in the dbt source YAML so
+  `source()` calls resolve to the correct CSV fixture.
 
 Key seed files:
 
@@ -16,7 +17,7 @@ Key seed files:
 
 Adding a new mock source record:
 1. Create `{source}__{table}.csv` in `dbt/seeds/mock_sources/` with headers matching the raw JSON payload shape
-2. Run `make dbt-run target=dev select=stg_{source}__{table}` to validate
+2. Run `mise run dbt -- run --target mock --select stg_{source}__{table}` to validate
 
 ## Macros
 

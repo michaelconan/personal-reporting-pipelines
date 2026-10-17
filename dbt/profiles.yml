@@ -1,14 +1,14 @@
 ---
 anchors:
-  # Databricks Unity Catalog configuration (primary target) - OAuth with service principal
+  # Databricks Unity Catalog configuration for test/prod - OAuth with service principal
   - &databricks_config
     type: databricks
-    host: "{{ env_var('DATABRICKS_HOST') }}"
-    http_path: "{{ env_var('DATABRICKS_HTTP_PATH') }}"
+    host: "{{ env_var('DESTINATION__DATABRICKS__CREDENTIALS__SERVER_HOSTNAME') }}"
+    http_path: "{{ env_var('DESTINATION__DATABRICKS__CREDENTIALS__HTTP_PATH') }}"
     client_id: "{{ env_var('DATABRICKS_CLIENT_ID') }}"
     client_secret: "{{ env_var('DATABRICKS_CLIENT_SECRET') }}"
     auth_type: oauth
-    catalog: "{{ env_var('DATABRICKS_CATALOG', 'reporting') }}"
+    catalog: "{{ env_var('DESTINATION__DATABRICKS__CREDENTIALS__CATALOG', 'workspace') }}"
     schema: "{{ env_var('DBT_SCHEMA', 'reporting') }}"
     threads: 4
   # BigQuery configuration retained for rollback path
@@ -29,8 +29,14 @@ personal:
         TimeZone: UTC
     # Primary targets - Databricks Unity Catalog
     dev:
-      <<: *databricks_config
+      # Use the same token-based connection settings as the dlt destination.
+      type: databricks
+      host: "{{ env_var('DESTINATION__DATABRICKS__CREDENTIALS__SERVER_HOSTNAME') }}"
+      http_path: "{{ env_var('DESTINATION__DATABRICKS__CREDENTIALS__HTTP_PATH') }}"
+      token: "{{ env_var('DESTINATION__DATABRICKS__CREDENTIALS__ACCESS_TOKEN') }}"
+      catalog: "{{ env_var('DESTINATION__DATABRICKS__CREDENTIALS__CATALOG') }}"
       schema: "{{ env_var('DBT_SCHEMA', 'reporting') }}_dev"
+      threads: 4
     test:
       <<: *databricks_config
       schema: "{{ env_var('DBT_SCHEMA', 'reporting') }}_test"

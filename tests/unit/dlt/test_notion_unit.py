@@ -11,7 +11,12 @@ from pytest import MonkeyPatch
 
 # local imports
 from pipelines.sources.notion import notion_source
-from tests.unit.dlt.conftest import sample_resource, sample_response
+from tests.unit.dlt.conftest import (
+    incremental_last_value,
+    sample_data,
+    sample_resource,
+    sample_response,
+)
 
 pytestmark = pytest.mark.local
 
@@ -22,36 +27,27 @@ def mock_notion_apis(monkeypatch: MonkeyPatch, mock_responses) -> Callable:
 
     # Mock the API key to prevent credential errors
     monkeypatch.setenv("SOURCES__NOTION__API_KEY", "dummy_api_key")
+    initial_filters: dict[str, str] = {}
 
     def cursor_callback(request):
         """Handle cursor-based pagination for Notion data source queries."""
         body = json.loads(request.body)
         start_cursor = body.get("start_cursor")
-        after_date = body["filter"]["last_edited_time"]["after"]
-
-        if "2020-01-01" not in after_date:
-            # Subsequent run page
-            return sample_response("notion__data_source_rows-run2.json")
-        else:
-            if not start_cursor:
-                # First page
-                return sample_response("notion__data_source_rows-run1_page1.json")
-            elif start_cursor:
-                # Second page
-                return sample_response("notion__data_source_rows-run1_page2.json")
-        # No more data
-        return (
-            200,
-            {},
-            json.dumps(
-                {
-                    "object": "list",
-                    "results": [],
-                    "next_cursor": None,
-                    "has_more": False,
-                },
-            ),
+        filters = body["filter"].get("and", [body["filter"]])
+        after_date = next(
+            item["last_edited_time"]["after"]
+            for item in filters
+            if "after" in item.get("last_edited_time", {})
         )
+        initial_after = initial_filters.setdefault("rows", after_date)
+
+        if start_cursor:
+            page1 = json.loads(sample_response("notion__data_source_rows-run1_page1.json")[2])
+            assert start_cursor == page1["next_cursor"]
+            return sample_response("notion__data_source_rows-run1_page2.json")
+        if after_date != initial_after:
+            return sample_response("notion__data_source_rows-run2.json")
+        return sample_response("notion__data_source_rows-run1_page1.json")
 
     def data_sources_callback(request):
         """Handle data source search requests (single page)."""
@@ -214,6 +210,15 @@ def test_notion_pipeline_refresh(mock_notion_apis, duckdb_pipeline, increment: b
     assert info.first_run is True
     assert info.has_failed_jobs is False
     assert len(info.loads_ids) == 1
+    expected_cursor = max(
+        item["last_edited_time"]
+        for page in ("run1_page1", "run1_page2")
+        for item in sample_data(f"notion__data_source_rows-{page}.json")["results"]
+    )
+    assert (
+        incremental_last_value(duckdb_pipeline, "notion__data_source_rows", "last_edited_time")
+        == expected_cursor
+    )
 
     # Check the loaded data
     dataset = duckdb_pipeline.dataset_name

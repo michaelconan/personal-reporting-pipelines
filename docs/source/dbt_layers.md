@@ -35,7 +35,8 @@ The convention applies to staging, core, intermediate, and marts. Union models a
 Models call `{{ source(source_name, relation_name) }}` directly; there is no `make_source` macro:
 
 - In mock (DuckDB) each source reads its test fixture via `config.external_location: dbt/test_fixtures/{source}/{identifier}.csv`.
-- In dev/test/prod (BigQuery) sources resolve to the raw schema.
+- In dev/test/prod (Databricks Unity Catalog) sources resolve to the raw schema
+  in catalog `workspace`.
 
 Consequence: fixture filenames under `dbt/test_fixtures/{source}/` must match the source identifiers in `_*sources.yml`.
 
@@ -68,13 +69,16 @@ Useful dbt vars defined for transforms:
 
 ## Running locally
 
-- To build dev target (DuckDB + seeds):
+- To build the local mock target (DuckDB + fixtures):
 
 ```bash
-make dbt-build target=dev
+mise run dbt-build-mock
 # or run a single model
-make dbt-run target=dev select="stg_google_health__sleep"
+mise run dbt -- run --target mock --select stg_google_health__sleep
 ```
+
+To build against Databricks dev, run `mise run dbt-build-dev`; this starts and
+waits for the SQL warehouse before dbt connects.
 
 - Generate docs:
 
@@ -85,5 +89,6 @@ uv run dbt docs serve --project-dir dbt --profiles-dir dbt
 
 ## Tests
 
-- Unit/integration SQL tests live in `dbt/tests/` and are executed during CI and in `make dbt-build`.
+- Unit/integration SQL tests live in `dbt/tests/` and are executed during CI and
+  in `mise run dbt-build-mock` / `mise run dbt-build-dev`.
 - Use `uv run dbt lint --project-dir dbt --profiles-dir dbt --target mock` for SQL style checks when working against the dev target.

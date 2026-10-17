@@ -26,7 +26,6 @@ logs/
 
 # Sphinx
 docs/_build/
-docs/source/dbt.html
 
 .env
 .env.databricks

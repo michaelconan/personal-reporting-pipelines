@@ -9,6 +9,8 @@ on:
       - 'tests/**'
       - 'uv.lock'
       - 'pyproject.toml'
+      - 'mise.toml'
+      - 'scripts/databricks_warehouse.py'
 
 permissions:
   contents: read
@@ -17,68 +19,38 @@ jobs:
   test-pipelines:
     timeout-minutes: 20
     runs-on: ubuntu-latest
+    env:
+      MISE_ENABLE_TOOLS: uv,python,github:databricks/cli
     steps:
       - name: checkout code
         uses: actions/checkout@v5
 
-      - name: set up uv
-        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d
+      - name: set up mise and project tools
+        uses: jdx/mise-action@v4
+
+      - name: install project dependencies
+        run: mise run setup
+
+      - name: install 1Password CLI beta
+        if: github.actor != 'dependabot[bot]'
+        uses: 1password/install-cli-action@v4
         with:
-          version: 'latest'
-          enable-cache: true
-
-      - name: set up python 3.13
-        uses: actions/setup-python@v6
-        with:
-          python-version: '3.13'
-
-      - name: install uv and dependencies
-        run: |
-          make install
-
-      - name: set environment variables
-        if: github.actor != 'dependabot[bot]'
-        run: |
-          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/sa_key.json" >> $GITHUB_ENV
-
-      - name: write keyfile
-        if: github.actor != 'dependabot[bot]'
-        run: |
-          cat << 'EOF' > $GOOGLE_APPLICATION_CREDENTIALS
-          ${{ secrets.GCP_SVC_KEY }}
-          EOF
-
-      - name: install 1password cli
-        if: github.actor != 'dependabot[bot]'
-        uses: 1password/install-cli-action@v3
-
-      - name: inject secrets using service account
-        if: github.actor != 'dependabot[bot]'
-        env:
-          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-        run: |
-          make inject
+          version: latest-beta
 
       - name: run local tests
         id: run_local_tests
         env:
           RUNTIME__LOG_LEVEL: "INFO"
-        run: |
-          make test-local
+        run: mise run test
 
       - name: run e2e tests
         id: run_e2e_tests
         if: github.actor != 'dependabot[bot]'
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          OP_ENVIRONMENT_ID: ${{ vars.OP_ENVIRONMENT_ID }}
           RUNTIME__LOG_LEVEL: "INFO"
-        run: |
-          make test-e2e
-
-      - name: remove keyfile
-        if: always()
-        run: |
-          rm -f $GOOGLE_APPLICATION_CREDENTIALS
+        run: mise run test-e2e
 
       - name: check if tests ran
         id: check_tests
