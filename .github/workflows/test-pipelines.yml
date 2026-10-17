@@ -31,17 +31,26 @@ jobs:
       - name: install project dependencies
         run: mise run setup
 
-      - name: install 1Password CLI beta
+      - name: install 1Password CLI
         if: github.actor != 'dependabot[bot]'
         uses: 1password/install-cli-action@v4
         with:
-          version: latest-beta
+          version: latest
 
       - name: run local tests
         id: run_local_tests
         env:
-          RUNTIME__LOG_LEVEL: "INFO"
+          RUNTIME__LOG_LEVEL: 'INFO'
         run: mise run test
+
+      - name: run integration tests
+        id: run_int_tests
+        if: github.actor != 'dependabot[bot]'
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          OP_ENVIRONMENT_ID: ${{ vars.OP_ENVIRONMENT_ID }}
+          RUNTIME__LOG_LEVEL: 'INFO'
+        run: op run --environment "$OP_ENVIRONMENT_ID" -- mise run test-live
 
       - name: run e2e tests
         id: run_e2e_tests
@@ -49,14 +58,14 @@ jobs:
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
           OP_ENVIRONMENT_ID: ${{ vars.OP_ENVIRONMENT_ID }}
-          RUNTIME__LOG_LEVEL: "INFO"
-        run: mise run test-e2e
+          RUNTIME__LOG_LEVEL: 'INFO'
+        run: op run --environment "$OP_ENVIRONMENT_ID" -- mise run test-e2e
 
       - name: check if tests ran
         id: check_tests
         if: always()
         run: |
-          if [ "${{ steps.run_local_tests.outcome }}" != "skipped" ] || [ "${{ steps.run_e2e_tests.outcome }}" != "skipped" ]; then
+          if [ "${{ steps.run_local_tests.outcome }}" != "skipped" ] || [ "${{ steps.run_int_tests.outcome }}" != "skipped" ] || [ "${{ steps.run_e2e_tests.outcome }}" != "skipped" ]; then
             echo "tests_ran=true" >> $GITHUB_OUTPUT
           else
             echo "tests_ran=false" >> $GITHUB_OUTPUT

@@ -38,15 +38,15 @@ jobs:
       - name: run local build (mock target with CSV fixtures)
         run: mise run dbt-build-mock
 
-      - name: install 1Password CLI beta
+      - name: install 1Password CLI
         if: github.actor != 'dependabot[bot]'
         uses: 1password/install-cli-action@v4
         with:
-          version: latest-beta
+          version: latest
 
       - name: run Databricks dev build
         if: github.actor != 'dependabot[bot]'
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
           OP_ENVIRONMENT_ID: ${{ vars.OP_ENVIRONMENT_ID }}
-        run: mise run dbt-build-dev
+        run: op run --environment "$OP_ENVIRONMENT_ID" -- mise run dbt-build-dev
