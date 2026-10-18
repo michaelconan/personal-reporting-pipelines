@@ -43,7 +43,9 @@ def repair_google_health(resource: str) -> None:
                 name = f"mock-google-health-steps-{page_index + 1}-{record_index}"
             record["name"] = name
             seen.add(name)
-    for page, suffix in zip(pages, ("-run1_page1.json", "-run1_page2.json", "-run2.json")):
+    for page, suffix in zip(
+        pages, ("-run1_page1.json", "-run1_page2.json", "-run2.json"), strict=True
+    ):
         write(prefix.with_name(prefix.name + suffix), page)
 
 

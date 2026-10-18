@@ -40,6 +40,7 @@ class PipelineConfig:
     loader_file_format: str | None = "parquet"
     progress: str | None = "log"
     token_getter: Callable | None = None
+    supports_direct_token: bool = False
     source_kwargs: dict | None = None
 
 
@@ -67,6 +68,7 @@ PIPELINE_CONFIG: dict[str, PipelineConfig] = {
             "sources.google_health.refresh_token",
         ],
         token_getter=get_google_health_token,
+        supports_direct_token=True,
     ),
 }
 
@@ -96,13 +98,12 @@ def run_refresh(
     loader_file_format: str | None = None,
     progress: str | None = None,
     token_getter: Callable | None = None,
+    supports_direct_token: bool = False,
     source_kwargs: dict | None = None,
     source_modifier: Callable | None = None,
 ):
     direct_google_health_token = (
-        dlt.secrets.get("sources.google_health.access_token")
-        if token_getter is get_google_health_token
-        else None
+        dlt.secrets.get("sources.google_health.access_token") if supports_direct_token else None
     )
 
     if required_secret_keys and not direct_google_health_token:
@@ -182,6 +183,7 @@ def refresh_pipeline(
         loader_file_format=config.loader_file_format,
         progress=config.progress,
         token_getter=config.token_getter,
+        supports_direct_token=config.supports_direct_token,
         source_kwargs=config.source_kwargs,
         source_modifier=source_modifier,
     )

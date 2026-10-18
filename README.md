@@ -138,9 +138,8 @@ of concerns:
    mise run setup
    ```
 
-2. **Configure credentialed tasks**: install the 1Password CLI beta and set
-   `OP_ENVIRONMENT_ID` plus `OP_SERVICE_ACCOUNT_TOKEN` in your shell or a local
-   `.env` file. The `mise.toml` `[env]` configuration loads optional `.env`.
+2. **Configure credentialed tasks**: install the 1Password CLI beta and export
+   `OP_ENVIRONMENT_ID` plus `OP_SERVICE_ACCOUNT_TOKEN` in your shell.
    `.env.databricks` is deprecated and no longer loaded; provide warehouse and
    source credentials through the selected 1Password Environment, or use `sbx`
    secrets inside Docker AI Sandbox. Credentialed tasks run inside

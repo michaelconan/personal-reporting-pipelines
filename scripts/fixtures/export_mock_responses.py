@@ -49,12 +49,9 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(PROJECT_ROOT))
 
 try:
-    from scripts.fixtures.scrub_data import resolve_project_root, scrub_api_response
+    from scripts.fixtures.scrub_data import scrub_api_response
 except ImportError:  # direct script execution: expose the repo root, then retry
-    sys.path.insert(0, str(PROJECT_ROOT))
-    from scripts.fixtures.scrub_data import resolve_project_root, scrub_api_response
-
-PROJECT_ROOT = resolve_project_root(Path(__file__).resolve().parent)
+    from scripts.fixtures.scrub_data import scrub_api_response
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
@@ -718,7 +715,6 @@ def run_source_export(
     session: requests.Session,
     sources_map: dict[str, dict[str, Any]],
     source_key: str,
-    dry_run: bool,
 ) -> None:
     """Run one registry-configured source extraction and capture API responses.
 
@@ -759,25 +755,21 @@ def run_source_export(
         logger.debug("Unable to enumerate source resources", exc_info=True)
 
 
-def run_hubspot_export(
-    session: requests.Session, sources_map: dict[str, dict[str, Any]], dry_run: bool
-) -> None:
+def run_hubspot_export(session: requests.Session, sources_map: dict[str, dict[str, Any]]) -> None:
     """Run HubSpot source extraction and process response bodies."""
-    run_source_export(session, sources_map, "hubspot", dry_run)
+    run_source_export(session, sources_map, "hubspot")
 
 
-def run_notion_export(
-    session: requests.Session, sources_map: dict[str, dict[str, Any]], dry_run: bool
-) -> None:
+def run_notion_export(session: requests.Session, sources_map: dict[str, dict[str, Any]]) -> None:
     """Run Notion source extraction and process response bodies."""
-    run_source_export(session, sources_map, "notion", dry_run)
+    run_source_export(session, sources_map, "notion")
 
 
 def run_google_health_export(
-    session: requests.Session, sources_map: dict[str, dict[str, Any]], dry_run: bool
+    session: requests.Session, sources_map: dict[str, dict[str, Any]]
 ) -> None:
     """Run Google Health source extraction and process response bodies."""
-    run_source_export(session, sources_map, "google_health", dry_run)
+    run_source_export(session, sources_map, "google_health")
 
 
 def save_captured_responses(
@@ -855,7 +847,7 @@ def main(argv: list[str] | None = None) -> None:
 
     for source_key in SOURCE_REGISTRY:
         if args.source in (source_key, "all"):
-            run_source_export(session, sources_map, source_key, args.dry_run)
+            run_source_export(session, sources_map, source_key)
 
     save_captured_responses(session.captured_responses, sources_map, args.dry_run)
 

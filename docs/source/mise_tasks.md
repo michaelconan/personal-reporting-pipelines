@@ -9,10 +9,9 @@ mise run setup
 ```
 
 The mise `[env]` configuration sets the project/profile paths and common runtime
-defaults. It loads an optional `.env` file with output redaction; keep it out of
-Git. `.env.databricks` is deprecated and is no longer loaded. Supply credentialed
-values through the selected 1Password Environment, or configure `sbx` secrets
-inside Docker AI Sandbox.
+defaults. `.env.databricks` is deprecated and is no longer loaded. Supply
+credentialed values through the selected 1Password Environment, or configure
+`sbx` secrets inside Docker AI Sandbox.
 
 ## Common tasks
 

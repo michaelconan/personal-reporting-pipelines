@@ -17,8 +17,18 @@ START_TIMEOUT_SECONDS = 900
 def run(
     command: Sequence[str], *, env: dict[str, str] | None = None
 ) -> subprocess.CompletedProcess[str]:
-    """Run a command and inherit its output."""
-    return subprocess.run(command, env=env, check=True, text=True)  # nosec B603
+    """Run a command, capturing output for error reporting."""
+    try:
+        return subprocess.run(  # nosec B603
+            command,
+            env=env,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except subprocess.CalledProcessError as exc:
+        detail = exc.stdout or exc.stderr or str(exc)
+        raise RuntimeError(f"Databricks CLI command failed: {detail.strip()}") from exc
 
 
 def databricks_cli_environment() -> tuple[dict[str, str], str]:
@@ -90,12 +100,21 @@ def warehouse_status(cli_env: dict[str, str], warehouse_id: str) -> dict[str, An
 def start_databricks_warehouse() -> None:
     """Start a stopped SQL warehouse and wait until it is running and healthy."""
     cli_env, warehouse_id = databricks_cli_environment()
-    status = warehouse_status(cli_env, warehouse_id)
-    state = status.get("state")
 
-    if state == "RUNNING" and (status.get("health") or {}).get("status") in (None, "HEALTHY"):
-        print(f"Databricks SQL warehouse {warehouse_id} is already running and healthy.")
-        return
+    try:
+        status = warehouse_status(cli_env, warehouse_id)
+        state = status.get("state")
+        health = status.get("health") or {}
+        health_status = health.get("status")
+
+        if state == "RUNNING" and health_status in (None, "HEALTHY"):
+            print(f"Databricks SQL warehouse {warehouse_id} is already running and healthy.")
+            return
+        if state == "RUNNING" and health_status in ("DEGRADED", "FAILED"):
+            detail = health.get("summary") or health.get("details") or health_status
+            raise RuntimeError(f"Databricks SQL warehouse is {health_status}: {detail}")
+    except subprocess.CalledProcessError:
+        state = None
 
     if state != "STARTING":
         print(f"Starting Databricks SQL warehouse {warehouse_id} (state: {state or 'unknown'}).")

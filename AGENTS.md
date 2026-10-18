@@ -13,7 +13,7 @@ dbt Staging (views) → dbt Intermediate → dbt Marts (tables)
 
 ## Target Configuration
 **Primary target**: Databricks Unity Catalog (`dev`, `test`, `prod` targets)
-**Rollback targets**: BigQuery (`dev-bigquery`, `test-bigquery`, `prod-bigquery` targets) — retained for easy rollback path
+**Rollback targets**: BigQuery (`dev-bq`, `test-bq`, `prod-bq` targets) — retained for easy rollback path
 **Local development**: DuckDB (`mock` target) with CSV test fixtures
 
 Default target is `dev` (Databricks). Use `DBT_TARGET` env var to override.
@@ -36,13 +36,13 @@ Current agentic workflow: `weekly-doc-updater` — runs every Monday, opens a PR
 - `pipelines/__init__.py` — Shared constants: BASE_DATE, RAW_SCHEMA, DBT_SCHEMA
 - `dbt/seeds/group_connect_cadence.csv` — Target connection cadence per group tier
 - `dbt/dbt_project.yml` — dbt config (profile, materializations, vars)
-- `dbt/profiles.yml` — dev/test/prod=Databricks, dev-bigquery/test-bigquery/prod-bigquery=BigQuery (rollback), mock=DuckDB
+- `dbt/profiles.yml` — dev/test/prod=Databricks, dev-bq/test-bq/prod-bq=BigQuery (rollback), mock=DuckDB
 
 ## Source Resolution (no make_source macro)
 There is no `make_source` macro. Models call `{{ source(source_name, relation_name) }}` directly for every target:
 - **mock (DuckDB)**: each source reads its test fixture via `config.external_location: dbt/test_fixtures/{source}/{identifier}.csv`.
 - **dev/test/prod (Databricks)**: sources resolve to the raw schema in Unity Catalog.
-- **dev-bigquery/test-bigquery/prod-bigquery (BigQuery)**: sources resolve to the raw schema (rollback path).
+- **dev-bq/test-bq/prod-bq (BigQuery)**: sources resolve to the raw schema (rollback path).
 
 **Consequence**: fixtures in `dbt/test_fixtures/{source}/` MUST be named after the source identifiers in `_*sources.yml`.
 
@@ -216,7 +216,7 @@ they are essential for ANY work in this project
 ## Secret Management
 Credentialed mise tasks run as `op run --environment "$OP_ENVIRONMENT_ID" -- ...`; the 1Password Environment exports the dlt source and Databricks environment variables. GitHub Actions uses `OP_SERVICE_ACCOUNT_TOKEN` plus the repository variable `OP_ENVIRONMENT_ID`. The 1Password CLI beta is required until Environment support is generally available.
 
-- **Local**: set `OP_ENVIRONMENT_ID` and `OP_SERVICE_ACCOUNT_TOKEN`, then use `mise run pipeline`, `mise run test-e2e`, or Databricks dbt tasks. `mise.toml` loads optional `.env` through `[env]` with redaction enabled. `.env.databricks` is deprecated; credentialed values come from the selected 1Password Environment or `sbx` secrets.
+- **Local**: export `OP_ENVIRONMENT_ID` and `OP_SERVICE_ACCOUNT_TOKEN`, then use `mise run pipeline`, `mise run test-e2e`, or Databricks dbt tasks. `.env.databricks` is deprecated; credentialed values come from the selected 1Password Environment or `sbx` secrets.
 - **Warehouse preflight**: `scripts/databricks_warehouse.py` maps dlt's `DESTINATION__DATABRICKS__CREDENTIALS__*` values to native Databricks CLI authentication variables and starts the configured SQL warehouse before e2e, pipeline, and Databricks dbt runs. For dbt `test`/`prod`, the profiles read `DATABRICKS_CLIENT_ID` and `DATABRICKS_CLIENT_SECRET` directly; `dev` uses the dlt access token.
 
 ## Agentic Coding (Docker AI Sandbox preferred; agent devcontainer alternative)

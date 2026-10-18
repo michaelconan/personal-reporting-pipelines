@@ -17,12 +17,14 @@ env:
   PYTHONUNBUFFERED: '1'
   UV_PROJECT_ENVIRONMENT: /tmp/personal-reporting-venv
   SECRET_STORE: 1password
-  OP_SERVICE_ACCOUNT_TOKEN: dummy
+  # OP_SERVICE_ACCOUNT_TOKEN must be set in the host environment or 1Password item.
+  # sbx injects the real value at runtime; uncomment the line below only for local testing.
+  # OP_SERVICE_ACCOUNT_TOKEN: dummy
   DESTINATION__DATABRICKS__CREDENTIALS__SERVER_HOSTNAME:
     ${{ env.args.databricks_host }}
   DESTINATION__DATABRICKS__CREDENTIALS__HTTP_PATH:
     ${{ env.args.databricks_path }}
-  DESTINATION__DATABRICKS__CREDENTIALS__CATALOG: personal
+  DESTINATION__DATABRICKS__CREDENTIALS__CATALOG: workspace
 
 lifecycle:
   postCreate:

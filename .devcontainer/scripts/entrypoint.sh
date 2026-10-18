@@ -19,12 +19,14 @@ if [[ -f "$AGENT_ENV_FILE" ]]; then
 
     # VS Code starts interactive shells separately from the entrypoint process.
     # Source the mounted file there as well so those shells inherit the variables.
-    AGENT_ENV_SOURCE="set -a; source $AGENT_ENV_FILE; set +a"
+    AGENT_ENV_MARKER="# >>> agent env >>>"
     if [[ -f "$HOME/.bashrc" ]]; then
-        grep -Fq "$AGENT_ENV_SOURCE" "$HOME/.bashrc" || \
-            printf '\n%s\n' "$AGENT_ENV_SOURCE" >> "$HOME/.bashrc"
+        grep -Fq "$AGENT_ENV_MARKER" "$HOME/.bashrc" || \
+            printf '\n%s\nset -a; source %s; set +a\n# <<< agent env <<<\n' \
+                "$AGENT_ENV_MARKER" "$AGENT_ENV_FILE" >> "$HOME/.bashrc"
     else
-        printf '%s\n' "$AGENT_ENV_SOURCE" > "$HOME/.bashrc"
+        printf '%s\nset -a; source %s; set +a\n# <<< agent env <<<\n' \
+            "$AGENT_ENV_MARKER" "$AGENT_ENV_FILE" > "$HOME/.bashrc"
     fi
 fi
 

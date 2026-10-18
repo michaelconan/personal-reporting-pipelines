@@ -44,6 +44,82 @@ def test_google_health_refreshes_oauth_token_when_direct_token_is_also_set(
     credentials.refresh.assert_called_once()
 
 
+def test_google_health_token_raises_when_no_credentials_configured(monkeypatch: MonkeyPatch):
+    monkeypatch.delenv("SOURCES__GOOGLE_HEALTH__ACCESS_TOKEN", raising=False)
+    monkeypatch.delenv("SOURCES__GOOGLE_HEALTH__REFRESH_TOKEN", raising=False)
+    monkeypatch.delenv("SOURCES__GOOGLE_HEALTH__CLIENT_ID", raising=False)
+    monkeypatch.delenv("SOURCES__GOOGLE_HEALTH__CLIENT_SECRET", raising=False)
+
+    with pytest.raises(KeyError, match="sources.google_health.refresh_token"):
+        get_google_health_token()
+
+
+def test_google_health_token_raises_when_client_id_missing(monkeypatch: MonkeyPatch):
+    monkeypatch.setenv("SOURCES__GOOGLE_HEALTH__REFRESH_TOKEN", "refresh-token")
+    monkeypatch.delenv("SOURCES__GOOGLE_HEALTH__CLIENT_ID", raising=False)
+    monkeypatch.delenv("SOURCES__GOOGLE_HEALTH__CLIENT_SECRET", raising=False)
+    monkeypatch.delenv("SOURCES__GOOGLE_HEALTH__ACCESS_TOKEN", raising=False)
+
+    with pytest.raises(KeyError, match="sources.google_health.client_id"):
+        get_google_health_token()
+
+
+def test_google_health_token_raises_when_client_secret_missing(monkeypatch: MonkeyPatch):
+    monkeypatch.setenv("SOURCES__GOOGLE_HEALTH__REFRESH_TOKEN", "refresh-token")
+    monkeypatch.setenv("SOURCES__GOOGLE_HEALTH__CLIENT_ID", "client-id")
+    monkeypatch.delenv("SOURCES__GOOGLE_HEALTH__CLIENT_SECRET", raising=False)
+    monkeypatch.delenv("SOURCES__GOOGLE_HEALTH__ACCESS_TOKEN", raising=False)
+
+    with pytest.raises(KeyError, match="sources.google_health.client_secret"):
+        get_google_health_token()
+
+
+def test_google_health_token_updates_refresh_token_in_secret_manager(
+    monkeypatch: MonkeyPatch,
+):
+    monkeypatch.setenv("SOURCES__GOOGLE_HEALTH__REFRESH_TOKEN", "old-refresh-token")
+    monkeypatch.setenv("SOURCES__GOOGLE_HEALTH__CLIENT_ID", "client-id")
+    monkeypatch.setenv("SOURCES__GOOGLE_HEALTH__CLIENT_SECRET", "client-secret")
+    monkeypatch.setattr("pipelines.sources.google_health.SECRET_STORE", "google")
+    credentials = MagicMock(token="new-access-token", refresh_token="new-refresh-token")
+    monkeypatch.setattr("pipelines.sources.google_health.Credentials", lambda **_: credentials)
+    monkeypatch.setattr("pipelines.sources.google_health.Request", lambda: object())
+
+    mock_client = MagicMock()
+    monkeypatch.setattr(
+        "pipelines.sources.google_health.secretmanager_v1.SecretManagerServiceClient",
+        lambda: mock_client,
+    )
+    monkeypatch.setattr(
+        "pipelines.sources.google_health.google.auth.default", lambda: (None, "test-project")
+    )
+
+    assert get_google_health_token() == "new-access-token"
+    mock_client.add_secret_version.assert_called_once()
+
+
+def test_google_health_token_updates_refresh_token_in_1password(
+    monkeypatch: MonkeyPatch,
+):
+    monkeypatch.setenv("SOURCES__GOOGLE_HEALTH__REFRESH_TOKEN", "old-refresh-token")
+    monkeypatch.setenv("SOURCES__GOOGLE_HEALTH__CLIENT_ID", "client-id")
+    monkeypatch.setenv("SOURCES__GOOGLE_HEALTH__CLIENT_SECRET", "client-secret")
+    monkeypatch.setattr("pipelines.sources.google_health.SECRET_STORE", "1password")
+    credentials = MagicMock(token="new-access-token", refresh_token="new-refresh-token")
+    monkeypatch.setattr("pipelines.sources.google_health.Credentials", lambda **_: credentials)
+    monkeypatch.setattr("pipelines.sources.google_health.Request", lambda: object())
+
+    mock_update = MagicMock()
+    monkeypatch.setattr("pipelines.common.utils.update_onepassword_item", mock_update)
+
+    assert get_google_health_token() == "new-access-token"
+    mock_update.assert_called_once_with(
+        item_name="google-health",
+        vault="reporting",
+        field_updates={"refresh_token": "new-refresh-token"},
+    )
+
+
 @pytest.fixture
 def mock_google_health_apis(monkeypatch: MonkeyPatch, mock_responses) -> Callable:
     BASE_URL = "https://health.googleapis.com/v4"
