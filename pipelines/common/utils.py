@@ -41,19 +41,6 @@ def validate_required_secrets(
             f"Expected one of: {sorted(supported_stores)}.",
         )
 
-    if secret_store == "google":
-        credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-        if not credentials_path:
-            raise OSError(
-                "SECRET_STORE is 'google' but GOOGLE_APPLICATION_CREDENTIALS is not set.",
-            )
-    elif secret_store == "1password":
-        op_token = os.getenv("OP_SERVICE_ACCOUNT_TOKEN")
-        if not op_token:
-            raise OSError(
-                "SECRET_STORE is '1password' but OP_SERVICE_ACCOUNT_TOKEN is not set.",
-            )
-
     missing_keys: list[str] = []
     for key in required_secret_keys:
         if not dlt.secrets.get(key):

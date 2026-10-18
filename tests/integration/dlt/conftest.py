@@ -25,9 +25,10 @@ def duckdb_pipeline(
     The pipeline is dropped after each test class.
     """
     pipelines_dir = tmp_path_factory.mktemp("dlt_pipelines")
+    database_path = pipelines_dir / "live_integration_test.duckdb"
     pipeline = dlt.pipeline(
         pipeline_name="live_integration_test",
-        destination="duckdb",
+        destination=dlt.destinations.duckdb(credentials=str(database_path)),
         dataset_name="live_data",
         dev_mode=True,
         pipelines_dir=str(pipelines_dir),

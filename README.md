@@ -16,15 +16,21 @@
 
 [![Run Transformations](https://github.com/michaelconan/personal-reporting-pipelines/actions/workflows/run-transforms.yml/badge.svg)](https://github.com/michaelconan/personal-reporting-pipelines/actions/workflows/run-transforms.yml)
 
-Personal data integration and analytics platform using dlt (ingestion into Databricks) and dbt (transforms on BigQuery), orchestrated with GitHub Actions.
+Personal data integration and analytics platform using dlt (ingestion into
+Databricks Unity Catalog) and dbt (transformations on Databricks), orchestrated
+with GitHub Actions and managed locally with mise.
 
 ## Overview
 
-This repository contains a Docker Development Container for VSCode and the infrastructure and workflows for my personal data platform. It uses Databricks for raw data ingestion and storage and secure credential management (1Password templates / GCP Secret Manager), with automated orchestration through GitHub Actions.
+This repository contains a Docker Development Container for VSCode and the
+infrastructure and workflows for my personal data platform. It uses Databricks
+for raw data ingestion and storage, 1Password Environments for workflow
+credentials, and mise for repeatable local and CI commands.
 
 ## Data Sources
 
-The following data will be ingested from my personal systems into a Databricks warehouse (Unity Catalog) for automation and analysis.
+The following data will be ingested from my personal systems into a Databricks
+warehouse (Unity Catalog) for automation and analysis.
 
 1. Notion
 2. HubSpot
@@ -34,15 +40,21 @@ The following data will be ingested from my personal systems into a Databricks w
 
 ### Data Pipeline Stack
 
-1. **[dlt hub](https://dlthub.com/docs/intro)** - Extract, normalise, and load source data into Databricks raw layer
-2. **[dbt core](https://docs.getdbt.com/)** - Transform raw data into analytics-ready models and views
-3. **[Databricks](https://www.databricks.com/)** - Lakehouse platform for storage and analysis
-4. **[1Password Secrets](https://developer.1password.com/docs/cli/reference/)** - Secure credential management with templates and command line automation
-5. **[GitHub Actions](https://github.com/features/actions)** - Automated orchestration and scheduling of data pipelines
+1. **[dlt hub](https://dlthub.com/docs/intro)** - Extract, normalise, and load
+   source data into Databricks raw layer
+2. **[dbt core](https://docs.getdbt.com/)** - Transform raw data into
+   analytics-ready models and views
+3. **[Databricks](https://www.databricks.com/)** - Lakehouse platform for
+   storage and analysis
+4. **[1Password Environments](https://developer.1password.com/docs/cli/reference/)** -
+   Secure environment variables supplied to commands with the 1Password CLI
+5. **[GitHub Actions](https://github.com/features/actions)** - Automated
+   orchestration and scheduling of data pipelines
 
 ### Project Structure
 
-The project follows modern data engineering best practices with clear separation of concerns:
+The project follows modern data engineering best practices with clear separation
+of concerns:
 
 ```
 ├── pipelines/          # dlt data extraction pipelines
@@ -63,20 +75,23 @@ The project follows modern data engineering best practices with clear separation
 
 ### Naming Conventions
 
-- **dlt pipelines**: `{source}__{entity}` (e.g., `hubspot__contacts`, `google_health__steps`)
-- **dbt models** (except marts): `{layer}_{source}__{entity}` (e.g., `stg_hubspot__contacts`, `contacts`)
-- **dbt marts**: `dim_{entity}_v1` / `fct_{entity}_v1` (e.g., `dim_habit_v1`, `fct_engagement_v1`)
+- **dlt pipelines**: `{source}__{entity}` (e.g., `hubspot__contacts`,
+  `google_health__steps`)
+- **dbt models** (except marts): `{layer}_{source}__{entity}` (e.g.,
+  `stg_hubspot__contacts`, `contacts`)
+- **dbt marts**: `dim_{entity}_v1` / `fct_{entity}_v1` (e.g., `dim_habit_v1`,
+  `fct_engagement_v1`)
 
 ## Setup
 
 ### Prerequisites
 
-1. **Google Cloud Platform Account** with BigQuery and Secret Manager APIs enabled
+1. **mise** for project tools and task commands
 2. **GitHub Account** with repository access
-3. **Python 3.12+** and pip for local development
+3. **1Password CLI beta** and an Environment ID for credentialed tasks
 4. **Docker** (optional, for containerized development)
 
-### GCP Setup
+### Optional GCP / BigQuery rollback setup
 
 1. **Create a GCP Project** and enable required APIs:
    - BigQuery API
@@ -90,6 +105,7 @@ The project follows modern data engineering best practices with clear separation
 3. **Configure Secret Manager**:
    - Configure GCP service account key as default application credentials
    - Store static keys and credentials for each data source in TOML fragments:
+
      ```toml
      [sources.hubspot]
      api_key = "your-key"
@@ -100,149 +116,214 @@ The project follows modern data engineering best practices with clear separation
       [sources.google_health]
       client_id = "your-id"
       client_secret = "your-secret"
-      ```
-    - After authorising the Google Health OAuth client, store refresh token in dedicated secret
-      - `sources-google_health-refresh_token`
+     ```
+
+   - After authorising the Google Health OAuth client, store refresh token in
+     dedicated secret
+     - `sources-google_health-refresh_token`
 
 4. **Create Service Account**:
-   - Service account with BigQuery Admin and Secret Manager Secret Accessor roles
+   - Service account with BigQuery Admin and Secret Manager Secret Accessor
+     roles
    - Download JSON key file for GitHub Actions
 
 ### Local Development Setup
 
 1. **Clone and setup**:
+
    ```bash
    git clone <repository-url>
    cd personal-reporting-pipelines
-   make install
+   mise install
+   mise run setup
    ```
 
-2. **Set environment variables**:
+2. **Configure credentialed tasks**: install the 1Password CLI beta and export
+   `OP_ENVIRONMENT_ID` plus `OP_SERVICE_ACCOUNT_TOKEN` in your shell.
+   `.env.databricks` is deprecated and no longer loaded; provide warehouse and
+   source credentials through the selected 1Password Environment, or use `sbx`
+   secrets inside Docker AI Sandbox. Credentialed tasks run inside
+   `op run --environment`.
+
+3. **Common tasks**:
+
+   ```bash
+   mise run test                                  # offline unit tests
+   mise run test-e2e                              # starts SQL warehouse, then runs cloud tests
+   mise run pipeline -- notion --full             # one dlt source
+   mise run pipeline-all                          # all three dlt sources
+   mise run dbt-build-mock                        # DuckDB fixture build
+   mise run dbt-build-dev                         # starts SQL warehouse, builds Databricks dev
+   mise run docs                                  # dbt + Sphinx documentation
+   ```
+
+   See `docs/source/mise_tasks.md` for the full task list and CI behavior.
+
+4. **Set optional local environment variables**:
    ```bash
    export GCP_PROJECT_ID=your-project-id
    export GOOGLE_APPLICATION_CREDENTIALS=/path/to/service/account/key.json
    export RAW_SCHEMA_NAME=raw_data
    ```
 
-### Agent Container (agentic coding)
+### Agentic coding (Docker AI Sandbox preferred)
 
-`.agentcontainer/` is a hardened, least-privilege sandbox for AI coding agents
-(`opencode`, `claude`, `codex`) — non-root `agent` user with no sudo, read-only
-root filesystem, dropped capabilities, no published ports, ephemeral home.
-It is separate from the full-access human dev container in `.devcontainer/`.
-Full details: `docs/source/agent_container.md`.
+The preferred path for AI coding agents (`opencode`, `claude`, `codex`) is
+**Docker AI Sandbox (`sbx` CLI)** configured by the repository-root
+`sbxenv.yaml`, with a **dedicated GitHub machine user** scoped to this repo.
+The `.devcontainer/agent` is the second supported option. Full details:
+`docs/source/agent_container.md`.
+That guide also explains how to export OpenCode sessions to Google Cloud Storage
+before removing an ephemeral environment and restore them later.
 
-1. **Create secret files** (gitignored, never committed):
-   `.secrets/opencode_api_key`, `.secrets/github_token`,
-   `.secrets/op_service_account_token`.
-2. **Build and start**:
+1. **Machine user** (one-time): create a dedicated GitHub account, add it as a
+   collaborator on this repo only (**Write**, not Admin), and mint a short-lived
+   fine-grained PAT limited to this repo (`Contents: read/write`,
+   `Pull requests: read/write`, `Metadata: read`). Never use a personal token.
+2. **Install and sign in**:
+   `brew trust docker/tap && brew install docker/tap/sbx` (or
+   `winget install -h Docker.sbx` / `sudo apt install docker-sbx`), then
+   `sbx login`.
+3. **Store development credentials**:
+   `sbx secret set github --command 'gh auth token'` (run as the machine user)
+   plus your model key, e.g.
+   `sbx secret set opencode --ref 'op://vault/item/field'`.
+4. **Store service credentials**: use custom secrets and specify dlt environment
+   variable names. For Databricks, use either a service-principal OAuth pair:
+   `DESTINATION__DATABRICKS__CREDENTIALS__CLIENT_ID` and
+   `DESTINATION__DATABRICKS__CREDENTIALS__CLIENT_SECRET`, or a personal access
+   token as `DESTINATION__DATABRICKS__CREDENTIALS__ACCESS_TOKEN`:
+
    ```bash
-   cd .agentcontainer
-   docker compose build
-   GITHUB_NAME="Your Name" GITHUB_EMAIL="you@example.com" docker compose up -d
-   docker compose exec agent bash
+   sbx secret set-custom databricks-client-id --ref 'op://vault/item/client-id' --env DESTINATION__DATABRICKS__CREDENTIALS__CLIENT_ID
+   sbx secret set-custom databricks-client-secret --ref 'op://vault/item/client-secret' --env DESTINATION__DATABRICKS__CREDENTIALS__CLIENT_SECRET
+   # PAT alternative:
+    sbx secret set-custom databricks-token --command 'powershell.exe -NoProfile -Command C:\Tools\Get-DatabricksToken.ps1' --refresh 30m --env DESTINATION__DATABRICKS__CREDENTIALS__ACCESS_TOKEN
    ```
-   (VSCode alternative: reopen the repo with the
-   `.agentcontainer/devcontainer.json` configuration.)
-3. **Use it**: inside the container run `uv sync` (`make install`), then
-   `make inject` when warehouse credentials are needed, then an agent such as
-   `opencode run "..."`. The entrypoint wires Docker secrets into env vars,
-   copies host agent configs (opencode/claude/codex), and configures git
-   identity plus SSH commit signing via the forwarded SSH agent — no keys are
-   stored in the image.
+
+   For dbt `test` and `prod` targets, also provide the CLI/dbt-native
+   `DATABRICKS_CLIENT_ID` and `DATABRICKS_CLIENT_SECRET` variables. The
+    warehouse preflight maps the dlt-style client credentials to Databricks CLI
+    variables; the dbt profiles read the native names directly. Set
+    `OP_ENVIRONMENT_ID` to the 1Password Environment ID used by credentialed
+    mise tasks.
+
+   Source credentials use the same custom-secret pattern, for example:
+    `sbx secret set-custom hubspot --ref 'op://vault/item/field' --env SOURCES__HUBSPOT__API_KEY`
+
+ 5. **Run an agent**:
+   ```bash
+   sbx run --name reporting-agent --clone claude .   # or: codex | opencode
+   ```
+   Inside: `mise install` and `mise run setup`, then `mise run pipeline -- notion`
+   or `opencode run "..."`. Credentialed tasks use
+   `op run --environment "$OP_ENVIRONMENT_ID" -- ...`.
+   Review via `git fetch sandbox-<name>` before push/PR.
+   Default to `DBT_TARGET=mock` inside sandboxes.
+
+Alternative: the restricted `.devcontainer/agent` "AI Agents" container
+(non-root, read-only root fs, no Docker socket) is also supported — see
+`docs/source/agent_container.md` §4. Its home-level `~/.secrets/.agent.env`
+file must include `GITHUB_TOKEN` set to the machine-user PAT.
 
 ### GitHub Actions Setup
 
-1. **Add repository secrets**:
-   - `GOOGLE_APPLICATION_CREDENTIALS`: Service account JSON key
-   - `GCP_PROJECT_ID`: Google cloud project identifier
+1. **Configure repository credentials**:
+   - `OP_SERVICE_ACCOUNT_TOKEN` (GitHub secret)
+   - `OP_ENVIRONMENT_ID` (GitHub variable containing the 1Password Environment ID)
+   - Ensure the 1Password Environment exports the dlt source and Databricks
+     variables used by the pipelines.
 
 2. **Configure workflow schedules** in `.github/workflows/`:
-    - Scheduled pipelines for source refreshes: Notion, HubSpot, Google Health
+   - Scheduled pipelines for source refreshes: Notion, HubSpot, Google Health
    - Scheduled pipeline for data transformations after source refresh
    - Manual trigger option for full refresh scenarios
 
-3. **Gemini workflows** are leveraged from [run-gemini-cli](https://github.com/google-github-actions/run-gemini-cli)
+3. **Gemini workflows** are leveraged from
+   [run-gemini-cli](https://github.com/google-github-actions/run-gemini-cli)
 
-4. **Agentic workflows** use [GitHub Agentic Workflows (gh-aw)](https://github.com/github/gh-aw) — see setup steps below.
+4. **Agentic workflows** use
+   [GitHub Agentic Workflows (gh-aw)](https://github.com/github/gh-aw) — see
+   setup steps below.
 
 ### GitHub Agentic Workflows (gh-aw) Setup
 
-Agentic workflows (`.github/workflows/*.md` + compiled `.lock.yml`) are managed via the [gh-aw](https://github.com/github/gh-aw) extension.
+Agentic workflows (`.github/workflows/*.md` + compiled `.lock.yml`) are managed
+via the [gh-aw](https://github.com/github/gh-aw) extension.
 
 **Install the extension:**
+
 ```bash
 gh extension install github/gh-aw
 ```
 
 **Add the engine secret** (this project uses Gemini):
+
 ```bash
 gh secret set GEMINI_API_KEY
 ```
 
-**Author or edit a workflow** — modify the `.md` source file in `.github/workflows/`. Frontmatter controls engine, triggers, permissions, and safe outputs; the Markdown body is the agent prompt.
+**Author or edit a workflow** — modify the `.md` source file in
+`.github/workflows/`. Frontmatter controls engine, triggers, permissions, and
+safe outputs; the Markdown body is the agent prompt.
 
 **Compile after frontmatter changes:**
+
 ```bash
 gh aw compile                  # recompile all workflows
 gh aw compile my-workflow      # recompile one workflow
 ```
 
-Commit both the `.md` source and the generated `.lock.yml`. The `.md` body is loaded at runtime so prompt-only changes don't require recompilation.
+Commit both the `.md` source and the generated `.lock.yml`. The `.md` body is
+loaded at runtime so prompt-only changes don't require recompilation.
 
 **Run a workflow manually:**
+
 ```bash
 gh aw run my-workflow
 ```
 
 ### Integrations
 
-1. **Google Cloud BigQuery** - Data warehouse using [dbt BigQuery adapter](https://docs.getdbt.com/reference/warehouse-profiles/bigquery-profile)
-2. **GCP Secret Manager** - Secure credential management for API keys and service accounts
+1. **Databricks Unity Catalog** — primary destination for dlt and dbt
+2. **1Password Environments** — source and warehouse credentials for local and CI tasks
 
 ## Pipeline Refresh Patterns
 
 The pipelines support flexible refresh modes for data loading:
 
 - **Incremental (default)**: Only loads new/changed data since last run
-- **Full refresh**: Completely reloads all data, useful for data quality issues or schema changes
+- **Full refresh**: Completely reloads all data, useful for data quality issues
+  or schema changes
 
 ### How to Trigger Full Refresh
 
 #### Method 1: Environment Variable Override (Global)
+
 ```bash
-export FORCE_FULL_REFRESH=true
-uv run python -m pipelines.hubspot
+FORCE_FULL_REFRESH=true mise run pipeline -- hubspot
 ```
 
 #### Method 2: Pipeline-Specific Override
+
 ```bash
 # Force full refresh for HubSpot only
-export HUBSPOT_FULL_REFRESH=true
-uv run python -m pipelines.hubspot
+HUBSPOT_FULL_REFRESH=true mise run pipeline -- hubspot
 ```
 
-#### Method 5: Central CLI entrypoint
+#### Central pipeline task
 
-Use the central runner `pipelines.run_pipeline` to run any pipeline and
-optionally select resources:
+The mise task wraps the central `pipelines.run_pipeline` runner, starts the
+Databricks SQL warehouse, and loads source credentials from the selected
+1Password Environment:
 
 ```bash
-# Full refresh for Notion via central runner
-uv run python -m pipelines.run_pipeline notion --full
-
-# Incremental with resource selection
-uv run python -m pipelines.run_pipeline hubspot --incremental --select hubspot__contacts,hubspot__companies
+mise run pipeline -- notion --full
+mise run pipeline -- hubspot --incremental --select hubspot__contacts,hubspot__companies
 ```
 
-You can also use the `Makefile` convenience targets (now consolidated as `refresh-*`):
+#### Direct function parameter
 
-```bash
-make refresh-notion ARGS="--full --debug"
-make refresh-hubspot ARGS="--select hubspot__contacts"
-```
-
-#### Method 3: Direct Function Parameter
 ```python
 from pipelines.hubspot import refresh_hubspot
 
@@ -253,52 +334,38 @@ refresh_hubspot(is_incremental=False)
 refresh_hubspot()  # or refresh_hubspot(is_incremental=None)
 ```
 
-#### Method 4: GitHub Actions Integration
-```yaml
-# .github/workflows/hubspot-pipeline.yml
-name: HubSpot Pipeline
-on:
-  schedule:
-    - cron: '0 2 * * *'  # Daily at 2 AM UTC
-  workflow_dispatch:
-    inputs:
-      force_full_refresh:
-        description: 'Force full refresh'
-        required: false
-        default: 'false'
-        type: boolean
+#### GitHub Actions
 
-jobs:
-  run-pipeline:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Install dependencies
-        run: make install
-      - name: Run HubSpot Pipeline
-        env:
-          FORCE_FULL_REFRESH: ${{ inputs.force_full_refresh }}
-        run: |
-          uv run python -m pipelines.hubspot
+```yaml
+steps:
+  - name: run HubSpot pipeline
+    env:
+      OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+      OP_ENVIRONMENT_ID: ${{ vars.OP_ENVIRONMENT_ID }}
+    run: mise run pipeline -- hubspot
 ```
 
 ### Environment Variables Reference
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `FORCE_FULL_REFRESH` | Global override for all pipelines | `export FORCE_FULL_REFRESH=true` |
-| `PIPELINE_NAME` | Pipeline identifier for specific overrides | `export PIPELINE_NAME=HUBSPOT` |
-| `{PIPELINE_NAME}_FULL_REFRESH` | Pipeline-specific full refresh flag | `export HUBSPOT_FULL_REFRESH=true` |
+| Variable                       | Description                                | Example                            |
+| ------------------------------ | ------------------------------------------ | ---------------------------------- |
+| `FORCE_FULL_REFRESH`           | Global override for all pipelines          | `export FORCE_FULL_REFRESH=true`   |
+| `PIPELINE_NAME`                | Pipeline identifier for specific overrides | `export PIPELINE_NAME=HUBSPOT`     |
+| `{PIPELINE_NAME}_FULL_REFRESH` | Pipeline-specific full refresh flag        | `export HUBSPOT_FULL_REFRESH=true` |
 
 ### Best Practices
 
-1. **Default to incremental**: Always use incremental loading for regular operations
-2. **Use full refresh sparingly**: Only when necessary for data quality or schema changes
-3. **Environment-based control**: Use environment variables for production deployments
+1. **Default to incremental**: Always use incremental loading for regular
+   operations
+2. **Use full refresh sparingly**: Only when necessary for data quality or
+   schema changes
+3. **Environment-based control**: Use environment variables for production
+   deployments
 4. **Logging**: Always log the refresh mode being used for debugging
-5. **GitHub Actions integration**: Use workflow inputs and environment variables to control refresh mode dynamically
-6. **Secret management**: Store all credentials in GCP Secret Manager, never in code
+5. **GitHub Actions integration**: Use workflow inputs and environment variables
+   to control refresh mode dynamically
+6. **Secret management**: Store credentials in the configured 1Password
+   Environment or GCP Secret Manager, never in code
 7. **Monitoring**: Set up alerts for pipeline failures and data quality issues
 
 ## Development and Testing
@@ -311,20 +378,21 @@ jobs:
 
 ### Local Development
 
-1. **Build Dev Container** in VSCode, this will run `make install` to install dependencies
+1. **Build Dev Container** in VSCode, this will run `mise run setup` to install
+   dependencies
 2. **Run pipelines locally** for testing:
    ```bash
-   # Local unit tests
-   make test-local
-   # Bigquery end-to-end tests
-   make test-e2e
+   # Offline unit tests
+   mise run test
+   # Live APIs + Databricks e2e tests (via the configured 1Password Environment)
+   mise run test-e2e
    ```
 3. **Test dbt models**:
    ```bash
-   # Local duckdb test
-   make dbt-build target=dev
-   # Bigquery non-prod schema test
-   make dbt-build target=test
+   # Local DuckDB fixtures
+   mise run dbt-build-mock
+   # Databricks dev (starts and waits for the SQL warehouse)
+   mise run dbt-build-dev
    ```
 
 ### Testing
@@ -336,24 +404,25 @@ jobs:
 
 ### dbt Development
 
-1. **Model development**: Use `make dbt-run target=dev select="model_name"` for iterative development
-2. **Model testing**: Use `make dbt-test target=dev select="model_name"` for iterative testing
-3. **Documentation**: Generate with `make dbt-docs target=dev`
+1. **Model development**: `mise run dbt -- run --target mock --select model_name`
+2. **Model testing**: `mise run dbt -- test --target mock --select model_name`
+3. **Documentation**: Generate the combined site with `mise run docs`
 
 #### Model structure
 
-Every dbt SQL model follows the same top-to-bottom shape so a reader can debug it
-without scrolling:
+Every dbt SQL model follows the same top-to-bottom shape so a reader can debug
+it without scrolling:
 
-1. **Import CTEs first.** One CTE per `ref()`/`source()`, placed at the very top of
-   the model. This is the only place `{{ ref(...) }}` appears, so the model's inputs
-   are obvious at a glance.
-2. **Transform CTEs next.** All shaping, joining, casting, and derivation happens in
-   named CTEs after the imports, reading from the imports or earlier CTEs.
-3. **Select from `final` last.** The model ends with a `final` CTE holding the output
-   shape, followed by exactly `select * from final`. Selecting the wildcard keeps the
-   output decoupled from column order and makes it cheap to inspect the final shape
-   while debugging.
+1. **Import CTEs first.** One CTE per `ref()`/`source()`, placed at the very top
+   of the model. This is the only place `{{ ref(...) }}` appears, so the model's
+   inputs are obvious at a glance.
+2. **Transform CTEs next.** All shaping, joining, casting, and derivation
+   happens in named CTEs after the imports, reading from the imports or earlier
+   CTEs.
+3. **Select from `final` last.** The model ends with a `final` CTE holding the
+   output shape, followed by exactly `select * from final`. Selecting the
+   wildcard keeps the output decoupled from column order and makes it cheap to
+   inspect the final shape while debugging.
 
 ```sql
 with
@@ -387,7 +456,6 @@ The project uses GitHub Actions for automated pipeline execution:
 - **Pull request validation**: Automated testing on code changes
 - **Deployment**: Automated deployment to production environment
 
-
 ### Monitoring and Alerts
 
 - **Pipeline status**: GitHub Actions workflow status monitoring
@@ -397,19 +465,27 @@ The project uses GitHub Actions for automated pipeline execution:
 
 ### dlt Logging and Artifacts
 
-dlt pipelines handle logging and artifacts differently than traditional applications:
+dlt pipelines handle logging and artifacts differently than traditional
+applications:
 
-- **Console logging**: All pipeline output goes to stdout/stderr (captured by GitHub Actions)
-- **Pipeline state**: Stored in `~/.dlt/` folder (home directory) with metadata, progress, and state information
+- **Console logging**: All pipeline output goes to stdout/stderr (captured by
+  GitHub Actions)
+- **Pipeline state**: Stored in `~/.dlt/` folder (home directory) with metadata,
+  progress, and state information
 - **No log files**: dlt doesn't create separate log files in a `logs/` directory
-- **Targeted artifacts**: GitHub Actions uploads only `state.json` files for debugging and monitoring
-- **Pipeline info**: The `pipeline.run()` method returns execution information that gets logged
+- **Targeted artifacts**: GitHub Actions uploads only `state.json` files for
+  debugging and monitoring
+- **Pipeline info**: The `pipeline.run()` method returns execution information
+  that gets logged
 
-**Note**: The `~/.dlt/` folder location is dlt's default behavior. You can customize this using the `DLT_DATA_DIR` environment variable if needed, but for GitHub Actions, the default home directory location works well.
+**Note**: The `~/.dlt/` folder location is dlt's default behavior. You can
+customize this using the `DLT_DATA_DIR` environment variable if needed, but for
+GitHub Actions, the default home directory location works well.
 
 ### What's in state.json Files
 
-The `state.json` files contain essential pipeline information without the bulk of raw data:
+The `state.json` files contain essential pipeline information without the bulk
+of raw data:
 
 - **Pipeline execution status**: Success/failure states and timestamps
 - **Resource progress**: Which data sources were processed and their status
@@ -417,4 +493,5 @@ The `state.json` files contain essential pipeline information without the bulk o
 - **Error information**: Any failures and their context
 - **Schema changes**: Data structure modifications detected during execution
 
-This targeted approach provides debugging insights while keeping artifact sizes manageable.
+This targeted approach provides debugging insights while keeping artifact sizes
+manageable.

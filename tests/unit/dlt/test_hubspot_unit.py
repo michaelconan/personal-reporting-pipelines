@@ -11,12 +11,16 @@ import pytest
 from pytest import MonkeyPatch
 
 # local imports
-from pipelines.sources.hubspot import hubspot_source, iso_to_unix
-from tests.unit.dlt.conftest import resolve_mock_path, sample_data, sample_resource, sample_response
+from pipelines.sources.hubspot import hubspot_source
+from tests.unit.dlt.conftest import (
+    pipeline_state,
+    resolve_mock_path,
+    sample_data,
+    sample_resource,
+    sample_response,
+)
 
 pytestmark = pytest.mark.local
-
-MOCK_FOLDER = "tests/fixtures"
 
 # All CRM objects in the HubSpot pipeline
 CRM_OBJECTS = [
@@ -49,19 +53,22 @@ def mock_hs_apis(monkeypatch: MonkeyPatch, mock_responses) -> Callable:
 
     # mock the dlt.secrets.value to prevent credential errors
     monkeypatch.setenv("SOURCES__HUBSPOT__API_KEY", "dummy_api_key")
+    initial_starts: dict[str, str] = {}
 
     def search_callback(request, object: str):
         payload = json.loads(request.body)
         after = payload.get("after")
         filters = payload["filterGroups"][0]["filters"]
         start_filter = next(f for f in filters if f["operator"] == "GTE")
+        initial_start = initial_starts.setdefault(object, start_filter["value"])
         if after is None:
-            file_name = f"hubspot__{object}-run1_page1.json"
-        elif int(start_filter["value"]) > iso_to_unix("2025-01-01"):
-            # Return data for subsequent run
-            file_name = f"hubspot__{object}-run2.json"
+            if start_filter["value"] != initial_start:
+                file_name = f"hubspot__{object}-run2.json"
+            else:
+                file_name = f"hubspot__{object}-run1_page1.json"
         else:
-            # Return data for second page
+            page1 = sample_data(f"hubspot__{object}-run1_page1.json")
+            assert str(after) == str(page1["paging"]["next"]["after"])
             file_name = f"hubspot__{object}-run1_page2.json"
 
         file_path = resolve_mock_path(file_name)
@@ -243,6 +250,18 @@ def test_hubspot_refresh(
     # Run pipeline the first time
     assert info.first_run is True
     assert info.has_failed_jobs is False
+    if "schemas" not in resource:
+        expected_cursor = max(
+            item["updatedAt"]
+            for page in ("run1_page1", "run1_page2")
+            for item in sample_data(f"hubspot__{resource}-{page}.json")["results"]
+        )
+        assert (
+            pipeline_state(duckdb_pipeline)["sources"]["hubspot_source"]["resources"][
+                f"hubspot__{resource}"
+            ]["incremental"]["updatedAt"]["last_value"]
+            == expected_cursor
+        )
     # Validate loaded data from initial run
     with duckdb_pipeline.sql_client() as client:
         table_rows = client.execute_sql(f"SELECT 1 FROM {dataset}.hubspot__{table}")

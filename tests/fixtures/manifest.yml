@@ -1,0 +1,174 @@
+version: 1
+
+# The manifest describes the checked-in HTTP fixtures, not production API
+# credentials.  Tests use it to validate response shape and cursor contracts.
+resources:
+  notion__data_source_rows:
+    source: notion
+    data_field: results
+    identity_path: id
+    cursor_path: next_cursor
+    request_cursor_path: start_cursor
+    request_cursor_location: json
+    has_more_path: has_more
+    incremental_cursor_path: last_edited_time
+    files:
+      run1_page1: notion/notion__data_source_rows-run1_page1.json
+      run1_page2: notion/notion__data_source_rows-run1_page2.json
+      run2: notion/notion__data_source_rows-run2.json
+
+  google_health__sleep:
+    source: google_health
+    data_field: dataPoints
+    identity_path: name
+    cursor_path: nextPageToken
+    request_cursor_path: pageToken
+    request_cursor_location: query
+    incremental_cursor_path: sleep.interval.endTime
+    files:
+      run1_page1: google_health/google_health__sleep-run1_page1.json
+      run1_page2: google_health/google_health__sleep-run1_page2.json
+      run2: google_health/google_health__sleep-run2.json
+
+  google_health__steps:
+    source: google_health
+    data_field: dataPoints
+    identity_path: steps.interval.startTime
+    cursor_path: nextPageToken
+    request_cursor_path: pageToken
+    request_cursor_location: query
+    incremental_cursor_path: steps.interval.startTime
+    files:
+      run1_page1: google_health/google_health__steps-run1_page1.json
+      run1_page2: google_health/google_health__steps-run1_page2.json
+      run2: google_health/google_health__steps-run2.json
+
+  google_health__exercise:
+    source: google_health
+    data_field: dataPoints
+    identity_path: name
+    cursor_path: nextPageToken
+    request_cursor_path: pageToken
+    request_cursor_location: query
+    incremental_cursor_path: exercise.interval.startTime
+    files:
+      run1_page1: google_health/google_health__exercise-run1_page1.json
+      run1_page2: google_health/google_health__exercise-run1_page2.json
+      run2: google_health/google_health__exercise-run2.json
+
+  hubspot__contacts:
+    source: hubspot
+    data_field: results
+    identity_path: id
+    cursor_path: paging.next.after
+    request_cursor_path: after
+    request_cursor_location: json
+    incremental_cursor_path: updatedAt
+    files:
+      run1_page1: hubspot/hubspot__contacts-run1_page1.json
+      run1_page2: hubspot/hubspot__contacts-run1_page2.json
+      run2: hubspot/hubspot__contacts-run2.json
+
+  hubspot__companies:
+    source: hubspot
+    data_field: results
+    identity_path: id
+    cursor_path: paging.next.after
+    request_cursor_path: after
+    request_cursor_location: json
+    incremental_cursor_path: updatedAt
+    files:
+      run1_page1: hubspot/hubspot__companies-run1_page1.json
+      run1_page2: hubspot/hubspot__companies-run1_page2.json
+      run2: hubspot/hubspot__companies-run2.json
+
+  hubspot__meetings:
+    source: hubspot
+    data_field: results
+    identity_path: id
+    cursor_path: paging.next.after
+    request_cursor_path: after
+    request_cursor_location: json
+    incremental_cursor_path: updatedAt
+    files:
+      run1_page1: hubspot/hubspot__meetings-run1_page1.json
+      run1_page2: hubspot/hubspot__meetings-run1_page2.json
+      run2: hubspot/hubspot__meetings-run2.json
+
+  hubspot__calls:
+    source: hubspot
+    data_field: results
+    identity_path: id
+    cursor_path: paging.next.after
+    request_cursor_path: after
+    request_cursor_location: json
+    incremental_cursor_path: updatedAt
+    files:
+      run1_page1: hubspot/hubspot__calls-run1_page1.json
+      run1_page2: hubspot/hubspot__calls-run1_page2.json
+      run2: hubspot/hubspot__calls-run2.json
+
+  hubspot__communications:
+    source: hubspot
+    data_field: results
+    identity_path: id
+    cursor_path: paging.next.after
+    request_cursor_path: after
+    request_cursor_location: json
+    incremental_cursor_path: updatedAt
+    files:
+      run1_page1: hubspot/hubspot__communications-run1_page1.json
+      run1_page2: hubspot/hubspot__communications-run1_page2.json
+      run2: hubspot/hubspot__communications-run2.json
+
+  hubspot__tasks:
+    source: hubspot
+    data_field: results
+    identity_path: id
+    cursor_path: paging.next.after
+    request_cursor_path: after
+    request_cursor_location: json
+    incremental_cursor_path: updatedAt
+    files:
+      run1_page1: hubspot/hubspot__tasks-run1_page1.json
+      run1_page2: hubspot/hubspot__tasks-run1_page2.json
+      run2: hubspot/hubspot__tasks-run2.json
+
+  hubspot__notes:
+    source: hubspot
+    data_field: results
+    identity_path: id
+    cursor_path: paging.next.after
+    request_cursor_path: after
+    request_cursor_location: json
+    incremental_cursor_path: updatedAt
+    files:
+      run1_page1: hubspot/hubspot__notes-run1_page1.json
+      run1_page2: hubspot/hubspot__notes-run1_page2.json
+      run2: hubspot/hubspot__notes-run2.json
+
+  hubspot__deals:
+    source: hubspot
+    data_field: results
+    identity_path: id
+    cursor_path: paging.next.after
+    request_cursor_path: after
+    request_cursor_location: json
+    incremental_cursor_path: updatedAt
+    files:
+      run1_page1: hubspot/hubspot__deals-run1_page1.json
+      run1_page2: hubspot/hubspot__deals-run1_page2.json
+      run2: hubspot/hubspot__deals-run2.json
+
+  hubspot__tickets:
+    source: hubspot
+    data_field: results
+    identity_path: id
+    cursor_path: paging.next.after
+    request_cursor_path: after
+    request_cursor_location: json
+    incremental_cursor_path: updatedAt
+    files:
+      run1_page1: hubspot/hubspot__tickets-run1_page1.json
+      run1_page2: hubspot/hubspot__tickets-run1_page2.json
+      run2: hubspot/hubspot__tickets-run2.json

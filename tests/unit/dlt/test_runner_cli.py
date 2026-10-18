@@ -163,3 +163,42 @@ def test_runner_refresh_pipeline(mock_validate, mock_dlt_pipeline, mock_dlt_secr
             write_disposition=None,  # None for is_incremental=True as per get_write_disposition
             loader_file_format="parquet",
         )
+
+
+@patch("pipelines.runner.dlt.secrets.get", return_value="workspace")
+@patch("pipelines.runner.dlt.pipeline")
+@patch("pipelines.runner.validate_required_secrets")
+def test_runner_supports_direct_token_skips_secret_validation(
+    mock_validate, mock_dlt_pipeline, mock_dlt_secrets_get
+):
+    """Test that supports_direct_token=True allows a direct access token to bypass secret validation."""
+    mock_pipeline_instance = MagicMock()
+    mock_dlt_pipeline.return_value = mock_pipeline_instance
+    mock_pipeline_instance.run.return_value = "Loaded 5 rows"
+
+    mock_source = MagicMock()
+
+    def fake_source(*, access_token: str, **_kwargs):
+        return mock_source
+
+    with patch.dict(
+        PIPELINE_CONFIG,
+        {
+            "google_health": PIPELINE_CONFIG["google_health"].__class__(
+                source_factory=fake_source,
+                pipeline_name="google_health_v4_pipeline",
+                display_name="Google Health v4",
+                required_secret_keys=["sources.google_health.client_id"],
+                token_getter=MagicMock(return_value="direct-token"),
+                supports_direct_token=True,
+            )
+        },
+    ):
+        # First call returns the direct token, second returns workspace for staging volume
+        mock_dlt_secrets_get.side_effect = ["direct-token", "workspace"]
+
+        info = refresh_pipeline("google_health", is_incremental=True)
+
+        assert info == "Loaded 5 rows"
+        # Secret validation should be skipped when a direct token is available
+        mock_validate.assert_not_called()

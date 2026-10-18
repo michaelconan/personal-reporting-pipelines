@@ -22,7 +22,7 @@ def test_live_hubspot_capture_can_generate_unit_fixtures(tmp_path, monkeypatch):
     session = export_mock_responses.ResponseCaptureSession()
     sources_map = {}
 
-    export_mock_responses.run_hubspot_export(session, sources_map, dry_run=False)
+    export_mock_responses.run_hubspot_export(session, sources_map)
 
     assert session.captured_responses
     export_mock_responses.save_captured_responses(

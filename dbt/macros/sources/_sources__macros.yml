@@ -30,6 +30,15 @@ macros:
       - name: data_type
         description: The target type to cast to (e.g., 'INT64', 'STRING').
         type: string
+  - name: databricks__cast_safe
+    description: Databricks implementation of cast_safe using TRY_CAST.
+    arguments:
+      - name: column_name
+        description: The column or expression to cast.
+        type: string
+      - name: data_type
+        description: The target type to cast to (e.g., 'INT64', 'STRING').
+        type: string
   - name: duckdb__deduplicate
     description: Override of dbt_utils.deduplicate for DuckDB. Instead of ROW_NUMBER
       filtered by CTE, it uses the QUALIFY clause and deduplicates in place, which DuckDB

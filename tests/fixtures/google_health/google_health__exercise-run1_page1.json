@@ -1,7 +1,8 @@
 {
+  "nextPageToken": "6",
   "dataPoints": [
     {
-      "name": "users/1572136180662765935/dataTypes/exercise/dataPoints/1105856560525156488",
+      "name": "Theodore",
       "dataSource": {
         "recordingMethod": "UNKNOWN",
         "application": {
@@ -11,27 +12,27 @@
       },
       "exercise": {
         "interval": {
-          "startTime": "2026-07-17T07:00:00Z",
+          "startTime": "2026-07-14T07:00:00Z",
           "startUtcOffset": "-25200s",
-          "endTime": "2026-07-17T07:06:40.500Z",
+          "endTime": "2026-07-14T08:10:57.500Z",
           "endUtcOffset": "-25200s"
         },
         "exerciseType": "WALKING",
         "metricsSummary": {
-          "caloriesKcal": 9,
-          "distanceMillimeters": 604755,
-          "steps": "801",
-          "averagePaceSecondsPerMeter": 0.6614248745359691
+          "caloriesKcal": 93,
+          "distanceMillimeters": 6428825,
+          "steps": "8515",
+          "averagePaceSecondsPerMeter": 0.6621738809191415
         },
         "exerciseMetadata": {},
         "displayName": "Walk",
-        "activeDuration": "400.500s",
-        "updateTime": "2026-07-18T00:10:07.211524Z",
-        "createTime": "2026-07-18T00:10:07.211524Z"
+        "activeDuration": "4257.500s",
+        "updateTime": "2026-07-16T08:43:23.618789Z",
+        "createTime": "2026-07-16T08:43:23.618789Z"
       }
     },
     {
-      "name": "users/1572136180662765935/dataTypes/exercise/dataPoints/1105856560525156488",
+      "name": "Jose",
       "dataSource": {
         "recordingMethod": "UNKNOWN",
         "application": {
@@ -41,27 +42,27 @@
       },
       "exercise": {
         "interval": {
-          "startTime": "2026-07-17T07:00:00Z",
+          "startTime": "2026-07-15T07:00:00Z",
           "startUtcOffset": "-25200s",
-          "endTime": "2026-07-17T07:06:40.500Z",
+          "endTime": "2026-07-15T07:40:07.500Z",
           "endUtcOffset": "-25200s"
         },
         "exerciseType": "WALKING",
         "metricsSummary": {
-          "caloriesKcal": 9,
-          "distanceMillimeters": 604755,
-          "steps": "801",
-          "averagePaceSecondsPerMeter": 0.6614248745359691
+          "caloriesKcal": 54,
+          "distanceMillimeters": 3635325,
+          "steps": "4815",
+          "averagePaceSecondsPerMeter": 0.6621141163444809
         },
         "exerciseMetadata": {},
         "displayName": "Walk",
-        "activeDuration": "400.500s",
-        "updateTime": "2026-07-18T00:10:07.211524Z",
-        "createTime": "2026-07-18T00:10:07.211524Z"
+        "activeDuration": "2407.500s",
+        "updateTime": "2026-07-16T12:15:09.515254Z",
+        "createTime": "2026-07-16T12:15:09.515254Z"
       }
     },
     {
-      "name": "users/1572136180662765935/dataTypes/exercise/dataPoints/6282038124202078872",
+      "name": "Lindsay",
       "dataSource": {
         "recordingMethod": "UNKNOWN",
         "application": {
@@ -71,25 +72,24 @@
       },
       "exercise": {
         "interval": {
-          "startTime": "2026-07-18T07:00:00Z",
+          "startTime": "2026-07-16T07:00:00Z",
           "startUtcOffset": "-25200s",
-          "endTime": "2026-07-18T07:57:44Z",
+          "endTime": "2026-07-16T08:38:12Z",
           "endUtcOffset": "-25200s"
         },
         "exerciseType": "WALKING",
         "metricsSummary": {
-          "caloriesKcal": 76,
-          "distanceMillimeters": 5230640,
-          "steps": "6928",
+          "caloriesKcal": 130,
+          "distanceMillimeters": 8896920,
+          "steps": "11784",
           "averagePaceSecondsPerMeter": 0.662251655629139
         },
         "exerciseMetadata": {},
         "displayName": "Walk",
-        "activeDuration": "3464s",
-        "updateTime": "2026-07-19T08:41:07.142432Z",
-        "createTime": "2026-07-19T08:41:07.142432Z"
+        "activeDuration": "5892s",
+        "updateTime": "2026-07-17T20:11:22.442565Z",
+        "createTime": "2026-07-17T20:11:22.442565Z"
       }
     }
-  ],
-  "nextPageToken": "25"
+  ]
 }

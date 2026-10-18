@@ -8,7 +8,7 @@ The following data will be ingested from my personal systems into a Databricks w
 
 1.  Notion
 2.  HubSpot
-3.  Fitbit
+3.  Google Health
 
 ## Pipeline Refresh Patterns
 
@@ -23,7 +23,7 @@ Your pipelines support flexible refresh modes for data loading:
 
 ```bash
 export FORCE_FULL_REFRESH=true
-uv run python -m pipelines.hubspot
+mise run pipeline -- hubspot
 ```
 
 #### Method 2: Pipeline-Specific Override
@@ -32,7 +32,7 @@ uv run python -m pipelines.hubspot
 # Force full refresh for HubSpot only
 export PIPELINE_NAME=HUBSPOT
 export HUBSPOT_FULL_REFRESH=true
-uv run python -m pipelines.hubspot
+mise run pipeline -- hubspot
 ```
 
 #### Method 3: Direct Function Parameter

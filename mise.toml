@@ -1,0 +1,149 @@
+[tools]
+uv = "latest"
+python = "3.13"
+opencode = "1.19.0"
+"databricks-cli" = "latest"
+
+[env]
+DBT_TARGET="dev"
+DBT_RAW_DATASET="raw"
+DBT_PROJECT_DIR = "{{ config_root }}/dbt"
+DBT_PROFILES_DIR = "{{ config_root }}/dbt"
+PYTHONUNBUFFERED = "1"
+RUNTIME__LOG_LEVEL = "INFO"
+
+[tasks.setup]
+description = "Install Python dependencies"
+run = "uv sync"
+
+[tasks.test]
+description = "Run offline Python unit tests"
+run = "uv run pytest tests/unit --log-cli-level=INFO --cov --cov-append --cov-report=xml --junitxml=test-results-local.xml -v -s"
+
+[tasks.test-live]
+description = "Run opt-in live API integration tests (uses source API credentials)"
+raw_args = true
+run = 'env RUN_LIVE_API_TESTS=1 uv run pytest tests/integration -m live -v -s'
+
+[tasks.test-e2e]
+description = "Run cloud end-to-end tests (starts the Databricks warehouse)"
+depends = ["databricks-start"]
+raw_args = true
+run = 'uv run pytest tests/e2e --log-cli-level=INFO --cov --cov-append --cov-report=xml --junitxml=test-results-e2e.xml -v -s'
+
+[tasks.test-all]
+description = "Run offline unit tests followed by cloud e2e tests"
+run = [
+  { task = "test" },
+  { task = "test-live" },
+  { task = "test-e2e" },
+]
+
+[tasks.pipeline]
+description = "Run a dlt pipeline by source name (notion, hubspot, google_health)"
+depends = ["databricks-start"]
+raw_args = true
+run = 'uv run python -m pipelines.run_pipeline'
+
+[tasks.pipeline-all]
+description = "Run all dlt pipelines"
+run = [
+  'mise run pipeline -- notion',
+  'mise run pipeline -- hubspot',
+  'mise run pipeline -- google_health',
+]
+
+[tasks.databricks-start]
+description = "Start the Databricks SQL warehouse and wait until healthy"
+run = 'uv run python scripts/databricks_warehouse.py'
+
+[tasks.dbt]
+description = "Run dbt from the project with profile and project paths configured"
+dir = "dbt"
+raw_args = true
+run = "uv run dbt"
+
+[tasks.dbt-deps]
+description = "Install dbt packages"
+run = "uv run dbt deps"
+
+[tasks.dbt-build-mock]
+description = "Build dbt models and tests against local DuckDB fixtures"
+dir = "dbt"
+raw_args = true
+run = "uv run dbt build --project-dir . --profiles-dir . --target mock"
+
+[tasks.dbt-build-dev]
+description = "Build dbt models and tests against Databricks dev (token auth)"
+depends = ["databricks-start"]
+raw_args = true
+run = 'uv run dbt build --target dev'
+
+[tasks.dbt-build-test]
+description = "Build dbt models and tests against Databricks test (SA auth)"
+depends = ["databricks-start"]
+raw_args = true
+run = 'uv run dbt build --target test'
+
+[tasks.dbt-build-prod]
+description = "Run dbt freshness and build against Databricks prod (SA auth)"
+depends = ["databricks-start"]
+raw_args = true
+run = [
+  'uv run dbt source freshness --target prod',
+  'uv run dbt build --target prod',
+]
+
+[tasks.dbt-lint]
+description = "Lint dbt SQL using the mock target"
+run = "uv run dbt lint --target mock"
+
+[tasks.dbt-parse-mock]
+description = "Parse dbt project using the mock target"
+run = "uv run dbt parse --target mock"
+
+[tasks.dbt-compile-mock]
+description = "Compile dbt project and write catalog.json for bouncer"
+run = "uv run dbt compile --target mock --write-catalog"
+
+[tasks.dbt-bouncer]
+description = "Run dbt-bouncer governance checks"
+run = "uv run dbt-bouncer --config-file dbt/dbt-bouncer.yml"
+
+[tasks.lint]
+description = "Run repository prek checks"
+run = "uv run prek run -c prek.yml --all-files"
+
+[tasks.coverage]
+description = "Show Python coverage and generate the HTML report"
+run = [
+  "uv run coverage report --show-missing",
+  "uv run coverage html",
+]
+
+[tasks.docs]
+description = "Build dbt and Sphinx documentation"
+run = [
+  "uv run dbt deps",
+  "uv run dbt docs generate --target mock",
+  "uv run sphinx-build -b html docs/source docs/_build/html",
+  "rm -rf docs/_build/html/dbt",
+  "mkdir -p docs/_build/html/dbt",
+  "cp -r dbt/target/index.html dbt/target/assets dbt/target/info_schema docs/_build/html/dbt/",
+]
+
+[tasks.clean]
+description = "Remove generated local test, build, and documentation artifacts"
+run = [
+  "find . -type f -name '*.pyc' -delete",
+  "find . -type d -name __pycache__ -prune -exec rm -rf {} +",
+  "find . -type d -name '*.egg-info' -prune -exec rm -rf {} +",
+  "find . -type f -name '*.pyo' -delete",
+  "find . -type f -name '.DS_Store' -delete",
+  "rm -rf .pytest_cache .coverage.* htmlcov build dist docs/_build",
+  "rm -f test-results-*.xml",
+]
+
+[tasks.dlt-clean]
+description = "Remove local dlt state and DuckDB files"
+run = "rm -rf ~/.dlt *.duckdb"

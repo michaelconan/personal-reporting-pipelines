@@ -1,7 +1,7 @@
 name: run google health pipeline
 on:
   schedule:
-    - cron: '0 5 * * 1'  # monday at 5 AM UTC
+    - cron: '0 5 * * 1' # monday at 5 AM UTC
   workflow_dispatch:
     inputs:
       force_full_refresh:
@@ -16,57 +16,36 @@ permissions:
 jobs:
   run-pipeline:
     runs-on: ubuntu-latest
+    env:
+      MISE_ENABLE_TOOLS: uv,python,databricks-cli
     steps:
       - name: checkout code
         uses: actions/checkout@v5
 
-      - name: set up uv
-        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d
+      - name: set up mise and project tools
+        uses: jdx/mise-action@v4
+
+      - name: install project dependencies
+        run: mise run setup
+
+      - name: install 1Password CLI
+        uses: 1password/install-cli-action@v4
         with:
-          version: 'latest'
-          enable-cache: true
-
-      - name: set up python 3.13
-        uses: actions/setup-python@v6
-        with:
-          python-version: '3.13'
-
-      - name: install uv and dependencies
-        run: |
-          make install
-
-      - name: set environment variables
-        run: |
-          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/sa_key.json" >> $GITHUB_ENV
-
-      - name: write keyfile
-        run: |
-          cat << 'EOF' > $GOOGLE_APPLICATION_CREDENTIALS
-          ${{ secrets.GCP_SVC_KEY }}
-          EOF
-
-      - name: install 1password cli
-        uses: 1password/install-cli-action@v3
-
-      - name: inject secrets using service account
-        env:
-          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-        run: |
-          make inject
+          version: latest
 
       - name: run google health pipeline
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          OP_ENVIRONMENT_ID: ${{ vars.OP_ENVIRONMENT_ID }}
           FORCE_FULL_REFRESH: ${{ inputs.force_full_refresh }}
-          RUNTIME__LOG_LEVEL: "INFO"
-          PYTHONUNBUFFERED: "1"
+          RUNTIME__LOG_LEVEL: 'INFO'
+          PYTHONUNBUFFERED: '1'
         run: |
-          make refresh-google-health
-
-      - name: Remove keyfile
-        if: always()
-        run: |
-          rm $GOOGLE_APPLICATION_CREDENTIALS
+          if [ "${{ inputs.force_full_refresh }}" = "true" ]; then
+            op run --environment "$OP_ENVIRONMENT_ID" -- mise run pipeline -- google_health --full
+          else
+            op run --environment "$OP_ENVIRONMENT_ID" -- mise run pipeline -- google_health
+          fi
 
       - name: upload dlt state files
         if: always()

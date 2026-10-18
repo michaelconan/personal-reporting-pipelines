@@ -6,14 +6,14 @@ This project uses dbt for data transformation. The dbt documentation, including 
 
 ## dbt Development
 
-1.  **Open dbt project** as root directory for SQLFluff and other utilities
-2.  **Local profile**: Copy BigQuery service account key to `~/.dbt/profiles.yml`
-3.  **Model development**: Use `uv run dbt run --select model_name` for iterative development
-4.  **Documentation**: Generate with `uv run dbt docs generate` and `uv run dbt docs serve`
+1.  **Install tools and dependencies**: `mise install` and `mise run setup`
+2.  **Model development**: Use `mise run dbt -- run --target mock --select model_name`
+3.  **Databricks development**: Use `mise run dbt-build-dev` (starts the warehouse)
+4.  **Documentation**: Generate with `mise run docs`
 
 ## dbt Transform Workflow
 
-The dbt transformation pipeline is defined in `.github/workflows/dbt-transform.yml`:
+The dbt transformation pipeline is defined in `.github/workflows/run-transforms.yml`:
 
 -   **Daily execution**: Runs at 4 AM UTC, after the data ingestion pipelines.
 -   **Triggers**: Automatically triggered after successful pipeline runs.
@@ -21,4 +21,4 @@ The dbt transformation pipeline is defined in `.github/workflows/dbt-transform.y
     -   Runs dbt models.
     -   Runs dbt tests.
     -   Generates dbt documentation.
--   **Commands**: Uses `make install` and `pipenv` for dbt operations.
+-   **Commands**: Uses mise setup and tasks, with credentials supplied by a 1Password Environment.

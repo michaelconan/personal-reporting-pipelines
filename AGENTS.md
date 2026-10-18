@@ -13,7 +13,7 @@ dbt Staging (views) → dbt Intermediate → dbt Marts (tables)
 
 ## Target Configuration
 **Primary target**: Databricks Unity Catalog (`dev`, `test`, `prod` targets)
-**Rollback targets**: BigQuery (`dev-bigquery`, `test-bigquery`, `prod-bigquery` targets) — retained for easy rollback path
+**Rollback targets**: BigQuery (`dev-bq`, `test-bq`, `prod-bq` targets) — retained for easy rollback path
 **Local development**: DuckDB (`mock` target) with CSV test fixtures
 
 Default target is `dev` (Databricks). Use `DBT_TARGET` env var to override.
@@ -36,13 +36,13 @@ Current agentic workflow: `weekly-doc-updater` — runs every Monday, opens a PR
 - `pipelines/__init__.py` — Shared constants: BASE_DATE, RAW_SCHEMA, DBT_SCHEMA
 - `dbt/seeds/group_connect_cadence.csv` — Target connection cadence per group tier
 - `dbt/dbt_project.yml` — dbt config (profile, materializations, vars)
-- `dbt/profiles.yml` — dev/test/prod=Databricks, dev-bigquery/test-bigquery/prod-bigquery=BigQuery (rollback), mock=DuckDB
+- `dbt/profiles.yml` — dev/test/prod=Databricks, dev-bq/test-bq/prod-bq=BigQuery (rollback), mock=DuckDB
 
 ## Source Resolution (no make_source macro)
 There is no `make_source` macro. Models call `{{ source(source_name, relation_name) }}` directly for every target:
 - **mock (DuckDB)**: each source reads its test fixture via `config.external_location: dbt/test_fixtures/{source}/{identifier}.csv`.
 - **dev/test/prod (Databricks)**: sources resolve to the raw schema in Unity Catalog.
-- **dev-bigquery/test-bigquery/prod-bigquery (BigQuery)**: sources resolve to the raw schema (rollback path).
+- **dev-bq/test-bq/prod-bq (BigQuery)**: sources resolve to the raw schema (rollback path).
 
 **Consequence**: fixtures in `dbt/test_fixtures/{source}/` MUST be named after the source identifiers in `_*sources.yml`.
 
@@ -133,16 +133,20 @@ Note: habit completions and thresholds come from the Notion habit reference data
 - `unnest_json_array(array_col, alias)` — cross-db JSON array unnesting (legacy)
 
 ## Testing
-- `make test-local` — Python unit tests
-- `make docs` — dbt docs site (v2 SPA) + Sphinx docs
-- `uv run dbt build --project-dir dbt --profiles-dir dbt --target mock` — local dbt build (DuckDB + CSV test fixtures)
-- `uv run dbt run --project-dir dbt --profiles-dir dbt --select <model> --target mock` — run specific model
-- `uv run dbt build --project-dir dbt --profiles-dir dbt --target dev` — build against Databricks dev target
-- SQL linting: `uv run dbt lint --project-dir dbt --profiles-dir dbt --target mock` (dbt 2.x built-in linter — rust parser with real dbt templating, reuses `dbt/.sqlfluff` rule config). Verified: full-project run exits 0 (warnings only). The `sqlfluff`/`sqlfluff-templater-dbt` PyPI packages are NOT installed — `sqlfluff-templater-dbt` requires Python `dbt-core` and cannot coexist with the dbt 2.x `dbt` package, and standalone sqlfluff (jinja templater) cannot resolve package macros like `dbt_utils.surrogate_key`, so `dbt lint` is the only reliable lint path.
+- `mise run setup` — install project Python dependencies with uv
+- `mise run test` — offline Python unit tests
+- `mise run test-e2e` — live-source / Databricks tests (starts and waits for the Databricks SQL warehouse)
+- `mise run test-live` — opt-in live API integration tests; calls source APIs
+- `mise run pipeline -- <notion|hubspot|google_health> [args]` — run one dlt pipeline with a 1Password Environment
+- `mise run dbt-build-mock` — local dbt build (DuckDB + CSV test fixtures)
+- `mise run dbt -- run --target mock --select <model>` — run a specific dbt model
+- `mise run dbt-build-dev` — build against Databricks dev after starting the SQL warehouse
+- `mise run dbt-lint` — SQL linting with the dbt 2.x Rust parser and real dbt templating; reuses `dbt/.sqlfluff`. The `sqlfluff`/`sqlfluff-templater-dbt` PyPI packages are not installed because `sqlfluff-templater-dbt` requires Python `dbt-core` and cannot coexist with dbt 2.x, while standalone sqlfluff cannot resolve package macros.
+- `mise run docs` — dbt docs site (v2 SPA) + Sphinx docs
 
 ## dbt 2.x Notes (Rust engine, `dbt~=2.0`)
 - dbt-bouncer gets `catalog.json` only from `dbt compile --write-catalog` — `dbt docs generate` no longer writes it.
-- `dbt docs generate --static` no longer exists; v2 emits a static SPA (`index.html` + `assets/` + `info_schema/*.parquet`) into `dbt/target/` which `make docs` copies to `docs/_build/html/dbt/`.
+- `dbt docs generate --static` no longer exists; v2 emits a static SPA (`index.html` + `assets/` + `info_schema/*.parquet`) into `dbt/target/` which `mise run docs` copies to `docs/_build/html/dbt/`.
 - Source-level `freshness` and `meta: external_location` at the top level are rejected by the strict v2 parser (`dbt1060`) — they must live under each source's `config:`. Freshness uses `loaded_at_query` joining `_dlt_loads` on `_dlt_load_id` (`where status = 0`); do not coalesce NULL to `current_timestamp()` (NULL = failed freshness).
 - Databricks profile keys `catalog`/`schema` are used for Unity Catalog (interchangeable with `database`/`schema` in other adapters).
 - BigQuery profile keys `project`/`dataset` remain valid in the dbt 2.x bigquery adapter (documented as interchangeable with `database`/`schema`).
@@ -154,7 +158,7 @@ Note: habit completions and thresholds come from the Notion habit reference data
 - **Data Warehouse**: Databricks Unity Catalog (primary), Google BigQuery (rollback)
 - **Orchestration**: GitHub Actions
 - **Secret Management**: GCP Secret Manager or 1Password (configured via `SECRET_STORE` env var)
-- **Development**: Python 3.12, uv, VSCode Dev Containers
+- **Development**: Python 3.13, uv, VSCode Dev Containers
 
 ## Code Standards
 
@@ -210,18 +214,18 @@ they are essential for ANY work in this project
 - `rest-api-pipeline-workflow`
 
 ## Secret Management
-GCP Secret Manager or 1Password (configured via `SECRET_STORE` env var). For local development and CI, Databricks credentials are loaded from 1Password using `op inject` with `.env.databricks.tpl` template.
+Credentialed mise tasks run as `op run --environment "$OP_ENVIRONMENT_ID" -- ...`; the 1Password Environment exports the dlt source and Databricks environment variables. GitHub Actions uses `OP_SERVICE_ACCOUNT_TOKEN` plus the repository variable `OP_ENVIRONMENT_ID`. The 1Password CLI beta is required until Environment support is generally available.
 
-- **Local**: `make databricks-env-export` (eval output) or `source .env.databricks` after `make inject`
-- **CI**: 1Password service account token injects `.env.databricks.tpl` → `.env.databricks` in workflow steps
+- **Local**: export `OP_ENVIRONMENT_ID` and `OP_SERVICE_ACCOUNT_TOKEN`, then use `mise run pipeline`, `mise run test-e2e`, or Databricks dbt tasks. `.env.databricks` is deprecated; credentialed values come from the selected 1Password Environment or `sbx` secrets.
+- **Warehouse preflight**: `scripts/databricks_warehouse.py` maps dlt's `DESTINATION__DATABRICKS__CREDENTIALS__*` values to native Databricks CLI authentication variables and starts the configured SQL warehouse before e2e, pipeline, and Databricks dbt runs. For dbt `test`/`prod`, the profiles read `DATABRICKS_CLIENT_ID` and `DATABRICKS_CLIENT_SECRET` directly; `dev` uses the dlt access token.
 
-## Agent Container (`.agentcontainer/`)
-Least-privilege sandbox for agentic coding (`opencode`, `claude`, `codex`) — separate from the full-access human `.devcontainer/`. Full guide: `docs/source/agent_container.md`.
+## Agentic Coding (Docker AI Sandbox preferred; agent devcontainer alternative)
+The preferred environment for AI agent work (`opencode`, `claude`, `codex`) is Docker AI Sandbox configured by the repository-root `sbxenv.yaml`; the `.devcontainer/agent` is the second supported option. Both use a **dedicated GitHub machine user** scoped to this repo (collaborator, **Write** only, fine-grained PAT limited to this repo: `Contents: read/write`, `Pull requests: read/write`, `Metadata: read`). Never use a personal token. Full guide: `docs/source/agent_container.md`.
 
-- **Hardening**: non-root `agent` user (no sudo), `read_only: true`, `cap_drop: [ALL]`, `no-new-privileges`, ephemeral `tmpfs` for `/tmp` and `/home/agent`, no published ports / Docker socket. Image: `personal-reporting-agentcontainer:local` (`python:3.13-slim` + git/curl/unzip, Node 22, `openssh-client`, `gh`, `op` 2.32.0, `opencode-ai`/`claude-code`/`codex`, `uv`).
-- **Build/run**: `cd .agentcontainer && docker compose build && GITHUB_NAME="..." GITHUB_EMAIL="..." docker compose up -d && docker compose exec agent bash`. Needs `.secrets/opencode_api_key`, `.secrets/github_token`, `.secrets/op_service_account_token` (gitignored).
-- **Inside**: entrypoint (`scripts/entrypoint.sh`) exports `/run/secrets/*` to env (`OPENCODE_API_KEY`/`ANTHROPIC_API_KEY`/`OPENAI_API_KEY`, `GITHUB_TOKEN`, `OP_SERVICE_ACCOUNT_TOKEN`), copies host agent configs only (claude/codex via `.host-*` staging paths; opencode config stays mounted, dlthub skills stay on `~/.agents` mount), sets git identity from `GITHUB_NAME`/`GITHUB_EMAIL` + SSH signing via forwarded `SSH_AUTH_SOCK` (no keys in image). Repo at `/workspaces` persists; home state is rebuilt each start.
-- **Use**: `uv sync` (or `make install`), `make inject` when warehouse creds are needed, then e.g. `opencode run "..."`. Agent wiring: `opencode.json` + `.codex/config.toml` (`dlt-workspace-mcp`), `.agents/skills/`, `AGENTS.md`/`CLAUDE.md`. Validate with `make test-local` and `uv run dbt build --project-dir dbt --profiles-dir dbt --target mock`.
+- **Setup**: install `sbx` (`brew trust docker/tap && brew install docker/tap/sbx` | `winget install -h Docker.sbx` | `sudo apt install docker-sbx`), `sbx login`, then `sbx secret set github --command 'gh auth token'` (run as the machine user) plus the model key. Pick the **Balanced** network preset (or **Locked Down**); extend with `sbx policy allow network <host>`.
+- **Run**: from the repo root, `sbx run --name reporting-agent --clone opencode .` (or `claude` | `codex` | `gemini`); `sbxenv.yaml` supplies the workspace environment. Manage with `sbx ls` / `sbx stop` / `sbx rm`.
+- **Inside**: `mise install`, `mise run setup`, then e.g. `mise run test` or `opencode run "..."`. Credentialed tasks use the configured 1Password Environment. Prefer one branch per task in clone mode; review from host (`git fetch sandbox-<name>`) before push/PR as the machine user. Default to `DBT_TARGET=mock`; never commit secrets (`.secrets/`, `*/secrets.toml`, `.env`) or direct to `main`. OpenCode session exports are sensitive; follow `docs/source/agent_container.md` to back them up to GCS before removing an ephemeral sandbox.
+- **Agent devcontainer**: restricted `agent` service in `.devcontainer/docker-compose.yml` (`.devcontainer/agent/devcontainer.json`, "AI Agents"; non-root, no sudo, `read_only: true`, `cap_drop: [ALL]`, no socket/ports, ephemeral home). Build/run: `cd .devcontainer && docker compose build agent && GITHUB_NAME="YOUR-MACHINE-USER" GITHUB_EMAIL="machine-user@example.com" docker compose up -d agent && docker compose exec agent bash`. The host supplies `~/.secrets/.agent.env`, mounted by Compose as `/run/secrets/agent_env`; it contains shell-compatible `KEY=value` entries such as `GITHUB_TOKEN` (machine-user PAT), `OPENCODE_API_KEY`, `OP_SERVICE_ACCOUNT_TOKEN`, and `OP_ENVIRONMENT_ID`. The entrypoint exports these for startup and interactive Bash shells.
 
 ## toolkits — match intent → install → open the entry skill (no discovery round-trip needed)
 Workflow toolkits are installed on demand. This index is authoritative for shipped toolkits: match the user's intent, run the install command, confirm from its output (`dlthub ai status` only if unclear), then hand over to the entry skill. No discovery call needed for these.

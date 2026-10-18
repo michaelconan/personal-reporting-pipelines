@@ -29,7 +29,12 @@ from pipelines import SECRET_STORE
 
 
 def get_google_health_token() -> str:
-    """Get a fresh Google Health API access token using the stored refresh token.
+    """Get a Google Health access token.
+
+    Prefer the configured OAuth refresh credentials whenever all are available,
+    even if a direct access token is also configured. A direct access token is
+    used only when the refresh credentials are absent; in that mode the provider
+    must supply a freshly refreshed token for each run.
 
     This function requests a new access token from Google's OAuth2 endpoint
     using the refresh token stored in DLT secrets. It also updates the
@@ -42,12 +47,25 @@ def get_google_health_token() -> str:
     Raises:
         requests.HTTPError: If the token refresh request fails.
     """
+    refresh_token = dlt.secrets.get("sources.google_health.refresh_token")
+    client_id = dlt.secrets.get("sources.google_health.client_id")
+    client_secret = dlt.secrets.get("sources.google_health.client_secret")
+    direct_token = dlt.secrets.get("sources.google_health.access_token")
+
+    if not (refresh_token and client_id and client_secret):
+        if direct_token:
+            return direct_token
+        # Preserve dlt's standard missing-secret diagnostics.
+        refresh_token = dlt.secrets["sources.google_health.refresh_token"]
+        client_id = dlt.secrets["sources.google_health.client_id"]
+        client_secret = dlt.secrets["sources.google_health.client_secret"]
+
     creds = Credentials(
         token=None,
-        refresh_token=dlt.secrets["sources.google_health.refresh_token"],
+        refresh_token=refresh_token,
         token_uri="https://oauth2.googleapis.com/token",
-        client_id=dlt.secrets["sources.google_health.client_id"],
-        client_secret=dlt.secrets["sources.google_health.client_secret"],
+        client_id=client_id,
+        client_secret=client_secret,
     )
 
     request = Request()
@@ -87,12 +105,9 @@ def google_health_source(
     end_ts = f"{end_date}T00:00:00Z" if end_date else None
     sleep_filter = 'sleep.interval.end_time >= "{incremental.start_value}"'
     steps_filter = 'steps.interval.start_time >= "{incremental.start_value}"'
-    exercise_filter = 'exercise.interval.civil_start_time >= "{incremental.start_value}"'
-
     if end_date:
         sleep_filter += ' AND sleep.interval.end_time < "{incremental.end_value}"'
         steps_filter += ' AND steps.interval.start_time < "{incremental.end_value}"'
-        exercise_filter += ' AND exercise.interval.civil_start_time < "{incremental.end_value}"'
 
     api_config: dict[str, Any] = {
         "client": {
@@ -139,11 +154,14 @@ def google_health_source(
                 "max_table_nesting": 2,
                 "endpoint": {
                     "path": "users/me/dataTypes/exercise/dataPoints",
-                    "params": {"filter": exercise_filter, "pageSize": 25},
+                    # The Exercise data type does not expose interval members
+                    # as server-side filter fields; dlt applies this cursor
+                    # locally after fetching the paginated response.
+                    "params": {"pageSize": 25},
                     "incremental": {
                         "cursor_path": "exercise.interval.startTime",
-                        "initial_value": initial_ts[:-1],
-                        "end_value": end_ts[:-1] if end_ts else None,
+                        "initial_value": initial_ts,
+                        "end_value": end_ts,
                     },
                 },
             },

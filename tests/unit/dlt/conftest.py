@@ -118,8 +118,29 @@ def sample_response(file_name: str) -> tuple[int, dict, str]:
         return (200, {}, f.read())
 
 
+def pipeline_state(pipeline: dlt.Pipeline) -> dict[str, Any]:
+    """Read the persisted dlt state for incremental assertions."""
+    state_path = Path(pipeline._pipeline_storage.storage_path) / "state.json"
+    return json.loads(state_path.read_text())
+
+
+def incremental_last_value(pipeline: dlt.Pipeline, resource_name: str, cursor_path: str) -> Any:
+    """Find a resource cursor without depending on dlt's source function name."""
+    state = pipeline_state(pipeline)
+    for source in state.get("sources", {}).values():
+        resource = source.get("resources", {}).get(resource_name)
+        if resource:
+            incremental = resource["incremental"]
+            if cursor_path in incremental:
+                return incremental[cursor_path]["last_value"]
+            for configured_path, values in incremental.items():
+                if configured_path.endswith(f".{cursor_path}"):
+                    return values["last_value"]
+    raise AssertionError(f"No persisted state found for {resource_name}")
+
+
 @pytest.fixture(scope="class")
-def duckdb_pipeline() -> dlt.Pipeline:
+def duckdb_pipeline(tmp_path_factory: pytest.TempPathFactory) -> dlt.Pipeline:
     """Pytest fixture providing a DuckDB pipeline for unit testing.
 
     Creates a DLT pipeline configured to use DuckDB as the destination
@@ -129,37 +150,17 @@ def duckdb_pipeline() -> dlt.Pipeline:
     Yields:
         dlt.Pipeline: Configured DLT pipeline for testing.
     """
-    import tempfile
-
-    # Use an isolated temporary HOME to avoid touching user's ~/.dlt files
-    tmp_home = tempfile.TemporaryDirectory()
-    old_home = os.environ.get("HOME")
-    old_userprofile = os.environ.get("USERPROFILE")
+    pipelines_dir = tmp_path_factory.mktemp("dlt_pipelines")
+    database_path = pipelines_dir / "local_unit_test.duckdb"
+    pipeline = dlt.pipeline(
+        pipeline_name="local_unit_test",
+        destination=dlt.destinations.duckdb(credentials=str(database_path)),
+        dataset_name="local_data",
+        dev_mode=True,
+        pipelines_dir=str(pipelines_dir),
+    )
+    yield pipeline
     try:
-        os.environ["HOME"] = tmp_home.name
-        os.environ["USERPROFILE"] = tmp_home.name
-
-        # Test pipeline
-        pipeline = dlt.pipeline(
-            pipeline_name="local_unit_test",
-            destination="duckdb",
-            dataset_name="local_data",
-            dev_mode=True,
-        )
-        yield pipeline
-    finally:
-        # Cleanup pipeline and temporary HOME
-        try:
-            pipeline.drop()
-        except Exception:
-            pass
-        tmp_home.cleanup()
-        # restore env
-        if old_home is None:
-            os.environ.pop("HOME", None)
-        else:
-            os.environ["HOME"] = old_home
-        if old_userprofile is None:
-            os.environ.pop("USERPROFILE", None)
-        else:
-            os.environ["USERPROFILE"] = old_userprofile
+        pipeline.drop()
+    except Exception:
+        pass

@@ -1,0 +1,33 @@
+schemaVersion: '1'
+name: personal-reporting
+agent: shell
+workspace: .
+kits:
+  - docker.io/sbx/mise-kit:latest
+
+args:
+  databricks_host:
+    description: Server hostname for Databricks account
+    required: true
+  databricks_path:
+    description: HTTP path for Databricks SQL warehouse
+    required: true
+
+env:
+  PYTHONUNBUFFERED: '1'
+  UV_PROJECT_ENVIRONMENT: /tmp/personal-reporting-venv
+  SECRET_STORE: 1password
+  # OP_SERVICE_ACCOUNT_TOKEN must be set in the host environment or 1Password item.
+  # sbx injects the real value at runtime; uncomment the line below only for local testing.
+  # OP_SERVICE_ACCOUNT_TOKEN: dummy
+  DESTINATION__DATABRICKS__CREDENTIALS__SERVER_HOSTNAME:
+    ${{ env.args.databricks_host }}
+  DESTINATION__DATABRICKS__CREDENTIALS__HTTP_PATH:
+    ${{ env.args.databricks_path }}
+  DESTINATION__DATABRICKS__CREDENTIALS__CATALOG: workspace
+
+lifecycle:
+  postCreate:
+    - name: Install dependencies
+      command: mise install
+      timeout: 5m

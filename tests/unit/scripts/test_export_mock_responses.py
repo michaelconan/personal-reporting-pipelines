@@ -499,18 +499,18 @@ def test_run_source_export_skips_missing_secret(monkeypatch):
     """Sources without credentials are skipped before any dlt work starts."""
     monkeypatch.setattr(export_mock_responses, "get_secret", lambda _path: None)
 
-    export_mock_responses.run_source_export({}, {}, "hubspot", dry_run=True)
+    export_mock_responses.run_source_export({}, {}, "hubspot")
 
 
 def test_main_dispatches_registry_sources(monkeypatch):
     """main() routes --source through the registry without per-source branches."""
     calls = []
 
-    def _stub(session, sources_map, source_key, dry_run):
-        calls.append((source_key, dry_run))
+    def _stub(session, sources_map, source_key):
+        calls.append(source_key)
 
     monkeypatch.setattr(export_mock_responses, "run_source_export", _stub)
 
     export_mock_responses.main(["--source", "notion", "--dry-run"])
 
-    assert calls == [("notion", True)]
+    assert calls == ["notion"]

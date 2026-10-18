@@ -2,12 +2,12 @@ FROM python:3.13-slim
 
 ARG UID=1000
 ARG GID=1000
-ARG OP_VERSION=2.32.0
+ARG OP_VERSION=latest-beta
 
 ENV DEBIAN_FRONTEND=noninteractive \
     PATH="/home/agent/.local/bin:${PATH}"
 
-# System packages: git, curl, unzip (op job), Node 22, OpenSSH client for SSH signing
+# System packages: git, curl, unzip (op CLI), Node 22, OpenSSH client for SSH signing
 RUN apt-get update && \
     apt-get install -y --no-install-recommends git curl unzip ca-certificates && \
     curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
@@ -22,9 +22,12 @@ RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | d
     rm -rf /var/lib/apt/lists/* && \
     gh --version
 
-# 1Password CLI via direct download (avoids the gpg/debsig apt-repo ceremony)
+# 1Password CLI beta via direct download (supports 1Password Environments).
 RUN ARCH="$(dpkg --print-architecture)" && \
-    curl -fsSL "https://cache.agilebits.com/dist/1P/op2/pkg/v${OP_VERSION}/op_linux_${ARCH}_v${OP_VERSION}.zip" -o /tmp/op.zip && \
+    if [ "${OP_VERSION}" = "latest-beta" ]; then \
+      OP_VERSION="$(curl -fsSL https://app-updates.agilebits.com/latest | python3 -c 'import json,sys; print(json.load(sys.stdin)["CLI2"]["beta"]["version"])')"; \
+    fi && \
+    curl -fsSL "https://cache.agilebits.com/dist/1P/op2/pkg/${OP_VERSION}/op_linux_${ARCH}_${OP_VERSION}.zip" -o /tmp/op.zip && \
     unzip -q /tmp/op.zip -d /tmp/op && \
     install -m 0755 /tmp/op/op /usr/local/bin/op && \
     rm -rf /tmp/op /tmp/op.zip && \
@@ -34,8 +37,9 @@ RUN ARCH="$(dpkg --print-architecture)" && \
 RUN npm install -g opencode-ai @anthropic-ai/claude-code @openai/codex && \
     npm cache clean --force
 
-# Project tooling: uv (dlt/dbt workflows) + python common deps
-RUN pip install --no-cache-dir uv
+# Project tooling: mise manages Python, uv, and the Databricks CLI.
+RUN curl -fsSL https://mise.run | MISE_INSTALL_PATH=/usr/local/bin/mise MISE_INSTALL_HELP=0 sh && \
+    mise --version
 
 # Non-root user with NO sudo (limited access)
 RUN (groupadd --gid "$GID" agent 2>/dev/null || groupadd agent) && \
@@ -46,6 +50,4 @@ COPY scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 USER agent
-WORKDIR /workspaces
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-CMD ["/bin/bash"]

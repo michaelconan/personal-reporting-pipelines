@@ -48,5 +48,5 @@ vars:
 
 # Databricks-specific configurations
 # These configs apply when targeting Databricks (dev/test/prod targets)
-# BigQuery targets (dev-bigquery/test-bigquery/prod-bigquery) are retained
+# BigQuery targets (dev-bq/test-bq/prod-bq) are retained
 # for easy rollback path

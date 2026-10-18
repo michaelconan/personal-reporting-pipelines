@@ -38,6 +38,18 @@ macros:
       - name: day_expr
         description: The day column or expression.
         type: string
+  - name: databricks__date_from_parts
+    description: Databricks implementation of date_from_parts using make_date.
+    arguments:
+      - name: year_expr
+        description: The year column or expression.
+        type: string
+      - name: month_expr
+        description: The month column or expression.
+        type: string
+      - name: day_expr
+        description: The day column or expression.
+        type: string
   - name: date_from_offset_seconds
     description: Adapter-aware macro to derive a local date from a UTC timestamp plus
       a second-based UTC offset string (e.g. '3600s'). Uses timestamp_add + date for
@@ -62,6 +74,15 @@ macros:
   - name: duckdb__date_from_offset_seconds
     description: DuckDB implementation of date_from_offset_seconds, dispatched via
       adapter.dispatch.
+    arguments:
+      - name: timestamp_expr
+        description: The UTC timestamp column or expression.
+        type: string
+      - name: offset_seconds_expr
+        description: The UTC offset string column or expression (e.g. '3600s').
+        type: string
+  - name: databricks__date_from_offset_seconds
+    description: Databricks implementation of date_from_offset_seconds using make_interval.
     arguments:
       - name: timestamp_expr
         description: The UTC timestamp column or expression.
@@ -97,6 +118,15 @@ macros:
       - name: end_expr
         description: The ending timestamp column or expression.
         type: string
+  - name: databricks__seconds_between
+    description: Databricks implementation of seconds_between using Unix timestamps.
+    arguments:
+      - name: start_expr
+        description: The starting timestamp column or expression.
+        type: string
+      - name: end_expr
+        description: The ending timestamp column or expression.
+        type: string
   - name: trunc_date
     description: "Adapter-aware macro that truncates timestamps/dates to a specified\
       \ part (e.g., 'month', 'year'). Pass the part as a quoted literal (for example:\
@@ -125,6 +155,15 @@ macros:
       - name: part
         description: The part to truncate to (e.g., 'year', 'month', 'day'). Must
           be passed as a quoted literal.
+        type: string
+      - name: column_name
+        description: The timestamp or date column/expression to truncate.
+        type: string
+  - name: databricks__trunc_date
+    description: Databricks implementation of trunc_date using date_trunc.
+    arguments:
+      - name: part
+        description: The part to truncate to (e.g., 'year', 'month', 'day'). Must be a quoted literal.
         type: string
       - name: column_name
         description: The timestamp or date column/expression to truncate.

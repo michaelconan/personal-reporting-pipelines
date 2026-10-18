@@ -49,12 +49,9 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(PROJECT_ROOT))
 
 try:
-    from scripts.fixtures.scrub_data import resolve_project_root, scrub_api_response
+    from scripts.fixtures.scrub_data import scrub_api_response
 except ImportError:  # direct script execution: expose the repo root, then retry
-    sys.path.insert(0, str(PROJECT_ROOT))
-    from scripts.fixtures.scrub_data import resolve_project_root, scrub_api_response
-
-PROJECT_ROOT = resolve_project_root(Path(__file__).resolve().parent)
+    from scripts.fixtures.scrub_data import scrub_api_response
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
@@ -92,6 +89,7 @@ SOURCE_REGISTRY: dict[str, dict[str, Any]] = {
     },
     "google_health": {
         "secret_key": "sources.google_health.refresh_token",
+        "direct_token_key": "sources.google_health.access_token",
         "page_size_property": "pageSize",
         "pipeline_name": "mock_export_gh",
         "display_name": "Google Health",
@@ -439,6 +437,7 @@ def update_pagination_fields(
     page_1: bool,
     paginator_cursor_path: str | None = None,
     paginator_has_more_path: str | None = None,
+    records: list[dict[str, Any]] | None = None,
 ) -> None:
     """Validate or remove fields at paths configured by the dlt paginator."""
     if not paginator_cursor_path:
@@ -446,6 +445,16 @@ def update_pagination_fields(
 
     cursor_value = get_nested_value(payload, paginator_cursor_path)
     if page_1:
+        # HubSpot's `after` cursor is the id of the final record in the page.
+        # Preserve opaque cursors from captured APIs, but make generated
+        # HubSpot fixtures internally consistent with the response payload.
+        if (
+            records
+            and paginator_cursor_path == "paging.next.after"
+            and cursor_value == "6"
+            and isinstance(records[-1].get("id"), (str, int))
+        ):
+            set_nested_value(payload, paginator_cursor_path, str(records[-1]["id"]))
         if cursor_value is None:
             raise ValueError(
                 f"Captured response is missing the dlt paginator cursor path "
@@ -459,7 +468,13 @@ def update_pagination_fields(
 
 
 def pad_records(records: list[dict[str, Any]], target_count: int = 6) -> list[dict[str, Any]]:
-    """Ensure records list has at least target_count items by deep-copying and updating IDs."""
+    """Ensure records have stable, unique identities before fixture splitting.
+
+    Captured Google Health records use ``name`` as their identity while other
+    APIs commonly use ``id`` or ``logId``.  Padding must not duplicate a
+    record across fixture pages because that makes pagination and incremental
+    tests produce false positives.
+    """
     if not records:
         return []
     result = copy.deepcopy(records)
@@ -471,6 +486,10 @@ def pad_records(records: list[dict[str, Any]], target_count: int = 6) -> list[di
             sample["id"] = f"{sample['id']}_{idx + 1}"
         if "logId" in sample:
             sample["logId"] = sample["logId"] + idx + 1
+        if "name" in sample and isinstance(sample["name"], str):
+            sample["name"] = f"{sample['name']}-mock-{idx + 1}"
+        elif "name" not in sample:
+            sample["name"] = f"mock-record-{idx + 1}"
         result.append(sample)
     return result
 
@@ -603,6 +622,7 @@ def process_and_split_payload(
         page_1=True,
         paginator_cursor_path=paginator_cursor_path,
         paginator_has_more_path=paginator_has_more_path,
+        records=records[0:3],
     )
 
     # 2. run1_page2 (2 records + cleared pagination indicators)
@@ -617,6 +637,14 @@ def process_and_split_payload(
 
     # 3. run2 (1 record with updated incremental timestamp/cursor)
     run2_record = advance_timestamps(records[5], cursor_path=incremental_cursor_path)
+    # A second incremental fetch represents a new record, not a duplicate
+    # update of the final record from the first run.
+    if isinstance(run2_record.get("id"), (str, int)):
+        run2_record["id"] = f"{run2_record['id']}_run2"
+    if isinstance(run2_record.get("logId"), int):
+        run2_record["logId"] += 1000000
+    if isinstance(run2_record.get("name"), str):
+        run2_record["name"] = f"{run2_record['name']}-run2"
     run2_payload = _build_page([run2_record])
     update_pagination_fields(
         run2_payload,
@@ -687,7 +715,6 @@ def run_source_export(
     session: requests.Session,
     sources_map: dict[str, dict[str, Any]],
     source_key: str,
-    dry_run: bool,
 ) -> None:
     """Run one registry-configured source extraction and capture API responses.
 
@@ -696,7 +723,7 @@ def run_source_export(
     """
     config = SOURCE_REGISTRY[source_key]
     display = config.get("display_name", source_key)
-    if not get_secret(config["secret_key"]):
+    if not get_secret(config["secret_key"]) and not get_secret(config.get("direct_token_key", "")):
         logger.warning("Skipping %s: required secret is not configured.", display)
         return
 
@@ -728,25 +755,21 @@ def run_source_export(
         logger.debug("Unable to enumerate source resources", exc_info=True)
 
 
-def run_hubspot_export(
-    session: requests.Session, sources_map: dict[str, dict[str, Any]], dry_run: bool
-) -> None:
+def run_hubspot_export(session: requests.Session, sources_map: dict[str, dict[str, Any]]) -> None:
     """Run HubSpot source extraction and process response bodies."""
-    run_source_export(session, sources_map, "hubspot", dry_run)
+    run_source_export(session, sources_map, "hubspot")
 
 
-def run_notion_export(
-    session: requests.Session, sources_map: dict[str, dict[str, Any]], dry_run: bool
-) -> None:
+def run_notion_export(session: requests.Session, sources_map: dict[str, dict[str, Any]]) -> None:
     """Run Notion source extraction and process response bodies."""
-    run_source_export(session, sources_map, "notion", dry_run)
+    run_source_export(session, sources_map, "notion")
 
 
 def run_google_health_export(
-    session: requests.Session, sources_map: dict[str, dict[str, Any]], dry_run: bool
+    session: requests.Session, sources_map: dict[str, dict[str, Any]]
 ) -> None:
     """Run Google Health source extraction and process response bodies."""
-    run_source_export(session, sources_map, "google_health", dry_run)
+    run_source_export(session, sources_map, "google_health")
 
 
 def save_captured_responses(
@@ -824,7 +847,7 @@ def main(argv: list[str] | None = None) -> None:
 
     for source_key in SOURCE_REGISTRY:
         if args.source in (source_key, "all"):
-            run_source_export(session, sources_map, source_key, args.dry_run)
+            run_source_export(session, sources_map, source_key)
 
     save_captured_responses(session.captured_responses, sources_map, args.dry_run)
 
