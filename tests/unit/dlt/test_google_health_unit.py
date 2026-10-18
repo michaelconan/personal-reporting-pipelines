@@ -9,6 +9,7 @@ import dlt
 
 # PyPI imports
 import pytest
+import requests
 from pytest import MonkeyPatch
 
 # local imports
@@ -129,12 +130,9 @@ def mock_google_health_apis(monkeypatch: MonkeyPatch, mock_responses) -> Callabl
     monkeypatch.setenv("SOURCES__GOOGLE_HEALTH__CLIENT_SECRET", "dummy_secret")
 
     initial_filters: dict[str, str] = {}
-    exercise_first_page_calls = 0
-    incremental_mode = True
 
     def cursor_callback(request, resource: str):
         """Handle cursor-based pagination for Google Health APIs."""
-        nonlocal exercise_first_page_calls
         parsed_url = urlparse(request.url)
         params = parse_qs(parsed_url.query)
         page_token = params.get("pageToken", [""])[0]
@@ -144,23 +142,16 @@ def mock_google_health_apis(monkeypatch: MonkeyPatch, mock_responses) -> Callabl
             page1 = json.loads(sample_response(f"google_health__{resource}-run1_page1.json")[2])
             assert page_token == page1["nextPageToken"]
             return sample_response(f"google_health__{resource}-run1_page2.json")
-        if resource == "exercise" and not filter_val and incremental_mode:
-            exercise_first_page_calls += 1
-            if exercise_first_page_calls > 1:
-                return sample_response(f"google_health__{resource}-run2.json")
         if filter_val != initial_filter:
             return sample_response(f"google_health__{resource}-run2.json")
         return sample_response(f"google_health__{resource}-run1_page1.json")
 
-    def setup(endpoints=None, incremental=True):
+    def setup(endpoints=None):
         """Nested function to only register mock endpoints for tests.
 
         Args:
             endpoints (list, optional): Specific endpoints to register. Defaults to None (all).
-            incremental: Whether the test run should return the next incremental page.
         """
-        nonlocal incremental_mode
-        incremental_mode = incremental
         if endpoints is None:
             endpoints = []
         # Mock the API responses
@@ -286,7 +277,7 @@ def test_google_health_refresh(
     increment: bool,
 ):
     # GIVEN (1)
-    mock_google_health_apis(endpoints=[resource], incremental=increment)
+    mock_google_health_apis(endpoints=[resource])
     expected_rows = 5  # 3 from page 1 + 2 from page 2
     dataset = duckdb_pipeline.dataset_name
     table = resource
@@ -360,3 +351,47 @@ def test_google_health_pipeline(mock_google_health_apis, duckdb_pipeline):
     with duckdb_pipeline.sql_client() as client:
         sleep_table = client.execute_sql(f"SELECT COUNT(*) FROM {dataset}.google_health__sleep")
         assert sleep_table[0][0] >= 3
+
+
+class _RecordingSession(requests.Session):
+    """Requests session that records URLs and returns empty data point pages."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.urls: list[str] = []
+
+    def send(self, request, **kwargs):  # noqa: ANN001, ANN003
+        self.urls.append(request.url)
+        response = requests.Response()
+        response.status_code = 200
+        response._content = b'{"dataPoints": []}'
+        response.headers["Content-Type"] = "application/json"
+        response.url = request.url
+        response.request = request
+        return response
+
+
+def test_google_health_exercise_filters_on_civil_start_time():
+    """Exercise filters server-side using an offset-less civil start time.
+
+    The Exercise data type only exposes ``civil_start_time`` for server-side
+    filtering and rejects RFC3339 values that carry a ``Z`` or numeric offset.
+    """
+    session = _RecordingSession()
+    source = google_health_source(
+        access_token="dummy_token",
+        initial_date="2026-01-01",
+        end_date="2026-02-01",
+        session=session,
+    )
+
+    list(source.resources["google_health__exercise"])
+
+    assert len(session.urls) == 1
+    query = parse_qs(urlparse(session.urls[0]).query)
+    (filter_value,) = query["filter"]
+    assert filter_value == (
+        'exercise.interval.civil_start_time >= "2026-01-01T00:00:00"'
+        ' AND exercise.interval.civil_start_time < "2026-02-01T00:00:00"'
+    )
+    assert "Z" not in filter_value

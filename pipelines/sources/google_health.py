@@ -14,6 +14,7 @@ API Resources:
 - `Daily Roll Up DataPoints <https://developers.google.com/health/reference/rest/v4/users.dataTypes.dataPoints/dailyRollUp>`_
 """
 
+from datetime import datetime
 from typing import Any
 
 import dlt
@@ -95,6 +96,21 @@ def get_google_health_token() -> str:
     return creds.token
 
 
+def _to_civil_datetime(value: Any) -> Any:
+    """Render an incremental timestamp as an offset-less civil date-time.
+
+    The Exercise data type only exposes ``civil_start_time`` as a server-side
+    filter field, and it rejects RFC3339 values that carry a ``Z`` or numeric
+    offset. The incremental cursor keeps the exact UTC timestamp for local
+    comparison; this only reformats the value interpolated into the filter.
+    """
+    if isinstance(value, str) and value.endswith("Z"):
+        return value[:-1]
+    if isinstance(value, datetime) and value.tzinfo is not None:
+        return value.replace(tzinfo=None).isoformat()
+    return value
+
+
 def google_health_source(
     access_token: str,
     initial_date: str = "1970-01-01",
@@ -105,9 +121,14 @@ def google_health_source(
     end_ts = f"{end_date}T00:00:00Z" if end_date else None
     sleep_filter = 'sleep.interval.end_time >= "{incremental.start_value}"'
     steps_filter = 'steps.interval.start_time >= "{incremental.start_value}"'
+    # Exercise only exposes a civil (offset-less) start time as a server-side
+    # filter field; the UTC suffix is stripped via the incremental `convert`
+    # hook while the exact UTC cursor is still used for local comparison.
+    exercise_filter = 'exercise.interval.civil_start_time >= "{incremental.start_value}"'
     if end_date:
         sleep_filter += ' AND sleep.interval.end_time < "{incremental.end_value}"'
         steps_filter += ' AND steps.interval.start_time < "{incremental.end_value}"'
+        exercise_filter += ' AND exercise.interval.civil_start_time < "{incremental.end_value}"'
 
     api_config: dict[str, Any] = {
         "client": {
@@ -154,14 +175,12 @@ def google_health_source(
                 "max_table_nesting": 2,
                 "endpoint": {
                     "path": "users/me/dataTypes/exercise/dataPoints",
-                    # The Exercise data type does not expose interval members
-                    # as server-side filter fields; dlt applies this cursor
-                    # locally after fetching the paginated response.
-                    "params": {"pageSize": 25},
+                    "params": {"filter": exercise_filter, "pageSize": 25},
                     "incremental": {
                         "cursor_path": "exercise.interval.startTime",
                         "initial_value": initial_ts,
                         "end_value": end_ts,
+                        "convert": _to_civil_datetime,
                     },
                 },
             },
