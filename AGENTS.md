@@ -193,6 +193,15 @@ select * from final
 
 Applies to staging, core, intermediate, and marts. Union models align branches in CTEs and union inside `final`.
 
+### Git commits (required)
+Agent-authored commits must attribute the model that produced them with a trailer on **every** commit (including amended/rewritten commits):
+
+```
+Co-authored-by: OpenCode (<model>) <opencode-agent[bot]@users.noreply.github.com>
+```
+
+Use the session's model id with the provider prefix removed (e.g. a session running `opencode-go/deepseek-v4.1-flash` uses `deepseek-v4.1-flash`). The commit author stays the dedicated machine user (`Conan Assistant`); the trailer records the model. When rewriting history, add the trailer to each commit rather than only the tip.
+
 ## Naming Conventions
 - **dlt tables**: `{source}__{entity}` (e.g., `hubspot__contacts`)
 - **Pipeline functions**: `refresh_{source}()` (e.g., `refresh_hubspot()`)
