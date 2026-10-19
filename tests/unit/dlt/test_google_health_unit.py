@@ -2,7 +2,7 @@
 import io
 import json
 from collections.abc import Callable
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from typing import Any
 from unittest.mock import MagicMock
 from urllib.parse import parse_qs, urlparse
@@ -413,6 +413,12 @@ def test_to_civil_date_bound_widens_and_drops_time():
     assert _to_civil_date_bound("2026-07-18T07:00:00.500Z") == "2026-07-17"
     assert _to_civil_date_bound("2026-07-18T07:00:00+05:30") == "2026-07-17"
     assert _to_civil_date_bound(datetime(2026, 1, 1, tzinfo=timezone.utc)) == "2025-12-31"
+    assert _to_civil_date_bound(date(2026, 1, 1)) == "2025-12-31"
+
+
+def test_to_civil_date_bound_rejects_unsupported_values():
+    with pytest.raises(TypeError):
+        _to_civil_date_bound(12345)
 
 
 def test_civil_bound_is_superset_of_utc_cursor():
