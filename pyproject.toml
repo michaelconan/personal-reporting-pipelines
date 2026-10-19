@@ -36,6 +36,13 @@ dev = [
     "yamlfix>=1.19.1",
 ]
 
+[tool.uv]
+# dlt[databricks] pulls in databricks-sql-connector, which pins
+# `oauthlib>=3.1.0,<4.0.0`. Adopting oauthlib 4.x (as dependency automation
+# proposes) would force dropping the Databricks stack, the primary target, so
+# hold it below 4.0.0 to keep the lockfile resolvable.
+constraint-dependencies = ["oauthlib<4.0.0"]
+
 [tool.ruff]
 line-length = 100
 exclude = [

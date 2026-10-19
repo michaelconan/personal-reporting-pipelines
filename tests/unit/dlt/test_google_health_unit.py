@@ -1,6 +1,8 @@
 # base imports
+import io
 import json
 from collections.abc import Callable
+from datetime import date, datetime, timedelta, timezone
 from typing import Any
 from unittest.mock import MagicMock
 from urllib.parse import parse_qs, urlparse
@@ -9,10 +11,15 @@ import dlt
 
 # PyPI imports
 import pytest
+import requests
 from pytest import MonkeyPatch
 
 # local imports
-from pipelines.sources.google_health import get_google_health_token, google_health_source
+from pipelines.sources.google_health import (
+    _to_civil_date_bound,
+    get_google_health_token,
+    google_health_source,
+)
 from tests.unit.dlt.conftest import (
     incremental_last_value,
     sample_data,
@@ -129,12 +136,9 @@ def mock_google_health_apis(monkeypatch: MonkeyPatch, mock_responses) -> Callabl
     monkeypatch.setenv("SOURCES__GOOGLE_HEALTH__CLIENT_SECRET", "dummy_secret")
 
     initial_filters: dict[str, str] = {}
-    exercise_first_page_calls = 0
-    incremental_mode = True
 
     def cursor_callback(request, resource: str):
         """Handle cursor-based pagination for Google Health APIs."""
-        nonlocal exercise_first_page_calls
         parsed_url = urlparse(request.url)
         params = parse_qs(parsed_url.query)
         page_token = params.get("pageToken", [""])[0]
@@ -144,23 +148,16 @@ def mock_google_health_apis(monkeypatch: MonkeyPatch, mock_responses) -> Callabl
             page1 = json.loads(sample_response(f"google_health__{resource}-run1_page1.json")[2])
             assert page_token == page1["nextPageToken"]
             return sample_response(f"google_health__{resource}-run1_page2.json")
-        if resource == "exercise" and not filter_val and incremental_mode:
-            exercise_first_page_calls += 1
-            if exercise_first_page_calls > 1:
-                return sample_response(f"google_health__{resource}-run2.json")
         if filter_val != initial_filter:
             return sample_response(f"google_health__{resource}-run2.json")
         return sample_response(f"google_health__{resource}-run1_page1.json")
 
-    def setup(endpoints=None, incremental=True):
+    def setup(endpoints=None):
         """Nested function to only register mock endpoints for tests.
 
         Args:
             endpoints (list, optional): Specific endpoints to register. Defaults to None (all).
-            incremental: Whether the test run should return the next incremental page.
         """
-        nonlocal incremental_mode
-        incremental_mode = incremental
         if endpoints is None:
             endpoints = []
         # Mock the API responses
@@ -286,7 +283,7 @@ def test_google_health_refresh(
     increment: bool,
 ):
     # GIVEN (1)
-    mock_google_health_apis(endpoints=[resource], incremental=increment)
+    mock_google_health_apis(endpoints=[resource])
     expected_rows = 5  # 3 from page 1 + 2 from page 2
     dataset = duckdb_pipeline.dataset_name
     table = resource
@@ -360,3 +357,127 @@ def test_google_health_pipeline(mock_google_health_apis, duckdb_pipeline):
     with duckdb_pipeline.sql_client() as client:
         sleep_table = client.execute_sql(f"SELECT COUNT(*) FROM {dataset}.google_health__sleep")
         assert sleep_table[0][0] >= 3
+
+
+class _RecordingSession(requests.Session):
+    """Requests session that records URLs and serves a canned data point page."""
+
+    def __init__(self, payload: dict[str, Any] | None = None) -> None:
+        super().__init__()
+        self.urls: list[str] = []
+        self.payload = payload if payload is not None else {"dataPoints": []}
+
+    def send(self, request, **kwargs):  # noqa: ANN001, ANN003
+        self.urls.append(request.url)
+        response = requests.Response()
+        response.status_code = 200
+        response.raw = io.BytesIO(json.dumps(self.payload).encode())
+        response.headers["Content-Type"] = "application/json"
+        response.url = request.url
+        response.request = request
+        return response
+
+
+def test_google_health_exercise_filters_on_civil_start_time():
+    """Exercise filters server-side using a conservative civil date bound.
+
+    The Exercise data type only exposes ``civil_start_time`` (local clock time),
+    so the UTC cursor is widened by a day to keep the server filter a superset
+    of the precise local incremental range.
+    """
+    session = _RecordingSession()
+    source = google_health_source(
+        access_token="dummy_token",
+        initial_date="2026-01-01",
+        end_date="2026-02-01",
+        session=session,
+    )
+
+    list(source.resources["google_health__exercise"])
+
+    assert len(session.urls) == 1
+    query = parse_qs(urlparse(session.urls[0]).query)
+    (filter_value,) = query["filter"]
+    assert filter_value == (
+        'exercise.interval.civil_start_time >= "2025-12-31"'
+        ' AND exercise.interval.civil_start_time < "2026-02-02"'
+    )
+    assert "Z" not in filter_value
+    assert "T" not in filter_value
+
+
+def test_to_civil_date_bound_widens_and_drops_time():
+    """``convert`` yields a date one day before the UTC watermark."""
+
+    assert _to_civil_date_bound("2026-01-01T00:00:00Z") == "2025-12-31"
+    assert _to_civil_date_bound("2026-07-18T07:00:00.500Z") == "2026-07-17"
+    assert _to_civil_date_bound(datetime(2026, 1, 1, tzinfo=timezone.utc)) == "2025-12-31"
+    assert _to_civil_date_bound(date(2026, 1, 1)) == "2025-12-31"
+
+
+def test_to_civil_date_bound_rejects_unsupported_values():
+    with pytest.raises(TypeError):
+        _to_civil_date_bound(12345)
+
+
+def test_civil_bound_is_superset_of_utc_cursor():
+    """A newer record can carry an earlier civil time than the UTC cursor.
+
+    With a -7h offset, a record 3h after the cursor in UTC is 4h before it on
+    the user's clock. The widened date bound must still include that record.
+    """
+
+    cursor = datetime(2026, 7, 18, 7, 0, tzinfo=timezone.utc)
+    bound = datetime.fromisoformat(_to_civil_date_bound(cursor.isoformat()))
+    new_record_civil = (cursor + timedelta(hours=3) - timedelta(hours=7)).replace(tzinfo=None)
+    assert new_record_civil >= bound
+
+
+def test_google_health_exercise_second_run_uses_civil_bound(tmp_path):
+    """A persisted UTC cursor is re-expressed as a conservative civil bound."""
+
+    database_path = tmp_path / "second_run.duckdb"
+    pipeline = dlt.pipeline(
+        pipeline_name="gh_second_run",
+        destination=dlt.destinations.duckdb(credentials=str(database_path)),
+        dataset_name="raw",
+        pipelines_dir=str(tmp_path / "pipelines"),
+    )
+
+    first = _RecordingSession(
+        payload={
+            "dataPoints": [
+                {
+                    "exercise": {
+                        "interval": {
+                            "startTime": "2026-07-18T07:00:00Z",
+                            "startUtcOffset": "-25200s",
+                            "endTime": "2026-07-18T08:00:00Z",
+                            "endUtcOffset": "-25200s",
+                        }
+                    }
+                }
+            ]
+        }
+    )
+    pipeline.run(
+        google_health_source(
+            access_token="dummy_token", initial_date="2026-01-01", session=first
+        ).resources["google_health__exercise"]
+    )
+
+    assert (
+        incremental_last_value(pipeline, "google_health__exercise", "exercise.interval.startTime")
+        == "2026-07-18T07:00:00Z"
+    )
+
+    second = _RecordingSession()
+    pipeline.run(
+        google_health_source(
+            access_token="dummy_token", initial_date="2026-01-01", session=second
+        ).resources["google_health__exercise"]
+    )
+
+    (filter_value,) = parse_qs(urlparse(second.urls[0]).query)["filter"]
+    assert filter_value == 'exercise.interval.civil_start_time >= "2026-07-17"'
+    assert "Z" not in filter_value

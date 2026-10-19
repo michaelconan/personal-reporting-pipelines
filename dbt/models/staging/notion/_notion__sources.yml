@@ -15,7 +15,7 @@ sources:
       loaded_at_query: |
         select max(loads.inserted_at)
         from {{ this }} as rows
-        join `{{ this.database }}.{{ this.schema }}._dlt_loads` as loads
+        join `{{ this.database }}`.`{{ this.schema }}`.`_dlt_loads` as loads
           on rows._dlt_load_id = loads.load_id
         where loads.status = 0
       # On DuckDB (mock) targets each table is read directly from its test

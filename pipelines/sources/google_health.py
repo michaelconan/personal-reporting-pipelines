@@ -14,6 +14,7 @@ API Resources:
 - `Daily Roll Up DataPoints <https://developers.google.com/health/reference/rest/v4/users.dataTypes.dataPoints/dailyRollUp>`_
 """
 
+from datetime import date, datetime, timedelta
 from typing import Any
 
 import dlt
@@ -95,6 +96,40 @@ def get_google_health_token() -> str:
     return creds.token
 
 
+_CIVIL_BOUND_MARGIN = timedelta(days=1)
+
+
+def _utc_date(value: Any) -> date:
+    """Extract the UTC calendar date from an incremental watermark."""
+    if isinstance(value, datetime):
+        return value.date()
+    if isinstance(value, date):
+        return value
+    if isinstance(value, str):
+        # Incremental timestamps come from the API Z-normalized, so the first
+        # 10 characters are the UTC date. Slicing also drops fractional
+        # seconds (e.g. ``.500Z``). A non-Z offset would be read as a literal
+        # calendar date; the one-day bound margin still covers that case.
+        return date.fromisoformat(value[:10])
+    raise TypeError(f"Unsupported incremental value: {value!r}")
+
+
+def _to_civil_date_bound(value: Any) -> str:
+    """Return a conservative offset-less civil date bound for a UTC watermark.
+
+    The Exercise data type only exposes ``exercise.interval.civil_start_time``
+    for server-side filtering, and that field is the user's local clock time
+    while the incremental cursor stores UTC. Because ``civil = utc + offset``,
+    a new record's civil time can be up to ~14 hours *earlier* than the UTC
+    watermark, so the server-side bound is widened by one day. The local
+    incremental still filters precisely on the UTC cursor, so the server
+    filter only has to be a superset (it never drops a newer record). A
+    date-only literal also avoids the fractional seconds that the civil
+    format rejects.
+    """
+    return (_utc_date(value) - _CIVIL_BOUND_MARGIN).isoformat()
+
+
 def google_health_source(
     access_token: str,
     initial_date: str = "1970-01-01",
@@ -105,9 +140,17 @@ def google_health_source(
     end_ts = f"{end_date}T00:00:00Z" if end_date else None
     sleep_filter = 'sleep.interval.end_time >= "{incremental.start_value}"'
     steps_filter = 'steps.interval.start_time >= "{incremental.start_value}"'
+    # Exercise only exposes a civil (local clock) start time for server-side
+    # filtering while the cursor stores UTC. Widen the server bound by a day so
+    # it is always a superset of the UTC range; the local incremental filters
+    # precisely. The upper bound is a fixed literal because `end_date` is known
+    # up front.
+    exercise_filter = 'exercise.interval.civil_start_time >= "{incremental.start_value}"'
     if end_date:
         sleep_filter += ' AND sleep.interval.end_time < "{incremental.end_value}"'
         steps_filter += ' AND steps.interval.start_time < "{incremental.end_value}"'
+        end_civil = (date.fromisoformat(end_date) + _CIVIL_BOUND_MARGIN).isoformat()
+        exercise_filter += f' AND exercise.interval.civil_start_time < "{end_civil}"'
 
     api_config: dict[str, Any] = {
         "client": {
@@ -154,14 +197,12 @@ def google_health_source(
                 "max_table_nesting": 2,
                 "endpoint": {
                     "path": "users/me/dataTypes/exercise/dataPoints",
-                    # The Exercise data type does not expose interval members
-                    # as server-side filter fields; dlt applies this cursor
-                    # locally after fetching the paginated response.
-                    "params": {"pageSize": 25},
+                    "params": {"filter": exercise_filter, "pageSize": 25},
                     "incremental": {
                         "cursor_path": "exercise.interval.startTime",
                         "initial_value": initial_ts,
                         "end_value": end_ts,
+                        "convert": _to_civil_date_bound,
                     },
                 },
             },
