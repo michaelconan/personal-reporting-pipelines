@@ -106,9 +106,10 @@ def _utc_date(value: Any) -> date:
     if isinstance(value, date):
         return value
     if isinstance(value, str):
-        # Cursor timestamps are Z-normalized UTC; the first 10 characters are
-        # the UTC date regardless of a trailing ``Z``, numeric offset, or
-        # fractional seconds.
+        # Incremental timestamps come from the API Z-normalized, so the first
+        # 10 characters are the UTC date. Slicing also drops fractional
+        # seconds (e.g. ``.500Z``). A non-Z offset would be read as a literal
+        # calendar date; the one-day bound margin still covers that case.
         return date.fromisoformat(value[:10])
     raise TypeError(f"Unsupported incremental value: {value!r}")
 

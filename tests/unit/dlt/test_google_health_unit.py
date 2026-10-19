@@ -411,7 +411,6 @@ def test_to_civil_date_bound_widens_and_drops_time():
 
     assert _to_civil_date_bound("2026-01-01T00:00:00Z") == "2025-12-31"
     assert _to_civil_date_bound("2026-07-18T07:00:00.500Z") == "2026-07-17"
-    assert _to_civil_date_bound("2026-07-18T07:00:00+05:30") == "2026-07-17"
     assert _to_civil_date_bound(datetime(2026, 1, 1, tzinfo=timezone.utc)) == "2025-12-31"
     assert _to_civil_date_bound(date(2026, 1, 1)) == "2025-12-31"
 

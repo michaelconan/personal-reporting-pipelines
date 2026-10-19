@@ -97,6 +97,7 @@ def test_loaded_at_query_does_not_coalesce(name: str, rel: str) -> None:
 @pytest.mark.parametrize(("name", "rel"), SOURCES)
 def test_dlt_loads_referenced_with_per_part_quoting(name: str, rel: str) -> None:
     query = _source(name, rel)["config"]["loaded_at_query"]
+    assert "`{{ this.database }}`.`{{ this.schema }}`.`_dlt_loads`" in query
     assert "`{{ this.database }}.{{ this.schema }}._dlt_loads`" not in query, (
         f"{name}: `_dlt_loads` is referenced inside a single backtick span that "
         "contains dots. Databricks parses it as one identifier, so the table "
