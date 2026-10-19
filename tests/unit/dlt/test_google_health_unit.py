@@ -1,6 +1,7 @@
 # base imports
 import json
 from collections.abc import Callable
+from datetime import datetime, timezone
 from typing import Any
 from unittest.mock import MagicMock
 from urllib.parse import parse_qs, urlparse
@@ -13,7 +14,11 @@ import requests
 from pytest import MonkeyPatch
 
 # local imports
-from pipelines.sources.google_health import get_google_health_token, google_health_source
+from pipelines.sources.google_health import (
+    _to_civil_datetime,
+    get_google_health_token,
+    google_health_source,
+)
 from tests.unit.dlt.conftest import (
     incremental_last_value,
     sample_data,
@@ -395,3 +400,11 @@ def test_google_health_exercise_filters_on_civil_start_time():
         ' AND exercise.interval.civil_start_time < "2026-02-01T00:00:00"'
     )
     assert "Z" not in filter_value
+
+
+def test_to_civil_datetime_strips_offsets():
+    """``convert`` yields an offset-less civil value for the filter."""
+
+    assert _to_civil_datetime("2026-01-01T00:00:00Z") == "2026-01-01T00:00:00"
+    assert _to_civil_datetime("2026-01-01T00:00:00") == "2026-01-01T00:00:00"
+    assert _to_civil_datetime(datetime(2026, 1, 1, tzinfo=timezone.utc)) == "2026-01-01T00:00:00"
