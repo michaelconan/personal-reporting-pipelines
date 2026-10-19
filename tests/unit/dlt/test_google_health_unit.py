@@ -1,7 +1,8 @@
 # base imports
+import io
 import json
 from collections.abc import Callable
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any
 from unittest.mock import MagicMock
 from urllib.parse import parse_qs, urlparse
@@ -15,7 +16,7 @@ from pytest import MonkeyPatch
 
 # local imports
 from pipelines.sources.google_health import (
-    _to_civil_datetime,
+    _to_civil_date_bound,
     get_google_health_token,
     google_health_source,
 )
@@ -359,17 +360,18 @@ def test_google_health_pipeline(mock_google_health_apis, duckdb_pipeline):
 
 
 class _RecordingSession(requests.Session):
-    """Requests session that records URLs and returns empty data point pages."""
+    """Requests session that records URLs and serves a canned data point page."""
 
-    def __init__(self) -> None:
+    def __init__(self, payload: dict[str, Any] | None = None) -> None:
         super().__init__()
         self.urls: list[str] = []
+        self.payload = payload if payload is not None else {"dataPoints": []}
 
     def send(self, request, **kwargs):  # noqa: ANN001, ANN003
         self.urls.append(request.url)
         response = requests.Response()
         response.status_code = 200
-        response._content = b'{"dataPoints": []}'
+        response.raw = io.BytesIO(json.dumps(self.payload).encode())
         response.headers["Content-Type"] = "application/json"
         response.url = request.url
         response.request = request
@@ -377,10 +379,11 @@ class _RecordingSession(requests.Session):
 
 
 def test_google_health_exercise_filters_on_civil_start_time():
-    """Exercise filters server-side using an offset-less civil start time.
+    """Exercise filters server-side using a conservative civil date bound.
 
-    The Exercise data type only exposes ``civil_start_time`` for server-side
-    filtering and rejects RFC3339 values that carry a ``Z`` or numeric offset.
+    The Exercise data type only exposes ``civil_start_time`` (local clock time),
+    so the UTC cursor is widened by a day to keep the server filter a superset
+    of the precise local incremental range.
     """
     session = _RecordingSession()
     source = google_health_source(
@@ -396,15 +399,80 @@ def test_google_health_exercise_filters_on_civil_start_time():
     query = parse_qs(urlparse(session.urls[0]).query)
     (filter_value,) = query["filter"]
     assert filter_value == (
-        'exercise.interval.civil_start_time >= "2026-01-01T00:00:00"'
-        ' AND exercise.interval.civil_start_time < "2026-02-01T00:00:00"'
+        'exercise.interval.civil_start_time >= "2025-12-31"'
+        ' AND exercise.interval.civil_start_time < "2026-02-02"'
     )
     assert "Z" not in filter_value
+    assert "T" not in filter_value
 
 
-def test_to_civil_datetime_strips_offsets():
-    """``convert`` yields an offset-less civil value for the filter."""
+def test_to_civil_date_bound_widens_and_drops_time():
+    """``convert`` yields a date one day before the UTC watermark."""
 
-    assert _to_civil_datetime("2026-01-01T00:00:00Z") == "2026-01-01T00:00:00"
-    assert _to_civil_datetime("2026-01-01T00:00:00") == "2026-01-01T00:00:00"
-    assert _to_civil_datetime(datetime(2026, 1, 1, tzinfo=timezone.utc)) == "2026-01-01T00:00:00"
+    assert _to_civil_date_bound("2026-01-01T00:00:00Z") == "2025-12-31"
+    assert _to_civil_date_bound("2026-07-18T07:00:00.500Z") == "2026-07-17"
+    assert _to_civil_date_bound("2026-07-18T07:00:00+05:30") == "2026-07-17"
+    assert _to_civil_date_bound(datetime(2026, 1, 1, tzinfo=timezone.utc)) == "2025-12-31"
+
+
+def test_civil_bound_is_superset_of_utc_cursor():
+    """A newer record can carry an earlier civil time than the UTC cursor.
+
+    With a -7h offset, a record 3h after the cursor in UTC is 4h before it on
+    the user's clock. The widened date bound must still include that record.
+    """
+
+    cursor = datetime(2026, 7, 18, 7, 0, tzinfo=timezone.utc)
+    bound = datetime.fromisoformat(_to_civil_date_bound(cursor.isoformat()))
+    new_record_civil = (cursor + timedelta(hours=3) - timedelta(hours=7)).replace(tzinfo=None)
+    assert new_record_civil >= bound
+
+
+def test_google_health_exercise_second_run_uses_civil_bound(tmp_path):
+    """A persisted UTC cursor is re-expressed as a conservative civil bound."""
+
+    database_path = tmp_path / "second_run.duckdb"
+    pipeline = dlt.pipeline(
+        pipeline_name="gh_second_run",
+        destination=dlt.destinations.duckdb(credentials=str(database_path)),
+        dataset_name="raw",
+        pipelines_dir=str(tmp_path / "pipelines"),
+    )
+
+    first = _RecordingSession(
+        payload={
+            "dataPoints": [
+                {
+                    "exercise": {
+                        "interval": {
+                            "startTime": "2026-07-18T07:00:00Z",
+                            "startUtcOffset": "-25200s",
+                            "endTime": "2026-07-18T08:00:00Z",
+                            "endUtcOffset": "-25200s",
+                        }
+                    }
+                }
+            ]
+        }
+    )
+    pipeline.run(
+        google_health_source(
+            access_token="dummy_token", initial_date="2026-01-01", session=first
+        ).resources["google_health__exercise"]
+    )
+
+    assert (
+        incremental_last_value(pipeline, "google_health__exercise", "exercise.interval.startTime")
+        == "2026-07-18T07:00:00Z"
+    )
+
+    second = _RecordingSession()
+    pipeline.run(
+        google_health_source(
+            access_token="dummy_token", initial_date="2026-01-01", session=second
+        ).resources["google_health__exercise"]
+    )
+
+    (filter_value,) = parse_qs(urlparse(second.urls[0]).query)["filter"]
+    assert filter_value == 'exercise.interval.civil_start_time >= "2026-07-17"'
+    assert "Z" not in filter_value
