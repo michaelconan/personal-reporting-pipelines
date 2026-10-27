@@ -21,6 +21,26 @@ jobs:
       - uses: anomalyco/opencode/github@2410593023d2c61f05123c9b0faf189a28dfbeee # pinned revision
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          OPENCODE_CONFIG_CONTENT: |
+            {
+              "permission": {
+                "read": "allow",
+                "edit": "allow",
+                "glob": "allow",
+                "grep": "allow",
+                "list": "allow",
+                "bash": "allow",
+                "task": "allow",
+                "external_directory": "allow",
+                "todowrite": "allow",
+                "webfetch": "allow",
+                "websearch": "allow",
+                "lsp": "allow",
+                "skill": "allow",
+                "question": "deny",
+                "doom_loop": "deny"
+              }
+            }
         with:
           model: ${{ vars.OPENCODE_MODEL }}
           prompt: |
