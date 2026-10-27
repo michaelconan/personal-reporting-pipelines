@@ -17,6 +17,7 @@ jobs:
   run-pipeline:
     runs-on: ubuntu-latest
     env:
+      DBT_TARGET: prod
       MISE_ENABLE_TOOLS: uv,python,databricks-cli
     steps:
       - name: checkout code
@@ -42,9 +43,9 @@ jobs:
           PYTHONUNBUFFERED: '1'
         run: |
           if [ "${{ inputs.force_full_refresh }}" = "true" ]; then
-            op run --environment "$OP_ENVIRONMENT_ID" -- mise run pipeline -- hubspot --full
+            op run --environment "$OP_ENVIRONMENT_ID" -- env DBT_TARGET=prod mise run pipeline -- hubspot --full
           else
-            op run --environment "$OP_ENVIRONMENT_ID" -- mise run pipeline -- hubspot
+            op run --environment "$OP_ENVIRONMENT_ID" -- env DBT_TARGET=prod mise run pipeline -- hubspot
           fi
 
       - name: upload dlt state files

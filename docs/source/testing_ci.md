@@ -63,8 +63,10 @@ and `HEALTHY` before e2e, pipeline, or Databricks dbt tasks proceed.
 Workflows are in `.github/workflows/`:
 
 - `refresh-notion.yml`, `refresh-hubspot.yml`, `refresh-google-health.yml` —
-  scheduled ingestion via `mise run pipeline`.
-- `run-transforms.yml` — scheduled production dbt freshness/build via mise.
+  scheduled ingestion via `mise run pipeline` against the production target
+  (`DBT_TARGET=prod`).
+- `run-transforms.yml` — scheduled production dbt freshness/build via mise
+  (`DBT_TARGET=prod`).
 - `test-pipelines.yml`, `test-transforms.yml`, `lint.yml` — CI tests and lint.
 - `docs.yml` — builds and deploys the Sphinx/dbt docs site.
 

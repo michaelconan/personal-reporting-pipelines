@@ -17,6 +17,7 @@ jobs:
   run-pipeline:
     runs-on: ubuntu-latest
     env:
+      DBT_TARGET: prod
       MISE_ENABLE_TOOLS: uv,python,databricks-cli
       # Skip the semantic-manifest validation notice (no dbt_cloud.yml in this project)
       DBT_ENGINE_NO_WARN_SEMANTIC_MANIFEST_VALIDATION: '1'

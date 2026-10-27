@@ -5,7 +5,7 @@ opencode = "1.19.0"
 "databricks-cli" = "latest"
 
 [env]
-DBT_TARGET="dev"
+DBT_TARGET = "{% if env.DBT_TARGET %}{{ env.DBT_TARGET }}{% else %}dev{% endif %}"
 DBT_RAW_DATASET="raw"
 DBT_PROJECT_DIR = "{{ config_root }}/dbt"
 DBT_PROFILES_DIR = "{{ config_root }}/dbt"
