@@ -13,7 +13,11 @@ BASE_DATE = "2020-01-01"
 SECRET_STORE = os.getenv("SECRET_STORE", default="1password")
 
 # Load and set dynamic schema and table variables based on DBT target
-DBT_TARGET = os.getenv("DBT_TARGET", default="prod")
+DBT_TARGET = os.getenv("DBT_TARGET")
+if not DBT_TARGET:
+    raise RuntimeError(
+        "DBT_TARGET must be set before importing pipelines (for example: prod, test, dev, or mock)"
+    )
 suffix = f"_{DBT_TARGET}" if DBT_TARGET != "prod" else ""
 
 # Define raw and DBT schemas

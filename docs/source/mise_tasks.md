@@ -25,7 +25,7 @@ credentialed values through the selected 1Password Environment, or configure
 | `mise run pipeline-all` | Run Notion, HubSpot, and Google Health |
 | `mise run dbt-build-mock` | Build/test dbt models with DuckDB fixtures |
 | `mise run dbt-build-dev` | Build/test on Databricks dev |
-| `mise run dbt-build-prod` | Run production source freshness and build |
+| `mise run dbt-build-prod` | Run source freshness and build against `DBT_TARGET` |
 | `mise run dbt -- run --target mock --select <model>` | Pass a dbt command through mise |
 | `mise run dbt-lint` | Lint SQL with dbt's built-in linter |
 | `mise run dbt-bouncer` | Run dbt-bouncer checks |

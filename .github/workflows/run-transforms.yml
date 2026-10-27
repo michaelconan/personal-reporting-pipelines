@@ -17,7 +17,6 @@ jobs:
   run-pipeline:
     runs-on: ubuntu-latest
     env:
-      DBT_TARGET: prod
       MISE_ENABLE_TOOLS: uv,python,databricks-cli
       # Skip the semantic-manifest validation notice (no dbt_cloud.yml in this project)
       DBT_ENGINE_NO_WARN_SEMANTIC_MANIFEST_VALIDATION: '1'
@@ -44,6 +43,7 @@ jobs:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
           OP_ENVIRONMENT_ID: ${{ vars.OP_ENVIRONMENT_ID }}
         run: |
+          op run --environment "$OP_ENVIRONMENT_ID" -- sh -c 'test "$DBT_TARGET" = "prod" || { echo "DBT_TARGET must be prod (got ${DBT_TARGET:-unset})"; exit 1; }'
           if [ "${{ inputs.force_full_refresh }}" = "true" ]; then
             op run --environment "$OP_ENVIRONMENT_ID" -- mise run dbt-build-prod -- --full-refresh
           else

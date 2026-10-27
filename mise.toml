@@ -5,7 +5,7 @@ opencode = "1.19.0"
 "databricks-cli" = "latest"
 
 [env]
-DBT_TARGET = "{% if env.DBT_TARGET %}{{ env.DBT_TARGET }}{% else %}dev{% endif %}"
+DBT_TARGET = { default = "dev" }
 DBT_RAW_DATASET="raw"
 DBT_PROJECT_DIR = "{{ config_root }}/dbt"
 DBT_PROFILES_DIR = "{{ config_root }}/dbt"
@@ -86,12 +86,12 @@ raw_args = true
 run = 'uv run dbt build --target test'
 
 [tasks.dbt-build-prod]
-description = "Run dbt freshness and build against Databricks prod (SA auth)"
+description = "Run dbt freshness and build against the DBT_TARGET environment (SA auth)"
 depends = ["databricks-start"]
 raw_args = true
 run = [
-  'uv run dbt source freshness --target prod',
-  'uv run dbt build --target prod',
+  'uv run dbt source freshness',
+  'uv run dbt build',
 ]
 
 [tasks.dbt-lint]

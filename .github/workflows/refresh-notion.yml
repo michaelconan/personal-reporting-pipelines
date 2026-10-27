@@ -17,7 +17,6 @@ jobs:
   run-pipeline:
     runs-on: ubuntu-latest
     env:
-      DBT_TARGET: prod
       MISE_ENABLE_TOOLS: uv,python,databricks-cli
     steps:
       - name: checkout code
@@ -42,10 +41,11 @@ jobs:
           RUNTIME__LOG_LEVEL: 'INFO'
           PYTHONUNBUFFERED: '1'
         run: |
+          op run --environment "$OP_ENVIRONMENT_ID" -- sh -c 'test "$DBT_TARGET" = "prod" || { echo "DBT_TARGET must be prod (got ${DBT_TARGET:-unset})"; exit 1; }'
           if [ "${{ inputs.force_full_refresh }}" = "true" ]; then
-            op run --environment "$OP_ENVIRONMENT_ID" -- env DBT_TARGET=prod mise run pipeline -- notion --full
+            op run --environment "$OP_ENVIRONMENT_ID" -- mise run pipeline -- notion --full
           else
-            op run --environment "$OP_ENVIRONMENT_ID" -- env DBT_TARGET=prod mise run pipeline -- notion
+            op run --environment "$OP_ENVIRONMENT_ID" -- mise run pipeline -- notion
           fi
 
       - name: upload dlt state files

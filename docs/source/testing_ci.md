@@ -63,10 +63,10 @@ and `HEALTHY` before e2e, pipeline, or Databricks dbt tasks proceed.
 Workflows are in `.github/workflows/`:
 
 - `refresh-notion.yml`, `refresh-hubspot.yml`, `refresh-google-health.yml` —
-  scheduled ingestion via `mise run pipeline` against the production target
-  (`DBT_TARGET=prod`).
-- `run-transforms.yml` — scheduled production dbt freshness/build via mise
-  (`DBT_TARGET=prod`).
+  scheduled ingestion via `mise run pipeline`. The jobs verify that the
+  1Password Environment supplies `DBT_TARGET=prod` before running.
+- `run-transforms.yml` — scheduled dbt freshness/build via mise. The job also
+  verifies `DBT_TARGET=prod` from the 1Password Environment before running.
 - `test-pipelines.yml`, `test-transforms.yml`, `lint.yml` — CI tests and lint.
 - `docs.yml` — builds and deploys the Sphinx/dbt docs site.
 
