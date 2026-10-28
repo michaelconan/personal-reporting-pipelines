@@ -6,7 +6,8 @@ opencode = "1.19.0"
 
 [env]
 DBT_TARGET = { default = "dev" }
-DBT_RAW_DATASET="raw"
+DBT_SCHEMA = { default = "reporting_dev" }
+RAW_SCHEMA = { default = "raw_dev" }
 DBT_PROJECT_DIR = "{{ config_root }}/dbt"
 DBT_PROFILES_DIR = "{{ config_root }}/dbt"
 PYTHONUNBUFFERED = "1"
@@ -73,26 +74,17 @@ dir = "dbt"
 raw_args = true
 run = "uv run dbt build --project-dir . --profiles-dir . --target mock"
 
-[tasks.dbt-build-dev]
-description = "Build dbt models and tests against Databricks dev (token auth)"
+[tasks.dbt-build]
+description = "Build dbt models and tests against DBT_TARGET (starts the Databricks warehouse)"
 depends = ["databricks-start"]
 raw_args = true
-run = 'uv run dbt build --target dev'
+run = "uv run dbt build"
 
-[tasks.dbt-build-test]
-description = "Build dbt models and tests against Databricks test (SA auth)"
+[tasks.dbt-source-freshness]
+description = "Run dbt source freshness against DBT_TARGET (starts the Databricks warehouse)"
 depends = ["databricks-start"]
 raw_args = true
-run = 'uv run dbt build --target test'
-
-[tasks.dbt-build-prod]
-description = "Run dbt freshness and build against the DBT_TARGET environment (SA auth)"
-depends = ["databricks-start"]
-raw_args = true
-run = [
-  'uv run dbt source freshness',
-  'uv run dbt build',
-]
+run = "uv run dbt source freshness"
 
 [tasks.dbt-lint]
 description = "Lint dbt SQL using the mock target"

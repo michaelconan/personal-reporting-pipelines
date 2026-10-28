@@ -16,7 +16,7 @@ dbt Staging (views) → dbt Intermediate → dbt Marts (tables)
 **Rollback targets**: BigQuery (`dev-bq`, `test-bq`, `prod-bq` targets) — retained for easy rollback path
 **Local development**: DuckDB (`mock` target) with CSV test fixtures
 
-Default target is `dev` (Databricks). Use `DBT_TARGET` env var to override.
+Default target is `dev` (Databricks). Use `DBT_TARGET` to select the target and set the matching `DBT_SCHEMA` / `RAW_SCHEMA`; local defaults are `reporting_dev` / `raw_dev`.
 
 ## GitHub Agentic Workflows (gh-aw)
 Scheduled AI-driven automation uses [gh-aw](https://github.com/github/gh-aw). Each workflow is a `.md` source file (frontmatter + agent prompt) compiled to a `.lock.yml` GitHub Actions file. Engine for this project: **Gemini** (`GEMINI_API_KEY` secret required).
@@ -140,7 +140,8 @@ Note: habit completions and thresholds come from the Notion habit reference data
 - `mise run pipeline -- <notion|hubspot|google_health> [args]` — run one dlt pipeline with a 1Password Environment
 - `mise run dbt-build-mock` — local dbt build (DuckDB + CSV test fixtures)
 - `mise run dbt -- run --target mock --select <model>` — run a specific dbt model
-- `mise run dbt-build-dev` — build against Databricks dev after starting the SQL warehouse
+- `mise run dbt-build` — build against `DBT_TARGET` (defaults to `dev`) after starting the SQL warehouse
+- `mise run dbt-source-freshness` — run dbt source freshness against `DBT_TARGET`
 - `mise run dbt-lint` — SQL linting with the dbt 2.x Rust parser and real dbt templating; reuses `dbt/.sqlfluff`. The `sqlfluff`/`sqlfluff-templater-dbt` PyPI packages are not installed because `sqlfluff-templater-dbt` requires Python `dbt-core` and cannot coexist with dbt 2.x, while standalone sqlfluff cannot resolve package macros.
 - `mise run docs` — dbt docs site (v2 SPA) + Sphinx docs
 

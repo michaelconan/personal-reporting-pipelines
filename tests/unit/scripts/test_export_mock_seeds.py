@@ -28,7 +28,7 @@ from scripts.fixtures.scrub_data import (
 def _export_env(monkeypatch):
     """Provide the exporter env config for every test."""
     monkeypatch.setenv("GCP_PROJECT_ID", "test-project")
-    monkeypatch.setenv("DBT_RAW_DATASET", "raw_test")
+    monkeypatch.setenv("RAW_SCHEMA", "raw_test")
     monkeypatch.delenv("MOCK_SEED_SAMPLE_ROWS", raising=False)
     monkeypatch.delenv("MOCK_SEED_MAX_WORKERS", raising=False)
     seed_faker(42)

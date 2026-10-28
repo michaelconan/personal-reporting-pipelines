@@ -37,11 +37,13 @@ jobs:
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
           OP_ENVIRONMENT_ID: ${{ vars.OP_ENVIRONMENT_ID }}
+          DBT_TARGET: prod
+          DBT_SCHEMA: reporting
+          RAW_SCHEMA: raw
           FORCE_FULL_REFRESH: ${{ inputs.force_full_refresh }}
           RUNTIME__LOG_LEVEL: 'INFO'
           PYTHONUNBUFFERED: '1'
         run: |
-          op run --environment "$OP_ENVIRONMENT_ID" -- sh -c 'test "$DBT_TARGET" = "prod" || { echo "DBT_TARGET must be prod (got ${DBT_TARGET:-unset})"; exit 1; }'
           if [ "${{ inputs.force_full_refresh }}" = "true" ]; then
             op run --environment "$OP_ENVIRONMENT_ID" -- mise run pipeline -- google_health --full
           else

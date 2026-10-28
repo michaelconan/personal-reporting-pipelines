@@ -8,7 +8,7 @@ This project uses dbt for data transformation. The dbt documentation, including 
 
 1.  **Install tools and dependencies**: `mise install` and `mise run setup`
 2.  **Model development**: Use `mise run dbt -- run --target mock --select model_name`
-3.  **Databricks development**: Use `mise run dbt-build-dev` (starts the warehouse)
+3.  **Databricks development**: Use `mise run dbt-build` (starts the warehouse; uses `DBT_TARGET`, default `dev`)
 4.  **Documentation**: Generate with `mise run docs`
 
 ## dbt Transform Workflow

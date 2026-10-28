@@ -9,7 +9,7 @@ This repo has two test systems: **pytest** for `pipelines/` (dlt) and **dbt buil
 | dlt integration (live, opt-in) | `tests/integration/dlt/` | DuckDB / live APIs | `live` | `RUN_LIVE_API_TESTS=1 pytest tests/integration -m live` | not run in CI |
 | Fixture-tooling live | `tests/integration/scripts/` | DuckDB / live APIs | `live` | `RUN_LIVE_API_TESTS=1 pytest tests/integration -m live` | not run in CI |
 | dlt e2e (cloud) | `tests/e2e/dlt/` | Databricks (`live_e2e_test` / `live_data`, `dev_mode=True`) | `e2e` | `mise run test-e2e` (`pytest tests/e2e`) | `test-pipelines.yml` (only with 1Password Environment credentials, skipped for dependabot) |
-| dbt transform tests | `dbt/models/**/_*.yml`, `dbt/tests/` | DuckDB (`mock` target) in CI, Databricks otherwise | n/a (`dbt test` / `dbt build`) | `mise run dbt-build-mock`, `mise run dbt-build-dev` | `test-transforms.yml`, `lint.yml` |
+| dbt transform tests | `dbt/models/**/_*.yml`, `dbt/tests/` | DuckDB (`mock` target) in CI, Databricks otherwise | n/a (`dbt test` / `dbt build`) | `mise run dbt-build-mock`, `mise run dbt-build` | `test-transforms.yml`, `lint.yml` |
 
 > **Note:** the Fitbit dlt pipeline was removed (Fitbit API deprecation), and the
 > dbt layer now models Google Health directly: `staging/google_health` models, the
@@ -24,7 +24,7 @@ Defined in `pyproject.toml` (`[tool.pytest.ini_options]`) and `tests/conftest.py
 - Markers: `e2e` (cloud Databricks), `live` (calls external APIs, explicit opt-in), `local` (offline).
 - `addopts = "-s -p no:pytest-responses --log-cli-level=INFO"`: the `responses` mock library is activated explicitly per-test via the `mock_responses` fixture, so it never interferes with e2e tests.
 - Coverage: `source = ["pipelines"]`, branch coverage, reports to `coverage.xml` + `test-results-*.xml` uploaded to Codecov.
-- `tests/conftest.py` sets `TEST=True`, `DBT_TARGET=test`, `RUNTIME__LOG_LEVEL=INFO`, and re-wires the `dlt` logger to pytest handlers.
+- `tests/conftest.py` sets `TEST=True`, `DBT_TARGET=test`, `DBT_SCHEMA=reporting_test`, `RAW_SCHEMA=raw_test`, `RUNTIME__LOG_LEVEL=INFO`, and re-wires the `dlt` logger to pytest handlers.
 
 ## dlt unit tests (`tests/unit/dlt/`, marker `local`)
 
@@ -96,9 +96,9 @@ waits for the warehouse first, then runs the tests inside the configured
 
 | Target | Adapter | Dataset/schema | Source/seeds behaviour (`dbt_project.yml`) |
 | ------ | ------- | -------------- | ------------------------------------------ |
-| `mock` | DuckDB (`dbt.duckdb`) | `reporting` | sources **disabled**; mock sources/fixtures are used for local model builds |
-| `dev` / `test` | Databricks Unity Catalog | catalog `workspace`, schemas `reporting_dev` / `reporting_test` | sources enabled; models read raw schema via `source()` |
-| `prod` | Databricks Unity Catalog | catalog `workspace`, schema `reporting` | sources enabled; models read raw schema via `source()` |
+| `mock` | DuckDB (`dbt.duckdb`) | `reporting_dev` | sources **disabled**; mock sources/fixtures are used for local model builds |
+| `dev` / `test` | Databricks Unity Catalog | catalog `workspace`, schemas `reporting_dev` / `reporting_test`; raw schemas `raw_dev` / `raw_test` | sources enabled; models read `RAW_SCHEMA` via `source()` |
+| `prod` | Databricks Unity Catalog | catalog `workspace`, schema `reporting`; raw schema `raw` | sources enabled; models read `RAW_SCHEMA` via `source()` |
 
 Models call `source(source_name, relation_name)` directly. Mock fixtures must
 match identifiers in `_*sources.yml`; local DuckDB inputs are wired through
@@ -112,7 +112,7 @@ Other `dbt_project.yml` settings relevant to tests: staging/core = views, interm
 mise run dbt-deps
 mise run dbt-build-mock                         # seed + run + test
 mise run dbt-build-mock -- --select "habits*" --full-refresh
-mise run dbt-build-dev                          # starts the Databricks SQL warehouse first
+mise run dbt-build                                # uses DBT_TARGET (default dev)
 mise run dbt -- run --target mock --select stg_notion__daily_habits
 mise run dbt -- test --target mock
 mise run dbt-lint
@@ -136,7 +136,7 @@ Mock source coverage lives in `dbt/test_fixtures/{google_health,hubspot,notion}/
 ## CI mapping
 
 - `test-pipelines.yml` (on `pipelines/**`, `tests/**` changes): `mise run setup` → always `mise run test` → `mise run test-e2e` when the 1Password Environment is available → Codecov coverage + test results.
-- `test-transforms.yml` (on `dbt/**` changes): `mise run setup` + `mise run dbt-deps` → `mise run dbt-build-mock` → `mise run dbt-build-dev` when 1Password credentials are available.
+- `test-transforms.yml` (on `dbt/**` changes): `mise run setup` + `mise run dbt-deps` → `mise run dbt-build-mock` → `mise run dbt-build` with `DBT_TARGET=test` when 1Password credentials are available.
 - `lint.yml` (every PR): `prek` (Python/ruff), `dbt lint` (SQLFluff engine, reuses `dbt/.sqlfluff`, `DBT_TARGET=mock`), `dbt parse` + `dbt compile --write-catalog` (produces `catalog.json` for bouncer; `docs generate` no longer emits one under dbt 2.x), `dbt-bouncer` checks.
 
 Credentialed tasks run inside `op run --environment "$OP_ENVIRONMENT_ID" -- ...`.

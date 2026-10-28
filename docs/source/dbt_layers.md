@@ -77,7 +77,7 @@ mise run dbt-build-mock
 mise run dbt -- run --target mock --select stg_google_health__sleep
 ```
 
-To build against Databricks dev, run `mise run dbt-build-dev`; this starts and
+To build against Databricks dev, run `mise run dbt-build`; this starts and
 waits for the SQL warehouse before dbt connects.
 
 - Generate docs:
@@ -90,5 +90,5 @@ uv run dbt docs serve --project-dir dbt --profiles-dir dbt
 ## Tests
 
 - Unit/integration SQL tests live in `dbt/tests/` and are executed during CI and
-  in `mise run dbt-build-mock` / `mise run dbt-build-dev`.
+  in `mise run dbt-build-mock` / `mise run dbt-build`.
 - Use `uv run dbt lint --project-dir dbt --profiles-dir dbt --target mock` for SQL style checks when working against the dev target.

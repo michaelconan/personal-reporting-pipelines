@@ -153,7 +153,7 @@ of concerns:
    mise run pipeline -- notion --full             # one dlt source
    mise run pipeline-all                          # all three dlt sources
    mise run dbt-build-mock                        # DuckDB fixture build
-   mise run dbt-build-dev                         # starts SQL warehouse, builds Databricks dev
+   mise run dbt-build                             # starts SQL warehouse, uses DBT_TARGET (default dev)
    mise run docs                                  # dbt + Sphinx documentation
    ```
 
@@ -163,7 +163,7 @@ of concerns:
    ```bash
    export GCP_PROJECT_ID=your-project-id
    export GOOGLE_APPLICATION_CREDENTIALS=/path/to/service/account/key.json
-   export RAW_SCHEMA_NAME=raw_data
+   export RAW_SCHEMA=raw_data
    ```
 
 ### Agentic coding (Docker AI Sandbox preferred)
@@ -325,13 +325,13 @@ mise run pipeline -- hubspot --incremental --select hubspot__contacts,hubspot__c
 #### Direct function parameter
 
 ```python
-from pipelines.hubspot import refresh_hubspot
+from pipelines.runner import refresh_pipeline
 
 # Force full refresh
-refresh_hubspot(is_incremental=False)
+refresh_pipeline("hubspot", is_incremental=False)
 
 # Use environment-based detection (default)
-refresh_hubspot()  # or refresh_hubspot(is_incremental=None)
+refresh_pipeline("hubspot")  # or refresh_pipeline("hubspot", is_incremental=None)
 ```
 
 #### GitHub Actions
@@ -392,7 +392,7 @@ steps:
    # Local DuckDB fixtures
    mise run dbt-build-mock
    # Databricks dev (starts and waits for the SQL warehouse)
-   mise run dbt-build-dev
+   mise run dbt-build
    ```
 
 ### Testing
