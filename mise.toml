@@ -40,9 +40,13 @@ run = [
   { task = "test-e2e" },
 ]
 
+[tasks.validate-target]
+description = "Validate DBT_TARGET and schema environment variables"
+run = "uv run python scripts/validate_target.py"
+
 [tasks.pipeline]
 description = "Run a dlt pipeline by source name (notion, hubspot, google_health)"
-depends = ["databricks-start"]
+depends = ["validate-target", "databricks-start"]
 raw_args = true
 run = 'uv run python -m pipelines.run_pipeline'
 
@@ -76,13 +80,13 @@ run = "uv run dbt build --project-dir . --profiles-dir . --target mock"
 
 [tasks.dbt-build]
 description = "Build dbt models and tests against DBT_TARGET (starts the Databricks warehouse)"
-depends = ["databricks-start"]
+depends = ["validate-target", "databricks-start"]
 raw_args = true
 run = "uv run dbt build"
 
 [tasks.dbt-source-freshness]
 description = "Run dbt source freshness against DBT_TARGET (starts the Databricks warehouse)"
-depends = ["databricks-start"]
+depends = ["validate-target", "databricks-start"]
 raw_args = true
 run = "uv run dbt source freshness"
 

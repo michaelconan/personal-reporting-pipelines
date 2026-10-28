@@ -46,9 +46,9 @@ jobs:
           DBT_SCHEMA: reporting
           RAW_SCHEMA: raw
         run: |
-          op run --environment "$OP_ENVIRONMENT_ID" -- mise run dbt-source-freshness
+          op run --environment "$OP_ENVIRONMENT_ID" -- env DBT_TARGET="$DBT_TARGET" DBT_SCHEMA="$DBT_SCHEMA" RAW_SCHEMA="$RAW_SCHEMA" mise run dbt-source-freshness
           if [ "${{ inputs.force_full_refresh }}" = "true" ]; then
-            op run --environment "$OP_ENVIRONMENT_ID" -- mise run dbt-build -- --full-refresh
+            op run --environment "$OP_ENVIRONMENT_ID" -- env DBT_TARGET="$DBT_TARGET" DBT_SCHEMA="$DBT_SCHEMA" RAW_SCHEMA="$RAW_SCHEMA" mise run dbt-build -- --full-refresh
           else
-            op run --environment "$OP_ENVIRONMENT_ID" -- mise run dbt-build
+            op run --environment "$OP_ENVIRONMENT_ID" -- env DBT_TARGET="$DBT_TARGET" DBT_SCHEMA="$DBT_SCHEMA" RAW_SCHEMA="$RAW_SCHEMA" mise run dbt-build
           fi

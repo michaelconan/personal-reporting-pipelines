@@ -52,4 +52,4 @@ jobs:
           DBT_TARGET: test
           DBT_SCHEMA: reporting_test
           RAW_SCHEMA: raw_test
-        run: op run --environment "$OP_ENVIRONMENT_ID" -- mise run dbt-build
+        run: op run --environment "$OP_ENVIRONMENT_ID" -- env DBT_TARGET="$DBT_TARGET" DBT_SCHEMA="$DBT_SCHEMA" RAW_SCHEMA="$RAW_SCHEMA" mise run dbt-build

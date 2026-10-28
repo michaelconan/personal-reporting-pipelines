@@ -45,9 +45,9 @@ jobs:
           PYTHONUNBUFFERED: '1'
         run: |
           if [ "${{ inputs.force_full_refresh }}" = "true" ]; then
-            op run --environment "$OP_ENVIRONMENT_ID" -- mise run pipeline -- notion --full
+            op run --environment "$OP_ENVIRONMENT_ID" -- env DBT_TARGET="$DBT_TARGET" DBT_SCHEMA="$DBT_SCHEMA" RAW_SCHEMA="$RAW_SCHEMA" mise run pipeline -- notion --full
           else
-            op run --environment "$OP_ENVIRONMENT_ID" -- mise run pipeline -- notion
+            op run --environment "$OP_ENVIRONMENT_ID" -- env DBT_TARGET="$DBT_TARGET" DBT_SCHEMA="$DBT_SCHEMA" RAW_SCHEMA="$RAW_SCHEMA" mise run pipeline -- notion
           fi
 
       - name: upload dlt state files

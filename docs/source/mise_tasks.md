@@ -37,7 +37,8 @@ credentialed values through the selected 1Password Environment, or configure
 `DBT_TARGET` defaults to `dev`, with matching `DBT_SCHEMA=reporting_dev` and
 `RAW_SCHEMA=raw_dev` defaults for local work. Set all three together when
 targeting another environment; the scheduled workflows set them explicitly on
-their run steps.
+their run steps. The pipeline, `dbt-build`, and `dbt-source-freshness` tasks
+validate that the target and schemas agree before running.
 
 Credentialed tasks require `OP_SERVICE_ACCOUNT_TOKEN` and `OP_ENVIRONMENT_ID`.
 They run their commands using:

@@ -13,8 +13,6 @@ SCHEMA_ENV_VARS = (
     "DBT_TARGET",
     "DBT_SCHEMA",
     "RAW_SCHEMA",
-    "DBT_SCHEMA_NAME",
-    "RAW_SCHEMA_NAME",
 )
 
 
