@@ -11,6 +11,7 @@ on:
       - 'pyproject.toml'
       - 'mise.toml'
       - 'scripts/databricks_warehouse.py'
+      - 'scripts/validate_target.py'
 
 permissions:
   contents: read

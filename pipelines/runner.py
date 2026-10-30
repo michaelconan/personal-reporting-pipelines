@@ -14,7 +14,7 @@ from typing import Any
 import dlt
 from dlt.destinations import databricks
 
-from pipelines import RAW_SCHEMA, SECRET_STORE
+from pipelines import DBT_SCHEMA, DBT_TARGET, RAW_SCHEMA, SECRET_STORE
 from pipelines.common.utils import (
     get_refresh_mode,
     get_write_disposition,
@@ -27,6 +27,7 @@ from pipelines.sources.google_health import (
 )
 from pipelines.sources.hubspot import hubspot_source
 from pipelines.sources.notion import notion_source
+from pipelines.targets import validate_ingestion_target
 
 logger = getLogger(__name__)
 
@@ -102,6 +103,8 @@ def run_refresh(
     source_kwargs: dict | None = None,
     source_modifier: Callable | None = None,
 ):
+    validate_ingestion_target(DBT_TARGET, DBT_SCHEMA, RAW_SCHEMA)
+
     direct_google_health_token = (
         dlt.secrets.get("sources.google_health.access_token") if supports_direct_token else None
     )

@@ -43,8 +43,8 @@ jobs:
                   "*": "deny",
                   "/tmp": "allow",
                   "/tmp/**": "allow",
-                  "/home": "allow",
-                  "/home/**": "allow"
+                  "${{ github.workspace }}": "allow",
+                  "${{ github.workspace }}/**": "allow"
                 },
                 "todowrite": "allow",
                 "webfetch": "allow",

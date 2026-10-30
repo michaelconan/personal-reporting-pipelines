@@ -3,31 +3,13 @@
 from __future__ import annotations
 
 import os
+import sys
+from pathlib import Path
 
-TARGET_SCHEMAS = {
-    "dev": ("reporting_dev", "raw_dev"),
-    "test": ("reporting_test", "raw_test"),
-    "prod": ("reporting", "raw"),
-}
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(PROJECT_ROOT))
 
-
-def validate_target(
-    target: str | None,
-    schema: str | None,
-    raw_schema: str | None,
-) -> None:
-    expected = TARGET_SCHEMAS.get(target or "")
-    if expected is None:
-        choices = ", ".join(sorted(TARGET_SCHEMAS))
-        raise ValueError(f"DBT_TARGET must be one of {choices} (got {target!r})")
-
-    expected_schema, expected_raw_schema = expected
-    if (schema, raw_schema) != (expected_schema, expected_raw_schema):
-        raise ValueError(
-            f"DBT_TARGET={target} requires DBT_SCHEMA={expected_schema} and "
-            f"RAW_SCHEMA={expected_raw_schema}; got DBT_SCHEMA={schema!r} and "
-            f"RAW_SCHEMA={raw_schema!r}"
-        )
+from pipelines.targets import validate_target  # noqa: E402
 
 
 def main() -> int:

@@ -5,9 +5,9 @@ opencode = "1.19.0"
 "databricks-cli" = "latest"
 
 [env]
-DBT_TARGET = { default = "dev" }
-DBT_SCHEMA = { default = "reporting_dev" }
-RAW_SCHEMA = { default = "raw_dev" }
+DBT_TARGET = "{% if env.DBT_TARGET %}{{ env.DBT_TARGET }}{% else %}dev{% endif %}"
+DBT_SCHEMA = "{% if env.DBT_SCHEMA %}{{ env.DBT_SCHEMA }}{% else %}reporting_dev{% endif %}"
+RAW_SCHEMA = "{% if env.RAW_SCHEMA %}{{ env.RAW_SCHEMA }}{% else %}raw_dev{% endif %}"
 DBT_PROJECT_DIR = "{{ config_root }}/dbt"
 DBT_PROFILES_DIR = "{{ config_root }}/dbt"
 PYTHONUNBUFFERED = "1"

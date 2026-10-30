@@ -9,6 +9,8 @@ on:
       - 'dbt/**/*.csv'
       - 'mise.toml'
       - 'scripts/databricks_warehouse.py'
+      - 'scripts/validate_target.py'
+      - 'pipelines/targets.py'
 
 permissions:
   contents: 'read'

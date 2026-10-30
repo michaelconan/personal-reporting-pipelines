@@ -102,7 +102,7 @@ Model-level and column docs live in `dbt/models/marts/_mrt__properties.yml`.
   - `_hubspot__{object}_updated_at` — parent updatedAt (from dlt `include_from_parent`)
 
 ### Google Health
-- Sleep table: `google_health__sleep` — `name` (data point id), `sleep__interval__start_time`, `sleep__interval__end_time`, `sleep__summary__minutes_asleep`, `sleep__metadata__{main_sleep,nap}`
+- Sleep table: `google_health__sleep` — `name` (data point id), `sleep__interval__start_time`, `sleep__interval__end_time`, `sleep__summary__minutes_asleep`, `sleep__metadata__main_sleep`
 - Steps table: `google_health__steps` — `steps__count` (string), `steps__interval__{start_time,end_time}`, civil date columns `steps__interval__civil_start_time__date__{year,month,day}`
 - Exercise table: `google_health__exercise` — `name`, `exercise__{exercise_type,display_name,active_duration}`, `exercise__metrics_summary__{steps,calories_kcal,distance_millimeters}`
 - Child tables (dlt nested tables): `google_health__sleep__sleep__stages`, `google_health__exercise__exercise__{exercise_events,splits}`
@@ -224,7 +224,7 @@ they are essential for ANY work in this project
 - `rest-api-pipeline-workflow`
 
 ## Secret Management
-Credentialed mise tasks run as `op run --environment "$OP_ENVIRONMENT_ID" -- ...`; the 1Password Environment exports the dlt source and Databricks environment variables. GitHub Actions uses `OP_SERVICE_ACCOUNT_TOKEN` plus the repository variable `OP_ENVIRONMENT_ID`. The 1Password CLI beta is required until Environment support is generally available.
+Credentialed mise tasks run as `op run --environment "$OP_ENVIRONMENT_ID" -- ...`; the 1Password Environment exports the dlt source and Databricks environment variables. GitHub Actions uses `OP_SERVICE_ACCOUNT_TOKEN` plus the repository variable `OP_ENVIRONMENT_ID`. The 1Password CLI must support Environments.
 
 - **Local**: export `OP_ENVIRONMENT_ID` and `OP_SERVICE_ACCOUNT_TOKEN`, then use `mise run pipeline`, `mise run test-e2e`, or Databricks dbt tasks. `.env.databricks` is deprecated; credentialed values come from the selected 1Password Environment or `sbx` secrets.
 - **Warehouse preflight**: `scripts/databricks_warehouse.py` maps dlt's `DESTINATION__DATABRICKS__CREDENTIALS__*` values to native Databricks CLI authentication variables and starts the configured SQL warehouse before e2e, pipeline, and Databricks dbt runs. For dbt `test`/`prod`, the profiles read `DATABRICKS_CLIENT_ID` and `DATABRICKS_CLIENT_SECRET` directly; `dev` uses the dlt access token.

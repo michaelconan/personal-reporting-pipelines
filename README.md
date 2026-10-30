@@ -88,7 +88,7 @@ of concerns:
 
 1. **mise** for project tools and task commands
 2. **GitHub Account** with repository access
-3. **1Password CLI beta** and an Environment ID for credentialed tasks
+3. **1Password CLI** with Environment support and an Environment ID for credentialed tasks
 4. **Docker** (optional, for containerized development)
 
 ### Optional GCP / BigQuery rollback setup
@@ -138,7 +138,7 @@ of concerns:
    mise run setup
    ```
 
-2. **Configure credentialed tasks**: install the 1Password CLI beta and export
+2. **Configure credentialed tasks**: install the 1Password CLI and export
    `OP_ENVIRONMENT_ID` plus `OP_SERVICE_ACCOUNT_TOKEN` in your shell.
    `.env.databricks` is deprecated and no longer loaded; provide warehouse and
    source credentials through the selected 1Password Environment, or use `sbx`
@@ -163,7 +163,9 @@ of concerns:
    ```bash
    export GCP_PROJECT_ID=your-project-id
    export GOOGLE_APPLICATION_CREDENTIALS=/path/to/service/account/key.json
-   export RAW_SCHEMA=raw_data
+   export DBT_TARGET=dev
+   export DBT_SCHEMA=reporting_dev
+   export RAW_SCHEMA=raw_dev
    ```
 
 ### Agentic coding (Docker AI Sandbox preferred)
