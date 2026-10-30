@@ -83,12 +83,12 @@ waits for the SQL warehouse before dbt connects.
 - Generate docs:
 
 ```bash
-uv run dbt docs generate --project-dir dbt --profiles-dir dbt
-uv run dbt docs serve --project-dir dbt --profiles-dir dbt
+mise run docs
+mise run dbt -- docs serve
 ```
 
 ## Tests
 
 - Unit/integration SQL tests live in `dbt/tests/` and are executed during CI and
   in `mise run dbt-build-mock` / `mise run dbt-build`.
-- Use `uv run dbt lint --project-dir dbt --profiles-dir dbt --target mock` for SQL style checks when working against the dev target.
+- Use `mise run dbt-lint` for SQL style checks.

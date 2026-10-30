@@ -9,16 +9,18 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
+# Capture the user-provided values before importing pipelines, whose package
+# initializer fills in local defaults for missing schema variables.
+DBT_TARGET = os.getenv("DBT_TARGET")
+DBT_SCHEMA = os.getenv("DBT_SCHEMA")
+RAW_SCHEMA = os.getenv("RAW_SCHEMA")
+
 from pipelines.targets import validate_target  # noqa: E402
 
 
 def main() -> int:
     try:
-        validate_target(
-            os.getenv("DBT_TARGET"),
-            os.getenv("DBT_SCHEMA"),
-            os.getenv("RAW_SCHEMA"),
-        )
+        validate_target(DBT_TARGET, DBT_SCHEMA, RAW_SCHEMA)
     except ValueError as exc:
         raise SystemExit(str(exc)) from exc
     return 0

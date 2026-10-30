@@ -4,7 +4,7 @@ sources:
   - name: notion
     description: Source data from the Notion habit tracker.
     loader: dlt
-    schema: "{{ env_var('RAW_SCHEMA', 'raw') }}"
+    schema: "{{ env_var('RAW_SCHEMA') }}"
     config:
       # Freshness is measured from the dlt load timestamp: join each row's
       # _dlt_load_id to dlt's _dlt_loads metadata table and take the latest

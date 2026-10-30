@@ -10,7 +10,7 @@ on:
       - 'mise.toml'
       - 'scripts/databricks_warehouse.py'
       - 'scripts/validate_target.py'
-      - 'pipelines/targets.py'
+      - 'pipelines/**'
 
 permissions:
   contents: 'read'

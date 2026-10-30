@@ -63,6 +63,7 @@ sleep_sessions as (
         started_at,
         ended_at,
         case
+            when is_main_sleep is null then 'UNKNOWN'
             when is_main_sleep then 'MAIN'
             else 'OTHER'
         end as sleep_type,

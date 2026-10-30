@@ -62,6 +62,18 @@ run = [
 description = "Start the Databricks SQL warehouse and wait until healthy"
 run = 'uv run python scripts/databricks_warehouse.py'
 
+[tasks.databricks-start-if-needed]
+description = "Start the Databricks SQL warehouse for Databricks dbt targets"
+run = '''
+case "${DBT_TARGET:-}" in
+  mock|*-bq)
+    echo "Skipping Databricks warehouse for ${DBT_TARGET}"
+    exit 0
+    ;;
+esac
+uv run python scripts/databricks_warehouse.py
+'''
+
 [tasks.dbt]
 description = "Run dbt from the project with profile and project paths configured"
 dir = "dbt"
@@ -79,14 +91,14 @@ raw_args = true
 run = "uv run dbt build --project-dir . --profiles-dir . --target mock"
 
 [tasks.dbt-build]
-description = "Build dbt models and tests against DBT_TARGET (starts the Databricks warehouse)"
-depends = ["validate-target", "databricks-start"]
+description = "Build dbt models and tests against DBT_TARGET (starts the Databricks warehouse for Databricks targets)"
+depends = ["validate-target", "databricks-start-if-needed"]
 raw_args = true
 run = "uv run dbt build"
 
 [tasks.dbt-source-freshness]
-description = "Run dbt source freshness against DBT_TARGET (starts the Databricks warehouse)"
-depends = ["validate-target", "databricks-start"]
+description = "Run dbt source freshness against DBT_TARGET (starts the Databricks warehouse for Databricks targets)"
+depends = ["validate-target", "databricks-start-if-needed"]
 raw_args = true
 run = "uv run dbt source freshness"
 

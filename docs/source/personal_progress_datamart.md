@@ -227,7 +227,7 @@ disambiguated by `session_kind`; kind-specific measures are NULL for the other k
 | `date_key` | FK | → `dim_date`; local date (sleep `session_date`, exercise start) |
 | `session_kind` | string | degenerate: SLEEP / EXERCISE |
 | `session_id` | string | natural key (`sleep_id` / exercise `name`) |
-| `sleep_type` | string | collapsed classification: `MAIN`, `OTHER` for sleep rows (derived from `is_main_sleep`); `NOT_APPLICABLE` for exercise rows |
+| `sleep_type` | string | collapsed classification: `MAIN`, `OTHER`, `UNKNOWN` for sleep rows (derived from `is_main_sleep`); `NOT_APPLICABLE` for exercise rows |
 | `started_at` / `ended_at` | timestamp | transaction times |
 | `duration_minutes` | numeric | measure, present for both kinds |
 | `asleep_minutes` | int | measure, sleep only |
@@ -237,7 +237,7 @@ disambiguated by `session_kind`; kind-specific measures are NULL for the other k
 | `provider` | string | `google_health` |
 
 Notes:
-- `is_main_sleep` is collapsed into `sleep_type` (`MAIN` / `OTHER`). The source's
+- `is_main_sleep` is collapsed into `sleep_type` (`MAIN` / `OTHER` / `UNKNOWN`). The source's
   lower-level `sleep__type` (CLASSIC / STAGES) is not carried into the fact.
 - Daily totals (`sleep_minutes`, `steps`) already exist at the daily grain in
   `fct_habit_occurrence`; this fact exposes the **session-level detail**
