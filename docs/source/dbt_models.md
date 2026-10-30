@@ -15,8 +15,8 @@ This project uses dbt for data transformation. The dbt documentation, including 
 
 The dbt transformation pipeline is defined in `.github/workflows/run-transforms.yml`:
 
--   **Daily execution**: Runs at 4 AM UTC, after the data ingestion pipelines.
--   **Triggers**: Automatically triggered after successful pipeline runs.
+-   **Weekly execution**: Runs Mondays at 6 AM UTC, after the data ingestion pipelines.
+-   **Triggers**: Scheduled Mondays at 6 AM UTC and manually via `workflow_dispatch`; no automatic chaining from ingestion.
 -   **Actions**:
     -   Runs dbt models.
     -   Runs dbt tests.

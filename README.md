@@ -203,12 +203,12 @@ before removing an ephemeral environment and restore them later.
     sbx secret set-custom databricks-token --command 'powershell.exe -NoProfile -Command C:\Tools\Get-DatabricksToken.ps1' --refresh 30m --env DESTINATION__DATABRICKS__CREDENTIALS__ACCESS_TOKEN
    ```
 
-   For dbt `test` and `prod` targets, also provide the CLI/dbt-native
-   `DATABRICKS_CLIENT_ID` and `DATABRICKS_CLIENT_SECRET` variables. The
-    warehouse preflight maps the dlt-style client credentials to Databricks CLI
-    variables; the dbt profiles read the native names directly. Set
-    `OP_ENVIRONMENT_ID` to the 1Password Environment ID used by credentialed
-    mise tasks.
+   For dbt `test` and `prod` targets, the profiles read the same dlt-style
+   `DESTINATION__DATABRICKS__CREDENTIALS__CLIENT_ID` and
+   `DESTINATION__DATABRICKS__CREDENTIALS__CLIENT_SECRET` variables. The
+   warehouse preflight maps them to Databricks CLI variables when starting
+   the warehouse. Set `OP_ENVIRONMENT_ID` to the 1Password Environment ID used
+   by credentialed mise tasks.
 
    Source credentials use the same custom-secret pattern, for example:
     `sbx secret set-custom hubspot --ref 'op://vault/item/field' --env SOURCES__HUBSPOT__API_KEY`
@@ -453,7 +453,7 @@ This convention applies to every model (staging, core, intermediate, and marts).
 
 The project uses GitHub Actions for automated pipeline execution:
 
-- **Scheduled runs**: Daily/weekly automated data ingestion
+- **Scheduled runs**: Weekly automated data ingestion
 - **Manual triggers**: On-demand pipeline execution with full refresh options
 - **Pull request validation**: Automated testing on code changes
 - **Deployment**: Automated deployment to production environment

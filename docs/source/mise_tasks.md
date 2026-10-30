@@ -56,7 +56,9 @@ Databricks variables, including `DESTINATION__DATABRICKS__CREDENTIALS__SERVER_HO
 `DESTINATION__DATABRICKS__CREDENTIALS__CLIENT_SECRET`. The warehouse helper maps
 the dlt OAuth pair to the Databricks CLI's native `DATABRICKS_CLIENT_ID` and
 `DATABRICKS_CLIENT_SECRET` variables and selects OAuth M2M authentication.
-The dbt `test` and `prod` profiles read those native variables directly; the
+The dbt `test` and `prod` profiles read the dlt-style
+`DESTINATION__DATABRICKS__CREDENTIALS__CLIENT_ID` and
+`DESTINATION__DATABRICKS__CREDENTIALS__CLIENT_SECRET` variables directly; the
 `dev` profile continues to use the dlt access token.
 
 The Databricks CLI task derives the warehouse ID from the dlt HTTP path, starts

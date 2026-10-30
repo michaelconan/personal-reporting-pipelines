@@ -207,14 +207,14 @@ Use the session's model id with the provider prefix removed (e.g. a session runn
 - **dlt tables**: `{source}__{entity}` (e.g., `hubspot__contacts`)
 - **Pipeline functions**: `refresh_{source}()` (e.g., `refresh_hubspot()`)
 - **dbt staging**: `stg_{source}__{entity}`; intermediate: `int_{domain}_{description}`; marts: `dim_{entity}_v1` / `fct_{entity}_v1`
-- **GitHub Actions workflows**: `{action}-{frequency}` (e.g., `dlt-daily`)
+- **GitHub Actions workflows**: `{action}-{frequency}` (e.g., `dlt-weekly`)
 - **Env vars**: `FORCE_FULL_REFRESH` (global), `{PIPELINE_NAME}_FULL_REFRESH` (per-pipeline)
 
 ## GitHub Actions Schedule
-- **HubSpot**: Daily at 2 AM UTC
+- **HubSpot**: Mondays at 2 AM UTC
+- **Notion**: Mondays at 4 AM UTC
 - **Google Health**: Mondays at 5 AM UTC
-- **Notion**: Weekly on Sundays at 9 AM UTC
-- **dbt Transform**: Daily at 4 AM UTC (after ingestion)
+- **dbt Transform**: Mondays at 6 AM UTC (after ingestion)
 - **Weekly doc updater**: Every Monday (gh-aw agentic workflow)
 
 
@@ -227,7 +227,7 @@ they are essential for ANY work in this project
 Credentialed mise tasks run as `op run --environment "$OP_ENVIRONMENT_ID" -- ...`; the 1Password Environment exports the dlt source and Databricks environment variables. GitHub Actions uses `OP_SERVICE_ACCOUNT_TOKEN` plus the repository variable `OP_ENVIRONMENT_ID`. The 1Password CLI must support Environments.
 
 - **Local**: export `OP_ENVIRONMENT_ID` and `OP_SERVICE_ACCOUNT_TOKEN`, then use `mise run pipeline`, `mise run test-e2e`, or Databricks dbt tasks. `.env.databricks` is deprecated; credentialed values come from the selected 1Password Environment or `sbx` secrets.
-- **Warehouse preflight**: `scripts/databricks_warehouse.py` maps dlt's `DESTINATION__DATABRICKS__CREDENTIALS__*` values to native Databricks CLI authentication variables and starts the configured SQL warehouse before e2e, pipeline, and Databricks dbt runs. For dbt `test`/`prod`, the profiles read `DATABRICKS_CLIENT_ID` and `DATABRICKS_CLIENT_SECRET` directly; `dev` uses the dlt access token.
+- **Warehouse preflight**: `scripts/databricks_warehouse.py` maps dlt's `DESTINATION__DATABRICKS__CREDENTIALS__*` values to native Databricks CLI authentication variables and starts the configured SQL warehouse before e2e, pipeline, and Databricks dbt runs. For dbt `test`/`prod`, the profiles read the dlt-style `DESTINATION__DATABRICKS__CREDENTIALS__CLIENT_ID` and `DESTINATION__DATABRICKS__CREDENTIALS__CLIENT_SECRET` directly; `dev` uses the dlt access token.
 
 ## Agentic Coding (Docker AI Sandbox preferred; agent devcontainer alternative)
 The preferred environment for AI agent work (`opencode`, `claude`, `codex`) is Docker AI Sandbox configured by the repository-root `sbxenv.yaml`; the `.devcontainer/agent` is the second supported option. Both use a **dedicated GitHub machine user** scoped to this repo (collaborator, **Write** only, fine-grained PAT limited to this repo: `Contents: read/write`, `Pull requests: read/write`, `Metadata: read`). Never use a personal token. Full guide: `docs/source/agent_container.md`.

@@ -35,4 +35,4 @@ The project follows modern data engineering best practices with clear separation
 
 - **dlt pipelines**: `{source}__{entity}` (e.g., `hubspot__contacts`, `google_health__steps`)
 - **dbt models**: `{layer}_{source}__{entity}` (e.g., `staging_hubspot__contacts`, `core_habit_events`)
-- **GitHub Actions**: `{action}-{frequency}` (e.g., `dlt-daily`, `dbt-weekly`)
+- **GitHub Actions**: `{action}-{frequency}` (e.g., `dlt-weekly`, `dbt-weekly`)
