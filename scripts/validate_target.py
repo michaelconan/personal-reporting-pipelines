@@ -11,9 +11,9 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 # Capture the user-provided values before importing pipelines, whose package
 # initializer fills in local defaults for missing schema variables.
-DBT_TARGET = os.getenv("DBT_TARGET")
-DBT_SCHEMA = os.getenv("DBT_SCHEMA")
-RAW_SCHEMA = os.getenv("RAW_SCHEMA")
+DBT_TARGET = (os.getenv("DBT_TARGET") or "").strip() or None
+DBT_SCHEMA = (os.getenv("DBT_SCHEMA") or "").strip() or None
+RAW_SCHEMA = (os.getenv("RAW_SCHEMA") or "").strip() or None
 
 from pipelines.targets import validate_target  # noqa: E402
 

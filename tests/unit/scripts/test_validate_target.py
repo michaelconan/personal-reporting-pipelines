@@ -84,3 +84,24 @@ def test_validate_ingestion_target_rejects_bigquery_target():
 
 def test_validate_ingestion_target_accepts_mock():
     validate_ingestion_target("mock", "reporting_dev", "raw_dev")
+
+
+def test_validate_target_cli_fails_when_raw_schema_is_unset():
+    result = run_cli(DBT_TARGET="dev", DBT_SCHEMA="reporting_dev")
+
+    assert result.returncode != 0
+    assert "RAW_SCHEMA=None" in result.stderr
+
+
+def test_validate_target_cli_fails_for_empty_schema_value():
+    result = run_cli(DBT_TARGET="dev", DBT_SCHEMA="", RAW_SCHEMA="raw_dev")
+
+    assert result.returncode != 0
+    assert "DBT_SCHEMA=None" in result.stderr
+
+
+def test_validate_target_cli_fails_when_all_values_are_unset():
+    result = run_cli()
+
+    assert result.returncode != 0
+    assert "DBT_TARGET must be one of" in result.stderr

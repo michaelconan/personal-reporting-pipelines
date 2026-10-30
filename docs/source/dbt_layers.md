@@ -37,6 +37,10 @@ Models call `{{ source(source_name, relation_name) }}` directly; there is no `ma
 - In mock (DuckDB) each source reads its test fixture via `config.external_location: dbt/test_fixtures/{source}/{identifier}.csv`.
 - In dev/test/prod (Databricks Unity Catalog) sources resolve to the raw schema
   in catalog `workspace`.
+- `RAW_SCHEMA` is required for dbt runs; source definitions fail fast instead of
+  defaulting to production. The mise dbt tasks and workflows supply
+  `raw_dev`, `raw_test`, or `raw` as appropriate. BigQuery rollback targets use
+  the same value for their dataset.
 
 Consequence: fixture filenames under `dbt/test_fixtures/{source}/` must match the source identifiers in `_*sources.yml`.
 
