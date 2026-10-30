@@ -227,7 +227,7 @@ disambiguated by `session_kind`; kind-specific measures are NULL for the other k
 | `date_key` | FK | → `dim_date`; local date (sleep `session_date`, exercise start) |
 | `session_kind` | string | degenerate: SLEEP / EXERCISE |
 | `session_id` | string | natural key (`sleep_id` / exercise `name`) |
-| `sleep_type` | string | collapsed classification: `MAIN`, `NAP`, `OTHER` for sleep rows (derived from `is_main_sleep` / `is_nap`); `NOT_APPLICABLE` for exercise rows |
+| `sleep_type` | string | collapsed classification: `MAIN`, `OTHER` for sleep rows (derived from `is_main_sleep`); `NOT_APPLICABLE` for exercise rows |
 | `started_at` / `ended_at` | timestamp | transaction times |
 | `duration_minutes` | numeric | measure, present for both kinds |
 | `asleep_minutes` | int | measure, sleep only |
@@ -237,12 +237,11 @@ disambiguated by `session_kind`; kind-specific measures are NULL for the other k
 | `provider` | string | `google_health` |
 
 Notes:
-- `is_main_sleep` / `is_nap` are collapsed into `sleep_type` (precedence `MAIN` over
-  `NAP`). The source's lower-level `sleep__type` (CLASSIC / STAGES) is not carried
-  into the fact.
+- `is_main_sleep` is collapsed into `sleep_type` (`MAIN` / `OTHER`). The source's
+  lower-level `sleep__type` (CLASSIC / STAGES) is not carried into the fact.
 - Daily totals (`sleep_minutes`, `steps`) already exist at the daily grain in
-  `fct_habit_occurrence`; this fact exposes the **session-level detail** (naps,
-  calories, distance, pace). The redundancy is intentional (two grains, two questions).
+  `fct_habit_occurrence`; this fact exposes the **session-level detail**
+  (calories, distance, pace). The redundancy is intentional (two grains, two questions).
 - A separate `fct_daily_steps` may be split out later if per-interval/device step
   analysis is wanted (`stg_google_health__steps` holds `device_name`,
   `data_source_platform`, interval counts).
@@ -265,7 +264,7 @@ prod via BigQuery), feeding `dim_group_tier`. Columns: `group_tier` (1–3),
 | Relationship | 1:1 / group / synchronous / async engagements per week | `fct_engagement` (distinct `engagement_id`) |
 | Relationship | distinct contacts met per month; contacts by group or tier | `fct_engagement` + `dim_person`/`dim_group` |
 | Relationship | tier cadence adherence = engagements per tier per `cadence_period` vs `cadence_value` | `fct_engagement` + `dim_group` + `dim_group_tier` |
-| Health | avg sleep minutes per night; naps share; exercise sessions / calories / distance / steps per week | `fct_health_session`, `fct_habit_occurrence` |
+| Health | avg sleep minutes per night; exercise sessions / calories / distance / steps per week | `fct_health_session`, `fct_habit_occurrence` |
 
 These map directly onto the three goals: `habit completion` and `adherence` rows come
 from the habit fact, `relationship` rows from the engagement fact (including tier

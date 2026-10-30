@@ -27,7 +27,6 @@ with sleep_sessions as (
         {{ cast_safe('sleep__summary__minutes_asleep', 'integer') }} as asleep_minutes,
         sleep__type as sleep_type,  -- Recording format (CLASSIC, STAGES, ...)
         sleep__metadata__main_sleep as is_main_sleep,  -- Whether this is the main sleep of the night
-        {{ cast_safe('sleep__metadata__nap', 'boolean') }} as is_nap,  -- Whether this session is a nap
         coalesce(sleep__update_time, sleep__create_time) as updated_at
     from
         {{ source('google_health', 'sleep') }}

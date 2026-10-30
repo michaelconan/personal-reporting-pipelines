@@ -46,9 +46,8 @@ models:
           - not_null
           - dbt_expectations.expect_column_values_to_be_between:
               arguments:
-                min_value: 120
+                min_value: 0
                 max_value: 1080
-                row_condition: is_nap is not true
       - name: asleep_minutes
         description: Minutes asleep recorded in the sleep summary.
         data_type: bigint
@@ -65,9 +64,6 @@ models:
           - not_null
       - name: is_main_sleep
         description: Whether the session is the main sleep of the night.
-        data_type: boolean
-      - name: is_nap
-        description: Whether the session is a nap.
         data_type: boolean
       - name: updated_at
         description: Latest update timestamp available for the session.

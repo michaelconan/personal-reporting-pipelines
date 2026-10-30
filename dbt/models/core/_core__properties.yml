@@ -68,7 +68,7 @@ models:
   - name: core_sleep_sessions
     description: Conformed sleep session entity, one row per sleep session regardless
       of provider. Overlapping duplicates are resolved to the single most robust
-      record (stage detail > main sleep > nap, then longer interval).
+      record (stage detail > main sleep, then longer interval).
     data_tests:
       - expect_intervals_to_not_overlap:
           arguments:
@@ -103,9 +103,8 @@ models:
           - not_null
           - dbt_expectations.expect_column_values_to_be_between:
               arguments:
-                min_value: 120  # 2 hours
+                min_value: 0
                 max_value: 1080  # 18 hours
-                row_condition: is_nap is not true
       - name: asleep_minutes
         description: Minutes recorded asleep in the provider summary.
         data_type: bigint
@@ -122,9 +121,6 @@ models:
           - not_null
       - name: is_main_sleep
         description: Whether the session is the main sleep of the night.
-        data_type: boolean
-      - name: is_nap
-        description: Whether the session is a nap.
         data_type: boolean
       - name: provider
         description: The source system that recorded the sleep session.

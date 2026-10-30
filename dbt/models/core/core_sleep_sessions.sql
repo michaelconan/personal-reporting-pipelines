@@ -8,8 +8,8 @@
 --          Overlapping sessions (duplicates of the same night recorded under
 --          different data points, e.g. CLASSIC + STAGES, or unclassified
 --          splits of a main sleep) are resolved to their single most robust
---          representative: a stage-detailed record wins, then a main sleep
---          over a nap, then the longer interval.
+--          representative: a stage-detailed record wins, then a main sleep,
+--          then the longer interval.
 --
 -- Source: stg_google_health (currently Google Health; future providers map here)
 -- Output: One row per sleep session
@@ -33,12 +33,10 @@ sleep_sessions as (
         asleep_minutes,
         sleep_type,
         is_main_sleep,
-        is_nap,
         'google_health' as provider,
         case
             when sleep_type = 'STAGES' then 3
             when is_main_sleep then 2
-            when is_nap then 1
             else 0
         end as overlap_priority
     from
@@ -61,7 +59,6 @@ final as (
         this.asleep_minutes,
         this.sleep_type,
         this.is_main_sleep,
-        this.is_nap,
         this.provider
     from
         sleep_sessions as this

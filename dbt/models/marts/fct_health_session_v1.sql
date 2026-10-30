@@ -19,7 +19,6 @@ core_sleep_sessions as (
         started_at,
         ended_at,
         is_main_sleep,
-        is_nap,
         duration_minutes,
         asleep_minutes,
         provider
@@ -65,7 +64,6 @@ sleep_sessions as (
         ended_at,
         case
             when is_main_sleep then 'MAIN'
-            when is_nap then 'NAP'
             else 'OTHER'
         end as sleep_type,
         cast(duration_minutes as numeric(38, 9)) as duration_minutes,

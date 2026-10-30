@@ -71,8 +71,8 @@ habit_events as (
 
 sleep_habits as (
     -- Sleep aggregated to the habit/date grain: multiple sessions on one local
-    -- date (main sleep plus naps) collapse to one occurrence with the summed
-    -- duration. Threshold comparison happens in the metrics layer against the
+    -- date collapse to one occurrence with the summed duration. Threshold
+    -- comparison happens in the metrics layer against the
     -- Notion habit reference.
 
     select
