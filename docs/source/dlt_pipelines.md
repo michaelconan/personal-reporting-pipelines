@@ -37,11 +37,11 @@ mise run pipeline-all
 Programmatic usage (for local dev/test):
 
 ```python
-from pipelines.hubspot import refresh_hubspot
+from pipelines.runner import refresh_pipeline
 # default: detects incremental behavior from env
-refresh_hubspot(is_incremental=None)
+refresh_pipeline("hubspot", is_incremental=None)
 # force full reload
-refresh_hubspot(is_incremental=False)
+refresh_pipeline("hubspot", is_incremental=False)
 ```
 
 ## Refresh modes and overrides

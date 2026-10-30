@@ -88,7 +88,7 @@ of concerns:
 
 1. **mise** for project tools and task commands
 2. **GitHub Account** with repository access
-3. **1Password CLI beta** and an Environment ID for credentialed tasks
+3. **1Password CLI** with Environment support and an Environment ID for credentialed tasks
 4. **Docker** (optional, for containerized development)
 
 ### Optional GCP / BigQuery rollback setup
@@ -138,7 +138,7 @@ of concerns:
    mise run setup
    ```
 
-2. **Configure credentialed tasks**: install the 1Password CLI beta and export
+2. **Configure credentialed tasks**: install the 1Password CLI and export
    `OP_ENVIRONMENT_ID` plus `OP_SERVICE_ACCOUNT_TOKEN` in your shell.
    `.env.databricks` is deprecated and no longer loaded; provide warehouse and
    source credentials through the selected 1Password Environment, or use `sbx`
@@ -153,7 +153,7 @@ of concerns:
    mise run pipeline -- notion --full             # one dlt source
    mise run pipeline-all                          # all three dlt sources
    mise run dbt-build-mock                        # DuckDB fixture build
-   mise run dbt-build-dev                         # starts SQL warehouse, builds Databricks dev
+   mise run dbt-build                             # starts SQL warehouse, uses DBT_TARGET (default dev)
    mise run docs                                  # dbt + Sphinx documentation
    ```
 
@@ -163,7 +163,9 @@ of concerns:
    ```bash
    export GCP_PROJECT_ID=your-project-id
    export GOOGLE_APPLICATION_CREDENTIALS=/path/to/service/account/key.json
-   export RAW_SCHEMA_NAME=raw_data
+   export DBT_TARGET=dev
+   export DBT_SCHEMA=reporting_dev
+   export RAW_SCHEMA=raw_dev
    ```
 
 ### Agentic coding (Docker AI Sandbox preferred)
@@ -201,12 +203,12 @@ before removing an ephemeral environment and restore them later.
     sbx secret set-custom databricks-token --command 'powershell.exe -NoProfile -Command C:\Tools\Get-DatabricksToken.ps1' --refresh 30m --env DESTINATION__DATABRICKS__CREDENTIALS__ACCESS_TOKEN
    ```
 
-   For dbt `test` and `prod` targets, also provide the CLI/dbt-native
-   `DATABRICKS_CLIENT_ID` and `DATABRICKS_CLIENT_SECRET` variables. The
-    warehouse preflight maps the dlt-style client credentials to Databricks CLI
-    variables; the dbt profiles read the native names directly. Set
-    `OP_ENVIRONMENT_ID` to the 1Password Environment ID used by credentialed
-    mise tasks.
+   For dbt `test` and `prod` targets, the profiles read the same dlt-style
+   `DESTINATION__DATABRICKS__CREDENTIALS__CLIENT_ID` and
+   `DESTINATION__DATABRICKS__CREDENTIALS__CLIENT_SECRET` variables. The
+   warehouse preflight maps them to Databricks CLI variables when starting
+   the warehouse. Set `OP_ENVIRONMENT_ID` to the 1Password Environment ID used
+   by credentialed mise tasks.
 
    Source credentials use the same custom-secret pattern, for example:
     `sbx secret set-custom hubspot --ref 'op://vault/item/field' --env SOURCES__HUBSPOT__API_KEY`
@@ -325,13 +327,13 @@ mise run pipeline -- hubspot --incremental --select hubspot__contacts,hubspot__c
 #### Direct function parameter
 
 ```python
-from pipelines.hubspot import refresh_hubspot
+from pipelines.runner import refresh_pipeline
 
 # Force full refresh
-refresh_hubspot(is_incremental=False)
+refresh_pipeline("hubspot", is_incremental=False)
 
 # Use environment-based detection (default)
-refresh_hubspot()  # or refresh_hubspot(is_incremental=None)
+refresh_pipeline("hubspot")  # or refresh_pipeline("hubspot", is_incremental=None)
 ```
 
 #### GitHub Actions
@@ -392,7 +394,7 @@ steps:
    # Local DuckDB fixtures
    mise run dbt-build-mock
    # Databricks dev (starts and waits for the SQL warehouse)
-   mise run dbt-build-dev
+   mise run dbt-build
    ```
 
 ### Testing
@@ -451,7 +453,7 @@ This convention applies to every model (staging, core, intermediate, and marts).
 
 The project uses GitHub Actions for automated pipeline execution:
 
-- **Scheduled runs**: Daily/weekly automated data ingestion
+- **Scheduled runs**: Weekly automated data ingestion
 - **Manual triggers**: On-demand pipeline execution with full refresh options
 - **Pull request validation**: Automated testing on code changes
 - **Deployment**: Automated deployment to production environment

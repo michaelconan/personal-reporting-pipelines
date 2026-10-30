@@ -38,13 +38,17 @@ jobs:
       - name: install dbt dependencies
         run: mise run dbt-deps
 
-      - name: run dbt build
+      - name: run dbt source freshness and build
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
           OP_ENVIRONMENT_ID: ${{ vars.OP_ENVIRONMENT_ID }}
+          DBT_TARGET: prod
+          DBT_SCHEMA: reporting
+          RAW_SCHEMA: raw
         run: |
+          op run --environment "$OP_ENVIRONMENT_ID" -- env DBT_TARGET="$DBT_TARGET" DBT_SCHEMA="$DBT_SCHEMA" RAW_SCHEMA="$RAW_SCHEMA" mise run dbt-source-freshness
           if [ "${{ inputs.force_full_refresh }}" = "true" ]; then
-            op run --environment "$OP_ENVIRONMENT_ID" -- mise run dbt-build-prod -- --full-refresh
+            op run --environment "$OP_ENVIRONMENT_ID" -- env DBT_TARGET="$DBT_TARGET" DBT_SCHEMA="$DBT_SCHEMA" RAW_SCHEMA="$RAW_SCHEMA" mise run dbt-build -- --full-refresh
           else
-            op run --environment "$OP_ENVIRONMENT_ID" -- mise run dbt-build-prod
+            op run --environment "$OP_ENVIRONMENT_ID" -- env DBT_TARGET="$DBT_TARGET" DBT_SCHEMA="$DBT_SCHEMA" RAW_SCHEMA="$RAW_SCHEMA" mise run dbt-build
           fi

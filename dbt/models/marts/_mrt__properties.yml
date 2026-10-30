@@ -441,8 +441,15 @@ models:
         description: Natural source identifier of the session.
         data_type: string
       - name: sleep_type
-        description: Collapsed sleep classification (MAIN, NAP, OTHER, NOT_APPLICABLE).
+        description: Collapsed sleep classification (MAIN, OTHER, NOT_APPLICABLE).
         data_type: string
+        data_tests:
+          - accepted_values:
+              arguments:
+                values:
+                  - MAIN
+                  - OTHER
+                  - NOT_APPLICABLE
       - name: started_at
         description: Timestamp when the session started.
         data_type: timestamp

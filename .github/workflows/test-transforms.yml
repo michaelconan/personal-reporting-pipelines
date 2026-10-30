@@ -9,6 +9,8 @@ on:
       - 'dbt/**/*.csv'
       - 'mise.toml'
       - 'scripts/databricks_warehouse.py'
+      - 'scripts/validate_target.py'
+      - 'pipelines/targets.py'
 
 permissions:
   contents: 'read'
@@ -44,10 +46,12 @@ jobs:
         with:
           version: latest
 
-      - name: run Databricks dev build
+      - name: run Databricks test build
         if: github.actor != 'dependabot[bot]'
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
           OP_ENVIRONMENT_ID: ${{ vars.OP_ENVIRONMENT_ID }}
-        run:
-          op run --environment "$OP_ENVIRONMENT_ID" -- mise run dbt-build-test
+          DBT_TARGET: test
+          DBT_SCHEMA: reporting_test
+          RAW_SCHEMA: raw_test
+        run: op run --environment "$OP_ENVIRONMENT_ID" -- env DBT_TARGET="$DBT_TARGET" DBT_SCHEMA="$DBT_SCHEMA" RAW_SCHEMA="$RAW_SCHEMA" mise run dbt-build

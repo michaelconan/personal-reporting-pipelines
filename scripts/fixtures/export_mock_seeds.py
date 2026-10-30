@@ -14,7 +14,7 @@ Prerequisites
   raw dataset.
 - Environment variables:
     * ``GCP_PROJECT_ID`` – BigQuery project ID.
-    * ``DBT_RAW_DATASET`` – Dataset name where the raw tables live (e.g.
+    * ``RAW_SCHEMA`` – Dataset name where the raw tables live (e.g.
       ``raw_reporting``).
     * ``MOCK_SEED_SAMPLE_ROWS`` (optional) – rows sampled per table (default: 5).
     * ``MOCK_SEED_MAX_WORKERS`` (optional) – parallel BigQuery exports
@@ -71,12 +71,12 @@ def get_config() -> dict[str, Any]:
         ``max_workers`` and ``output_dir``.
 
     Raises:
-        RuntimeError: If ``GCP_PROJECT_ID`` or ``DBT_RAW_DATASET`` is missing.
+        RuntimeError: If ``GCP_PROJECT_ID`` or ``RAW_SCHEMA`` is missing.
     """
     project_id = os.getenv("GCP_PROJECT_ID")
-    raw_dataset = os.getenv("DBT_RAW_DATASET")
+    raw_dataset = os.getenv("RAW_SCHEMA")
     if not project_id or not raw_dataset:
-        raise RuntimeError("Environment variables GCP_PROJECT_ID and DBT_RAW_DATASET must be set.")
+        raise RuntimeError("Environment variables GCP_PROJECT_ID and RAW_SCHEMA must be set.")
     try:
         sample_rows = int(os.getenv("MOCK_SEED_SAMPLE_ROWS", str(DEFAULT_SAMPLE_ROWS)))
     except ValueError:
@@ -205,7 +205,7 @@ def export_table(
         source_name: Name of the source (e.g. "hubspot", "notion").
         identifier: The dbt identifier for the table (e.g. "hubspot__contacts").
         project_id: GCP project override (defaults to ``GCP_PROJECT_ID``).
-        raw_dataset: Raw dataset override (defaults to ``DBT_RAW_DATASET``).
+        raw_dataset: Raw dataset override (defaults to ``RAW_SCHEMA``).
         sample_rows: Number of rows to sample.
         output_dir: Seed output directory override.
         dry_run: Log the write without touching disk.
@@ -214,7 +214,7 @@ def export_table(
         The seed file path, or ``None`` when the table has no rows.
     """
     project = project_id or os.getenv("GCP_PROJECT_ID")
-    dataset = raw_dataset or os.getenv("DBT_RAW_DATASET")
+    dataset = raw_dataset or os.getenv("RAW_SCHEMA")
     out_dir = Path(output_dir) if output_dir is not None else PROJECT_ROOT / "dbt" / "test_fixtures"
     bq_table = f"{project}.{dataset}.{identifier}"
     query = f"SELECT * FROM `{bq_table}` ORDER BY RAND() LIMIT {int(sample_rows)}"

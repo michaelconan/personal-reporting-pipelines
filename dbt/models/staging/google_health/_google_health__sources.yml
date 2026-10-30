@@ -55,9 +55,6 @@ sources:
           - name: sleep__metadata__main_sleep
             description: Whether the session is the main sleep of the day.
             data_type: boolean
-          - name: sleep__metadata__nap
-            description: Whether the session is a nap.
-            data_type: boolean
           - name: _dlt_id
             description: dlt-generated row hash (row key for the raw table).
             data_type: varchar

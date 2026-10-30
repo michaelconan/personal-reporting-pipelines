@@ -12,12 +12,12 @@ dbt Staging (views) → dbt Intermediate → dbt Marts (tables)
 - dlt: extraction and direct-loading into Databricks (Unity Catalog). Keeps incremental state and supports full refreshes.
 - dbt: transformations layered into staging, intermediate, and marts. Seeds and macros enable local dev.
 - Databricks: primary data warehouse (Unity Catalog); dlt stages data in a managed volume and loads into the raw schema. dbt transforms and marts run on Databricks. BigQuery targets retained for easy rollback path. DuckDB used for local dev target.
-- GitHub Actions: scheduling and orchestration for daily/weekly runs.
+- GitHub Actions: scheduling and orchestration for weekly runs.
 
 ## Operational guidance
 
 - Ingest first, then run dbt transforms (workflows configured to enforce this order).
-- Use `mise run dbt-build-dev` to validate transformations against Databricks dev.
+- Use `mise run dbt-build` to validate transformations against Databricks dev.
 - Use `mise run dbt-build-mock` for local testing with CSV fixtures in DuckDB.
 - Maintain group_connect_cadence.csv as the single source of truth for group tier cadence targets.
 

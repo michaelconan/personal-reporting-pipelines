@@ -202,3 +202,13 @@ def test_runner_supports_direct_token_skips_secret_validation(
         assert info == "Loaded 5 rows"
         # Secret validation should be skipped when a direct token is available
         mock_validate.assert_not_called()
+
+
+def test_refresh_pipeline_rejects_target_schema_mismatch(monkeypatch):
+    """Direct ingestion must not silently write schemas that disagree with the target."""
+    monkeypatch.setattr("pipelines.runner.DBT_TARGET", "prod")
+    monkeypatch.setattr("pipelines.runner.DBT_SCHEMA", "reporting_dev")
+    monkeypatch.setattr("pipelines.runner.RAW_SCHEMA", "raw_dev")
+
+    with pytest.raises(ValueError, match="requires DBT_SCHEMA=reporting"):
+        refresh_pipeline("notion")

@@ -104,7 +104,7 @@ mise run dbt-lint
 
 Credentialed tasks call `op run --environment "$OP_ENVIRONMENT_ID" -- ...`.
 Configure both `OP_ENVIRONMENT_ID` and `OP_SERVICE_ACCOUNT_TOKEN` in the
-sandbox. The 1Password CLI beta is required until Environment support is GA.
+sandbox. The 1Password CLI must support Environments.
 Databricks tasks start the configured SQL warehouse and wait until it is
 healthy before running.
 

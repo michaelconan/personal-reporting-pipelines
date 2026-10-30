@@ -24,7 +24,7 @@ personal:
     mock:
       type: duckdb
       path: dbt.duckdb
-      schema: "{{ env_var('DBT_SCHEMA', 'reporting') }}"
+      schema: "{{ env_var('DBT_SCHEMA', 'reporting_dev') }}"
       # Pin the session timezone so timestamp→date casts match Databricks (UTC)
       settings:
         TimeZone: UTC
@@ -34,7 +34,7 @@ personal:
       <<: *databricks_config
       token:
         "{{ env_var('DESTINATION__DATABRICKS__CREDENTIALS__ACCESS_TOKEN') }}"
-      schema: "{{ env_var('DBT_SCHEMA', 'reporting') }}_dev"
+      schema: "{{ env_var('DBT_SCHEMA', 'reporting_dev') }}"
     test:
       <<: *databricks_config
       client_id:
@@ -42,7 +42,7 @@ personal:
       client_secret:
         "{{ env_var('DESTINATION__DATABRICKS__CREDENTIALS__CLIENT_SECRET') }}"
       auth_type: oauth
-      schema: "{{ env_var('DBT_SCHEMA', 'reporting') }}_test"
+      schema: "{{ env_var('DBT_SCHEMA', 'reporting_test') }}"
     prod:
       <<: *databricks_config
       client_id:
@@ -54,11 +54,11 @@ personal:
     # Rollback targets - BigQuery (retained for easy rollback path)
     dev-bq:
       <<: *bigquery_config
-      dataset: "{{ env_var('DBT_SCHEMA', 'reporting') }}_dev"
+      dataset: "{{ env_var('DBT_SCHEMA', 'reporting_dev') }}"
       threads: 4
     test-bq:
       <<: *bigquery_config
-      dataset: "{{ env_var('DBT_SCHEMA', 'reporting') }}_test"
+      dataset: "{{ env_var('DBT_SCHEMA', 'reporting_test') }}"
       threads: 4
     prod-bq:
       <<: *bigquery_config

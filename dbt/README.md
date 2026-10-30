@@ -59,11 +59,11 @@ The local testing setup uses a `profiles.yml` file located in `dbt/profiles.yml`
 ## Databricks authentication
 
 The `dev` target uses the dlt destination's access token. The `test` and `prod`
-targets use Databricks OAuth M2M with `DATABRICKS_CLIENT_ID` and
-`DATABRICKS_CLIENT_SECRET`. The dlt destination and warehouse preflight use
+targets use Databricks OAuth M2M with the dlt-style
 `DESTINATION__DATABRICKS__CREDENTIALS__CLIENT_ID` and
-`DESTINATION__DATABRICKS__CREDENTIALS__CLIENT_SECRET`; configure both naming
-forms in the credential environment when running dbt `test` or `prod`.
+`DESTINATION__DATABRICKS__CREDENTIALS__CLIENT_SECRET` variables. The warehouse
+preflight maps those to the Databricks CLI's native `DATABRICKS_CLIENT_ID` and
+`DATABRICKS_CLIENT_SECRET` only for starting the warehouse.
 
 ## Data Quality
 

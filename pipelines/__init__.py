@@ -12,14 +12,10 @@ BASE_DATE = "2020-01-01"
 # google or 1password
 SECRET_STORE = os.getenv("SECRET_STORE", default="1password")
 
-# Load and set dynamic schema and table variables based on DBT target
-DBT_TARGET = os.getenv("DBT_TARGET", default="prod")
-suffix = f"_{DBT_TARGET}" if DBT_TARGET != "prod" else ""
-
-# Define raw and DBT schemas
-DBT_SCHEMA_NAME = os.getenv("DBT_SCHEMA_NAME", default="reporting")
-DBT_SCHEMA = DBT_SCHEMA_NAME + suffix
-RAW_SCHEMA = os.getenv("RAW_SCHEMA_NAME", default="raw") + suffix
+# Define target and schema names supplied by the environment, defaulting to local dev
+DBT_TARGET = os.getenv("DBT_TARGET") or "dev"
+DBT_SCHEMA = os.getenv("DBT_SCHEMA") or "reporting_dev"
+RAW_SCHEMA = os.getenv("RAW_SCHEMA") or "raw_dev"
 
 # Set environment variables for schemas
 os.environ["DBT_SCHEMA"] = DBT_SCHEMA

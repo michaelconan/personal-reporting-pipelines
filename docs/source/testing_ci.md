@@ -22,15 +22,17 @@ class completes and resets local dlt state in a `finally` block.
 
 ```bash
 mise run dbt-build-mock
-mise run dbt-build-dev
-mise run dbt-build-prod
+mise run dbt-build
+DBT_TARGET=prod DBT_SCHEMA=reporting RAW_SCHEMA=raw mise run dbt-source-freshness
+DBT_TARGET=prod DBT_SCHEMA=reporting RAW_SCHEMA=raw mise run dbt-build
 mise run dbt -- run --target mock --select stg_google_health__sleep
 mise run dbt -- test --target mock --select stg_google_health__sleep
 ```
 
-The `mock` target uses DuckDB and CSV fixtures. The dev/prod tasks use the
-Databricks profiles and perform a warehouse preflight. For development docs,
-run `mise run docs`.
+The `mock` target uses DuckDB and CSV fixtures. `dbt-build` and
+`dbt-source-freshness` use `DBT_TARGET` plus the matching `DBT_SCHEMA` and
+`RAW_SCHEMA`, and perform a warehouse preflight. For development docs, run
+`mise run docs`.
 
 ## Linting and governance
 
@@ -52,8 +54,7 @@ mise run dbt-bouncer
 Credentialed mise tasks use `op run --environment "$OP_ENVIRONMENT_ID" -- ...`.
 Configure `OP_SERVICE_ACCOUNT_TOKEN` as a GitHub secret and `OP_ENVIRONMENT_ID`
 as a repository variable. The 1Password Environment must export the dlt source
-and destination variables. CI installs the 1Password CLI `latest-beta` until
-Environment support is generally available.
+and destination variables. CI installs the 1Password CLI `latest`.
 
 The Databricks CLI task starts a stopped SQL warehouse and polls for `RUNNING`
 and `HEALTHY` before e2e, pipeline, or Databricks dbt tasks proceed.
@@ -63,8 +64,10 @@ and `HEALTHY` before e2e, pipeline, or Databricks dbt tasks proceed.
 Workflows are in `.github/workflows/`:
 
 - `refresh-notion.yml`, `refresh-hubspot.yml`, `refresh-google-health.yml` —
-  scheduled ingestion via `mise run pipeline`.
-- `run-transforms.yml` — scheduled production dbt freshness/build via mise.
+  scheduled ingestion via `mise run pipeline` with `DBT_TARGET=prod`,
+  `DBT_SCHEMA=reporting`, and `RAW_SCHEMA=raw` set on the run step.
+- `run-transforms.yml` — scheduled dbt source freshness and build via mise with
+  the same production target and schema variables set on the run step.
 - `test-pipelines.yml`, `test-transforms.yml`, `lint.yml` — CI tests and lint.
 - `docs.yml` — builds and deploys the Sphinx/dbt docs site.
 

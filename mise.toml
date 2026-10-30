@@ -5,8 +5,9 @@ opencode = "1.19.0"
 "databricks-cli" = "latest"
 
 [env]
-DBT_TARGET="dev"
-DBT_RAW_DATASET="raw"
+DBT_TARGET = "{% if env.DBT_TARGET %}{{ env.DBT_TARGET }}{% else %}dev{% endif %}"
+DBT_SCHEMA = "{% if env.DBT_SCHEMA %}{{ env.DBT_SCHEMA }}{% else %}reporting_dev{% endif %}"
+RAW_SCHEMA = "{% if env.RAW_SCHEMA %}{{ env.RAW_SCHEMA }}{% else %}raw_dev{% endif %}"
 DBT_PROJECT_DIR = "{{ config_root }}/dbt"
 DBT_PROFILES_DIR = "{{ config_root }}/dbt"
 PYTHONUNBUFFERED = "1"
@@ -39,9 +40,13 @@ run = [
   { task = "test-e2e" },
 ]
 
+[tasks.validate-target]
+description = "Validate DBT_TARGET and schema environment variables"
+run = "uv run python scripts/validate_target.py"
+
 [tasks.pipeline]
 description = "Run a dlt pipeline by source name (notion, hubspot, google_health)"
-depends = ["databricks-start"]
+depends = ["validate-target", "databricks-start"]
 raw_args = true
 run = 'uv run python -m pipelines.run_pipeline'
 
@@ -73,26 +78,17 @@ dir = "dbt"
 raw_args = true
 run = "uv run dbt build --project-dir . --profiles-dir . --target mock"
 
-[tasks.dbt-build-dev]
-description = "Build dbt models and tests against Databricks dev (token auth)"
-depends = ["databricks-start"]
+[tasks.dbt-build]
+description = "Build dbt models and tests against DBT_TARGET (starts the Databricks warehouse)"
+depends = ["validate-target", "databricks-start"]
 raw_args = true
-run = 'uv run dbt build --target dev'
+run = "uv run dbt build"
 
-[tasks.dbt-build-test]
-description = "Build dbt models and tests against Databricks test (SA auth)"
-depends = ["databricks-start"]
+[tasks.dbt-source-freshness]
+description = "Run dbt source freshness against DBT_TARGET (starts the Databricks warehouse)"
+depends = ["validate-target", "databricks-start"]
 raw_args = true
-run = 'uv run dbt build --target test'
-
-[tasks.dbt-build-prod]
-description = "Run dbt freshness and build against Databricks prod (SA auth)"
-depends = ["databricks-start"]
-raw_args = true
-run = [
-  'uv run dbt source freshness --target prod',
-  'uv run dbt build --target prod',
-]
+run = "uv run dbt source freshness"
 
 [tasks.dbt-lint]
 description = "Lint dbt SQL using the mock target"

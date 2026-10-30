@@ -38,13 +38,13 @@ mise run pipeline -- hubspot
 #### Method 3: Direct Function Parameter
 
 ```python
-from pipelines.hubspot import refresh_hubspot
+from pipelines.runner import refresh_pipeline
 
 # Force full refresh
-refresh_hubspot(is_incremental=False)
+refresh_pipeline("hubspot", is_incremental=False)
 
 # Use environment-based detection (default)
-refresh_hubspot()  # or refresh_hubspot(is_incremental=None)
+refresh_pipeline("hubspot")  # or refresh_pipeline("hubspot", is_incremental=None)
 ```
 
 ### Environment Variables Reference

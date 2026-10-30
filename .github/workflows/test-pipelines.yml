@@ -10,7 +10,7 @@ on:
       - 'uv.lock'
       - 'pyproject.toml'
       - 'mise.toml'
-      - 'scripts/databricks_warehouse.py'
+      - 'scripts/**'
 
 permissions:
   contents: read
