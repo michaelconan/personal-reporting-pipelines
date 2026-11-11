@@ -81,6 +81,7 @@ def test_start_warehouse_starts_then_waits_for_healthy(monkeypatch) -> None:
     monkeypatch.setattr(databricks_warehouse, "warehouse_status", _status_provider(statuses))
     monkeypatch.setattr(databricks_warehouse, "run", lambda command, **_: commands.append(command))
     monkeypatch.setattr(databricks_warehouse.time, "sleep", lambda _: None)
+    _fake_clock(monkeypatch)
 
     databricks_warehouse.start_databricks_warehouse()
 
@@ -124,6 +125,23 @@ def _status_provider(statuses):
     return _next
 
 
+def _fake_clock(monkeypatch, step: float = 10.0) -> None:
+    """Replace time.monotonic with a clock advancing by ``step`` per read.
+
+    Poll-loop tests must not depend on the real 900s deadline: a regression
+    that loops forever would otherwise spin until the real deadline
+    instead of failing fast.
+    """
+    clock = [0.0]
+
+    def fake_monotonic():
+        value = clock[0]
+        clock[0] += step
+        return value
+
+    monkeypatch.setattr(databricks_warehouse.time, "monotonic", fake_monotonic)
+
+
 def _patch_start(monkeypatch, statuses, run) -> None:
     monkeypatch.setattr(
         databricks_warehouse, "databricks_cli_environment", lambda: ({}, "warehouse-id")
@@ -131,6 +149,7 @@ def _patch_start(monkeypatch, statuses, run) -> None:
     monkeypatch.setattr(databricks_warehouse, "warehouse_status", _status_provider(statuses))
     monkeypatch.setattr(databricks_warehouse, "run", run)
     monkeypatch.setattr(databricks_warehouse.time, "sleep", lambda _: None)
+    _fake_clock(monkeypatch)
 
 
 def _record_sleeps(monkeypatch):
@@ -159,19 +178,108 @@ def test_start_error_classification() -> None:
     # A generic timeout is not a capacity error: only run()'s unique
     # "command timed out after" message is transient.
     assert not databricks_warehouse.is_transient_start_error(RuntimeError("connection timed out"))
-    assert databricks_warehouse.is_benign_start_error(
+    assert databricks_warehouse.is_benign_starting_error(
         RuntimeError("Error: cannot start warehouse: already starting")
     )
-    assert not databricks_warehouse.is_benign_start_error(
+    assert databricks_warehouse.is_benign_starting_error(
+        RuntimeError("Error: warehouse is already running")
+    )
+    assert databricks_warehouse.is_benign_stopping_error(
+        RuntimeError("Cannot start the warehouse while it is stopping.")
+    )
+    assert not databricks_warehouse.is_benign_starting_error(
+        RuntimeError("Databricks CLI command failed: Error: PERMISSION_DENIED.")
+    )
+    assert not databricks_warehouse.is_benign_stopping_error(
         RuntimeError("Databricks CLI command failed: Error: PERMISSION_DENIED.")
     )
 
 
-def test_state_and_health_raises_for_unhealthy_running() -> None:
-    with pytest.raises(RuntimeError, match="UNHEALTHY"):
+def test_state_and_health_raises_for_degraded_running() -> None:
+    with pytest.raises(RuntimeError, match="DEGRADED"):
         databricks_warehouse._state_and_health(
-            {"state": "RUNNING", "health": {"status": "UNHEALTHY", "summary": "disk full"}}
+            {"state": "RUNNING", "health": {"status": "DEGRADED", "summary": "disk full"}}
         )
+
+
+def test_state_and_health_treats_unknown_health_as_not_ready() -> None:
+    # UNKNOWN health on a RUNNING warehouse must not raise: the warehouse
+    # just reached RUNNING and its health data has not settled yet.
+    assert databricks_warehouse._state_and_health(
+        {"state": "RUNNING", "health": {"status": "UNKNOWN"}}
+    ) == ("RUNNING", "UNKNOWN")
+
+
+def test_start_warehouse_waits_for_unknown_health_to_settle(monkeypatch) -> None:
+    # RUNNING + UNKNOWN polls until HEALTHY; no second start is issued.
+    statuses = [
+        {"state": "STOPPED"},
+        {"state": "RUNNING", "health": {"status": "UNKNOWN"}},
+        {"state": "RUNNING", "health": {"status": "HEALTHY"}},
+    ]
+    commands = []
+    _patch_start(
+        monkeypatch,
+        statuses,
+        lambda command, **_: commands.append(command),
+    )
+
+    databricks_warehouse.start_databricks_warehouse()
+
+    assert len(commands) == 1
+
+
+def test_start_warehouse_tolerates_unexpected_and_missing_states(monkeypatch) -> None:
+    # An unknown state, then a status with no state at all, must not kill
+    # the run: keep polling until the warehouse reports healthy.
+    statuses = [
+        {"state": "STOPPED"},
+        {"state": "BOGUS"},
+        {},
+        {"state": "RUNNING", "health": {"status": "HEALTHY"}},
+    ]
+    commands = []
+    _patch_start(
+        monkeypatch,
+        statuses,
+        lambda command, **_: commands.append(command),
+    )
+
+    databricks_warehouse.start_databricks_warehouse()
+
+    assert len(commands) == 1
+
+
+def test_start_warehouse_waits_out_stop_after_already_stopping_rejection(
+    monkeypatch,
+) -> None:
+    # A start rejected as "already stopping" must wait out the stop in the
+    # same attempt — not burn an attempt and a 60s backoff the way an
+    # "already starting" rejection would.
+    statuses = [
+        {"state": "STOPPED"},
+        {"state": "STOPPING"},
+        {"state": "STOPPED"},
+        {"state": "STARTING"},
+        {"state": "RUNNING", "health": {"status": "HEALTHY"}},
+    ]
+    commands = []
+
+    def stopping_then_ok(command, **_):
+        commands.append(command)
+        if len(commands) == 1:
+            raise RuntimeError(
+                "Databricks CLI command failed: Cannot start the warehouse while it is stopping."
+            )
+
+    _patch_start(monkeypatch, statuses, stopping_then_ok)
+    sleeps = _record_sleeps(monkeypatch)
+
+    databricks_warehouse.start_databricks_warehouse()
+
+    assert len(commands) == 2
+    assert 60 not in sleeps
+    assert all(sleep == databricks_warehouse.POLL_INTERVAL_SECONDS for sleep in sleeps)
 
 
 def test_state_and_health_tolerates_malformed_health_payload() -> None:
@@ -210,6 +318,7 @@ def test_poll_for_healthy_fails_fast_on_deleting(monkeypatch) -> None:
         lambda *_: {"state": "DELETING"},
     )
     monkeypatch.setattr(databricks_warehouse.time, "sleep", lambda _: None)
+    _fake_clock(monkeypatch)
 
     with pytest.raises(RuntimeError, match="cannot be started"):
         databricks_warehouse._poll_for_healthy(
@@ -448,6 +557,7 @@ def test_settle_stopping_tolerates_transient_status_read_failure(monkeypatch) ->
     )
     monkeypatch.setattr(databricks_warehouse, "warehouse_status", status_with_one_failure)
     monkeypatch.setattr(databricks_warehouse.time, "sleep", lambda _: None)
+    _fake_clock(monkeypatch)
     commands = []
     monkeypatch.setattr(databricks_warehouse, "run", lambda command, **_: commands.append(command))
 
@@ -514,6 +624,7 @@ def test_start_warehouse_tolerates_transient_status_poll_failure(monkeypatch) ->
     )
     monkeypatch.setattr(databricks_warehouse, "warehouse_status", status_with_one_failure)
     monkeypatch.setattr(databricks_warehouse.time, "sleep", lambda _: None)
+    _fake_clock(monkeypatch)
     commands = []
     monkeypatch.setattr(databricks_warehouse, "run", lambda command, **_: commands.append(command))
 
