@@ -57,7 +57,11 @@ as a repository variable. The 1Password Environment must export the dlt source
 and destination variables. CI installs the 1Password CLI `latest`.
 
 The Databricks CLI task starts a stopped SQL warehouse and polls for `RUNNING`
-and `HEALTHY` before e2e, pipeline, or Databricks dbt tasks proceed.
+and `HEALTHY` before e2e, pipeline, or Databricks dbt tasks proceed. A start
+rejected with a transient capacity error (`RESOURCE_EXHAUSTED`) is retried
+with backoff (up to 6 attempts), a warehouse in `STARTING` or `STOPPING` is
+waited out, and the whole start-and-wait is bounded by a 15-minute overall
+deadline.
 
 ## GitHub Actions
 

@@ -63,6 +63,9 @@ The dbt `test` and `prod` profiles read the dlt-style
 
 The Databricks CLI task derives the warehouse ID from the dlt HTTP path, starts
 the SQL warehouse if needed, and waits for it to report `RUNNING` and `HEALTHY`.
+Transient capacity rejections are retried with backoff (up to 6 attempts),
+`STARTING`/`STOPPING` is waited out, and the whole start-and-wait is bounded
+by a 15-minute overall deadline.
 For PAT authentication, it maps the dlt `ACCESS_TOKEN` to `DATABRICKS_TOKEN`.
 `pipeline`, `pipeline-all`, `test-e2e`, `dbt-build`, and `dbt-source-freshness`
 perform this preflight automatically. To start it separately, run
