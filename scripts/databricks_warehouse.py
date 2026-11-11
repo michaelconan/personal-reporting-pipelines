@@ -3,15 +3,106 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import subprocess  # nosec B404
 import time
 from collections.abc import Sequence
 from typing import Any
 
+logger = logging.getLogger(__name__)
+
 WAREHOUSE_PATH_PREFIX = "/sql/1.0/warehouses/"
 POLL_INTERVAL_SECONDS = 10
-START_TIMEOUT_SECONDS = 900
+# Soft overall wall-clock bound for the whole start-and-wait, across all
+# attempts and backoff. The test-pipelines CI job has a 20-minute timeout,
+# so the start helper must never burn 6 x 15 min of per-attempt polling
+# (~90 min) on a warehouse stuck in STARTING. Note the backoff delays sum
+# to 1020s, so the last delay is truncated by this deadline: the real
+# bound is 15 min. It is soft, not hard: the deadline is checked at loop
+# boundaries, so a status/start call can add up to CLI_TIMEOUT_SECONDS
+# (120s) and a poll interval can add a few more seconds — the run can
+# overshoot by a couple of minutes, still inside the 20-minute job.
+OVERALL_TIMEOUT_SECONDS = 900
+# Every Databricks CLI call gets its own timeout so a hung `start`/`get`
+# cannot defeat OVERALL_TIMEOUT_SECONDS: a normal call takes seconds.
+CLI_TIMEOUT_SECONDS = 120
+# A STOPPED sample right after an accepted start can just be eventual
+# consistency, so a launch is only declared failed after the warehouse was
+# observed STARTING, or after this many consecutive STOPPED polls with no
+# STARTING observed at all (~120s — an accepted start can legitimately
+# take a while to report STARTING, and giving up sooner risks a duplicate
+# start, which the API may reject as "already starting").
+STOPPED_POLLS_WITHOUT_START = 12
+# States from which a warehouse cannot be started.
+STATE_RUNNING = "RUNNING"
+STATE_STARTING = "STARTING"
+STATE_STOPPING = "STOPPING"
+STATE_STOPPED = "STOPPED"
+TERMINAL_STATES = ("DELETED", "DELETING")
+# Health statuses: None/HEALTHY means ready; UNKNOWN means the warehouse
+# just reached RUNNING and its health data has not settled yet (keep
+# polling); only DEGRADED/FAILED fail fast.
+FATAL_HEALTH_STATUSES = ("DEGRADED", "FAILED")
+
+# Starting a serverless SQL warehouse can fail transiently when the backing
+# serverless compute pool runs out of capacity. Databricks reports this as
+# RESOURCE_EXHAUSTED, surfaced by the CLI as "Cannot create the resource,
+# please try again later." (Seen in scheduled runs on 2026-11-09, where the
+# single start attempt failed in under 3s and killed the whole pipeline.)
+# Retry only those errors, with backoff, instead of failing immediately.
+START_MAX_ATTEMPTS = 6
+# One delay per retryable attempt: attempts 1-5 sleep before retrying;
+# attempt 6 raises instead of sleeping, so the tuple has
+# START_MAX_ATTEMPTS - 1 entries.
+START_RETRY_DELAYS_SECONDS = (60, 120, 240, 300, 300)
+# The timeout marker must match run()'s unique message ("command timed out
+# after 120s"), not any timeout: a generic "timed out" would also match a
+# permanent auth/network timeout and retry it 6 times. The capacity
+# markers alone are the real signal.
+TRANSIENT_START_ERROR_MARKERS = (
+    "cannot create the resource",
+    "resource_exhausted",
+    "command timed out after",
+)
+# A start rejected because a start is already in flight is not a failure:
+# the warehouse is starting, so poll for it instead of failing the run.
+# Starting and stopping rejections are distinguished: a stopping warehouse
+# must be waited out in the same attempt, not treated as "already
+# starting". Phrasings are matched as substrings, so "while it is
+# starting/stopping/running" covers the CLI's prose variants.
+BENIGN_STARTING_MARKERS = (
+    "already starting",
+    "cannot start while starting",
+    "while it is starting",
+    "already running",
+    "cannot start while running",
+    "while it is running",
+)
+BENIGN_STOPPING_MARKERS = (
+    "already stopping",
+    "cannot start while stopping",
+    "while it is stopping",
+)
+
+
+def _run_cli(
+    command: Sequence[str], *, env: dict[str, str] | None = None
+) -> subprocess.CompletedProcess[str]:
+    """Run one Databricks CLI command, returning the raw result.
+
+    Callers that need the raw CLI failure (polling) let
+    CalledProcessError/TimeoutExpired propagate; run() wraps them into
+    RuntimeError for the start path instead.
+    """
+    return subprocess.run(  # nosec B603 B607
+        command,
+        env=env,
+        check=True,
+        capture_output=True,
+        text=True,
+        timeout=CLI_TIMEOUT_SECONDS,
+    )
 
 
 def run(
@@ -19,15 +110,17 @@ def run(
 ) -> subprocess.CompletedProcess[str]:
     """Run a command, capturing output for error reporting."""
     try:
-        return subprocess.run(  # nosec B603
-            command,
-            env=env,
-            check=True,
-            capture_output=True,
-            text=True,
-        )
+        return _run_cli(command, env=env)
+    except subprocess.TimeoutExpired as exc:
+        raise RuntimeError(
+            f"Databricks CLI command timed out after {CLI_TIMEOUT_SECONDS}s: {' '.join(command)}"
+        ) from exc
     except subprocess.CalledProcessError as exc:
-        detail = exc.stdout or exc.stderr or str(exc)
+        # Prefer stderr (where the CLI puts the real error text) but keep
+        # stdout too: on failure the CLI can emit both, and dropping
+        # stderr would hide the text transient/benign classification
+        # matches on.
+        detail = "\n".join(part for part in (exc.stderr, exc.stdout) if part) or str(exc)
         raise RuntimeError(f"Databricks CLI command failed: {detail.strip()}") from exc
 
 
@@ -83,65 +176,396 @@ def databricks_cli_environment() -> tuple[dict[str, str], str]:
 
 
 def warehouse_status(cli_env: dict[str, str], warehouse_id: str) -> dict[str, Any]:
-    """Read the SQL warehouse state through the Databricks CLI."""
-    result = subprocess.run(  # nosec B603 B607
+    """Read the SQL warehouse state through the Databricks CLI.
+
+    A hung call raises subprocess.TimeoutExpired, which callers treat as a
+    transient status-read failure.
+    """
+    result = _run_cli(
         ["databricks", "warehouses", "get", warehouse_id, "--output", "json"],
         env=cli_env,
-        check=True,
-        capture_output=True,
-        text=True,
     )
     try:
-        return json.loads(result.stdout)
+        data = json.loads(result.stdout)
     except json.JSONDecodeError as exc:
         raise RuntimeError("Databricks CLI returned invalid JSON for warehouse status.") from exc
+    if not isinstance(data, dict):
+        raise TypeError(f"Databricks CLI returned unexpected warehouse status: {data!r}")
+    return data
+
+
+def is_transient_start_error(error: Exception) -> bool:
+    """Return True when a start failure is worth retrying.
+
+    Only serverless capacity exhaustion is retried. Anything else (auth,
+    permissions, an unknown warehouse, bad configuration) fails immediately
+    so a real problem is not hidden behind a long retry loop.
+    """
+    message = str(error).lower()
+    return any(marker in message for marker in TRANSIENT_START_ERROR_MARKERS)
+
+
+def is_benign_starting_error(error: Exception) -> bool:
+    """Return True when a start was rejected because one is already in flight.
+
+    The warehouse is starting (or already running), so the caller should
+    poll for it instead of failing the run.
+    """
+    message = str(error).lower()
+    return any(marker in message for marker in BENIGN_STARTING_MARKERS)
+
+
+def is_benign_stopping_error(error: Exception) -> bool:
+    """Return True when a start was rejected because the warehouse is stopping.
+
+    Distinct from an already-starting rejection: the stop must be waited
+    out in the same attempt, not treated as "already starting".
+    """
+    message = str(error).lower()
+    return any(marker in message for marker in BENIGN_STOPPING_MARKERS)
+
+
+def _retry_delay_seconds(attempt: int) -> int:
+    """Backoff before the next start attempt (1-based attempt just made)."""
+    index = min(attempt - 1, len(START_RETRY_DELAYS_SECONDS) - 1)
+    return START_RETRY_DELAYS_SECONDS[index]
+
+
+def _state_and_health(status: dict[str, Any]) -> tuple[str | None, str | None]:
+    """Return (state, health status), raising if running and degraded/failed.
+
+    The health status is only meaningful when the state is RUNNING;
+    callers ignore it for any other state. UNKNOWN health does not raise:
+    a warehouse that just reached RUNNING can report it before its health
+    data settles, so it means "not ready yet", not failure.
+    """
+    state = status.get("state")
+    health = status.get("health")
+    if not isinstance(health, dict):
+        # A malformed health payload must not crash with AttributeError;
+        # treat it as "no health information".
+        health = {}
+    health_status = health.get("status")
+    if state == STATE_RUNNING and health_status in FATAL_HEALTH_STATUSES:
+        detail = health.get("summary") or health.get("details") or health_status
+        raise RuntimeError(f"Databricks SQL warehouse is {health_status}: {detail}")
+    return state, health_status
+
+
+def _is_healthy(state: str | None, health_status: str | None) -> bool:
+    """Return True when the warehouse is running with settled healthy status."""
+    return state == STATE_RUNNING and health_status in (None, "HEALTHY")
+
+
+class LaunchFailedError(RuntimeError):
+    """A start was accepted (or the warehouse was already starting) but the launch failed."""
+
+
+def _sleep_before_retry(delay: int, overall_deadline: float, warehouse_id: str) -> None:
+    """Sleep for the backoff delay, or fail fast if the overall deadline hits."""
+    remaining = overall_deadline - time.monotonic()
+    if remaining <= 0:
+        raise TimeoutError(
+            f"Databricks SQL warehouse {warehouse_id} did not start "
+            f"within {OVERALL_TIMEOUT_SECONDS}s."
+        )
+    time.sleep(min(delay, remaining))
+
+
+def _read_status(cli_env: dict[str, str], warehouse_id: str) -> dict[str, Any] | None:
+    """Read the warehouse status, returning None on a transient CLI failure.
+
+    Only subprocess failures are swallowed; an invalid-JSON RuntimeError
+    or a non-object TypeError from warehouse_status propagates so a real
+    parsing bug fails fast.
+    """
+    try:
+        return warehouse_status(cli_env, warehouse_id)
+    except subprocess.SubprocessError as exc:
+        logger.warning("Could not read Databricks SQL warehouse status: %s. Retrying.", exc)
+        return None
+
+
+def _check_after_settle(warehouse_id: str, state: str | None, overall_deadline: float) -> None:
+    """Raise if the deadline passed or the warehouse reached a terminal state after settling."""
+    if time.monotonic() >= overall_deadline:
+        raise TimeoutError(
+            f"Databricks SQL warehouse {warehouse_id} did not start "
+            f"within {OVERALL_TIMEOUT_SECONDS}s."
+        )
+    if state in TERMINAL_STATES:
+        raise RuntimeError(
+            f"Databricks SQL warehouse {warehouse_id} is {state}; it cannot be started."
+        )
+
+
+def _settle_stopping(
+    cli_env: dict[str, str], warehouse_id: str, overall_deadline: float
+) -> tuple[str | None, bool]:
+    """Wait out a STOPPING warehouse; return (settled state, is healthy).
+
+    A start issued while STOPPING is rejected by the API as a non-transient
+    error, so this waits in the same attempt — no backoff, no attempt
+    consumed — until the warehouse settles to STOPPED (or starts, or
+    becomes healthy on its own).
+    """
+    while time.monotonic() < overall_deadline:
+        time.sleep(POLL_INTERVAL_SECONDS)
+        status = _read_status(cli_env, warehouse_id)
+        if status is None:
+            continue
+        state, health_status = _state_and_health(status)
+        if _is_healthy(state, health_status):
+            logger.info("Databricks SQL warehouse %s is running and healthy.", warehouse_id)
+            return state, True
+        if state != STATE_STOPPING:
+            return state, False
+    raise TimeoutError(
+        f"Databricks SQL warehouse {warehouse_id} did not stop before the "
+        f"{OVERALL_TIMEOUT_SECONDS}s overall deadline."
+    )
+
+
+def _poll_for_healthy(
+    cli_env: dict[str, str],
+    warehouse_id: str,
+    overall_deadline: float,
+    observed_starting: bool,
+) -> None:
+    """Poll until the warehouse is healthy; raise LaunchFailedError if the launch failed.
+
+    ``observed_starting`` means STARTING was observed — either the warehouse
+    was already STARTING when this attempt began, or a poll since the start
+    saw it. A STOPPED sample only declares the launch failed once STARTING
+    was observed, or after STOPPED_POLLS_WITHOUT_START consecutive STOPPED
+    polls with no STARTING at all (a genuine instant failure, not the
+    eventual consistency of a first poll right after an accepted start).
+    When the grace window expires, one confirmation poll is taken first:
+    an accepted start can legitimately be slow to report STARTING, and
+    failing on the threshold poll alone risks a duplicate start.
+    """
+    stopped_without_start = 0
+    grace_confirmed = False
+    warned_unexpected = False
+    while time.monotonic() < overall_deadline:
+        time.sleep(POLL_INTERVAL_SECONDS)
+        status = _read_status(cli_env, warehouse_id)
+        if status is None:
+            continue
+        state, health_status = _state_and_health(status)
+
+        if _is_healthy(state, health_status):
+            logger.info("Databricks SQL warehouse %s is running and healthy.", warehouse_id)
+            return
+        if state == STATE_RUNNING:
+            # Running but health not settled yet (e.g. UNKNOWN); keep
+            # polling until it reports HEALTHY or the deadline hits.
+            logger.debug(
+                "Databricks SQL warehouse %s is running with health %s; waiting.",
+                warehouse_id,
+                health_status or "unknown",
+            )
+            continue
+        if state == STATE_STARTING:
+            observed_starting = True
+            stopped_without_start = 0
+            grace_confirmed = False
+            continue
+        if state == STATE_STOPPING:
+            stopped_without_start = 0
+            grace_confirmed = False
+            continue
+        if state == STATE_STOPPED:
+            if observed_starting:
+                # The start was accepted and the launch actually began,
+                # then the warehouse stopped again; retry the start.
+                logger.info("Databricks SQL warehouse %s stopped while starting.", warehouse_id)
+                raise LaunchFailedError(
+                    f"Databricks SQL warehouse {warehouse_id} stopped while starting."
+                )
+            stopped_without_start += 1
+            if stopped_without_start >= STOPPED_POLLS_WITHOUT_START:
+                if not grace_confirmed:
+                    # ~120s of STOPPED with no STARTING observed, but the
+                    # accepted start may just be slow to report; take one
+                    # confirmation poll before declaring the launch failed.
+                    grace_confirmed = True
+                    logger.info(
+                        "Databricks SQL warehouse %s still STOPPED after the grace "
+                        "window; taking one confirmation poll.",
+                        warehouse_id,
+                    )
+                    continue
+                logger.info("Databricks SQL warehouse %s never left STOPPED.", warehouse_id)
+                raise LaunchFailedError(
+                    f"Databricks SQL warehouse {warehouse_id} never left STOPPED."
+                )
+            continue
+        if state in TERMINAL_STATES:
+            raise RuntimeError(
+                f"Databricks SQL warehouse {warehouse_id} is {state}; it cannot be started."
+            )
+        # Log an unexpected state once, then at debug level: a persistent
+        # unknown state would otherwise repeat this warning every poll.
+        if not warned_unexpected:
+            logger.warning(
+                "Databricks SQL warehouse %s is in unexpected state %s; continuing to poll.",
+                warehouse_id,
+                state or "unknown",
+            )
+            warned_unexpected = True
+        else:
+            logger.debug(
+                "Databricks SQL warehouse %s still in unexpected state %s.",
+                warehouse_id,
+                state or "unknown",
+            )
+    raise TimeoutError(
+        f"Databricks SQL warehouse did not become healthy within {OVERALL_TIMEOUT_SECONDS}s."
+    )
 
 
 def start_databricks_warehouse() -> None:
-    """Start a stopped SQL warehouse and wait until it is running and healthy."""
+    """Start a stopped SQL warehouse and wait until it is running and healthy.
+
+    A start rejected with a transient capacity error is retried with
+    backoff (up to START_MAX_ATTEMPTS starts). A start that is accepted but
+    then falls back to STOPPED while polling is treated the same way: the
+    launch itself failed, so start again rather than polling a stopped
+    warehouse until the timeout. The whole operation is soft-bounded by
+    OVERALL_TIMEOUT_SECONDS (15 minutes, checked at loop boundaries, so it
+    can overshoot by up to a CLI timeout plus a poll interval), so a
+    warehouse stuck in STARTING cannot burn a fresh 15-minute poll on
+    every attempt.
+    """
     cli_env, warehouse_id = databricks_cli_environment()
+    overall_deadline = time.monotonic() + OVERALL_TIMEOUT_SECONDS
 
-    try:
-        status = warehouse_status(cli_env, warehouse_id)
-        state = status.get("state")
-        health = status.get("health") or {}
-        health_status = health.get("status")
-
-        if state == "RUNNING" and health_status in (None, "HEALTHY"):
-            print(f"Databricks SQL warehouse {warehouse_id} is already running and healthy.")
+    for attempt in range(1, START_MAX_ATTEMPTS + 1):
+        if time.monotonic() >= overall_deadline:
+            raise TimeoutError(
+                f"Databricks SQL warehouse {warehouse_id} did not start "
+                f"within {OVERALL_TIMEOUT_SECONDS}s."
+            )
+        try:
+            status = warehouse_status(cli_env, warehouse_id)
+        except subprocess.TimeoutExpired as exc:
+            # A hung initial read is transient: proceed to issue a start
+            # rather than failing the run on a status read alone. If the
+            # warehouse was actually running, the start is rejected as
+            # "already running", which is benign and polls to healthy.
+            logger.warning(
+                "Could not read Databricks SQL warehouse status: %s. Starting anyway.", exc
+            )
+            status = {}
+        except subprocess.CalledProcessError as exc:
+            # A failed initial read must not silently fall through to a
+            # start that consumes an attempt before the real (e.g. auth)
+            # failure surfaces.
+            detail = exc.stderr or exc.stdout or str(exc)
+            raise RuntimeError(
+                f"Could not read Databricks SQL warehouse status: {detail.strip()}"
+            ) from exc
+        state, health_status = _state_and_health(status)
+        if _is_healthy(state, health_status):
+            logger.info("Databricks SQL warehouse %s is already running and healthy.", warehouse_id)
             return
-        if state == "RUNNING" and health_status in ("DEGRADED", "FAILED"):
-            detail = health.get("summary") or health.get("details") or health_status
-            raise RuntimeError(f"Databricks SQL warehouse is {health_status}: {detail}")
-    except subprocess.CalledProcessError:
-        state = None
+        if state in TERMINAL_STATES:
+            raise RuntimeError(
+                f"Databricks SQL warehouse {warehouse_id} is {state}; it cannot be started."
+            )
 
-    if state != "STARTING":
-        print(f"Starting Databricks SQL warehouse {warehouse_id} (state: {state or 'unknown'}).")
-        run(["databricks", "warehouses", "start", warehouse_id, "--no-wait"], env=cli_env)
+        if state == STATE_STOPPING:
+            state, healthy = _settle_stopping(cli_env, warehouse_id, overall_deadline)
+            if healthy:
+                return
+            _check_after_settle(warehouse_id, state, overall_deadline)
 
-    deadline = time.monotonic() + START_TIMEOUT_SECONDS
-    while time.monotonic() < deadline:
-        time.sleep(POLL_INTERVAL_SECONDS)
-        status = warehouse_status(cli_env, warehouse_id)
-        state = status.get("state")
-        health = status.get("health") or {}
-        health_status = health.get("status")
+        # RUNNING here means health has not settled yet (e.g. UNKNOWN):
+        # do not start it, just poll until it reports HEALTHY.
+        observed_starting = state in (STATE_STARTING, STATE_RUNNING)
+        retry_next_attempt = False
+        while not observed_starting:
+            logger.info(
+                "Starting Databricks SQL warehouse %s (state: %s, attempt %d/%d).",
+                warehouse_id,
+                state or "unknown",
+                attempt,
+                START_MAX_ATTEMPTS,
+            )
+            try:
+                run(["databricks", "warehouses", "start", warehouse_id, "--no-wait"], env=cli_env)
+            except RuntimeError as exc:
+                if is_benign_starting_error(exc):
+                    # A start is already in flight (or the warehouse is
+                    # already running); poll for it instead of failing
+                    # on a duplicate-start rejection.
+                    logger.info(
+                        "Databricks SQL warehouse %s is already starting; polling.", warehouse_id
+                    )
+                    observed_starting = True
+                elif is_benign_stopping_error(exc):
+                    # Wait out the stop in this same attempt, then
+                    # re-evaluate: STARTING/RUNNING means poll, STOPPED
+                    # means try the start again below.
+                    logger.info(
+                        "Databricks SQL warehouse %s is stopping; waiting it out.", warehouse_id
+                    )
+                    state, healthy = _settle_stopping(cli_env, warehouse_id, overall_deadline)
+                    if healthy:
+                        return
+                    _check_after_settle(warehouse_id, state, overall_deadline)
+                    observed_starting = state in (STATE_STARTING, STATE_RUNNING)
+                elif is_transient_start_error(exc):
+                    if attempt == START_MAX_ATTEMPTS:
+                        # Same "did not start after N attempts" wording
+                        # as a launch that failed while polling, so the
+                        # two give-up paths read consistently.
+                        raise RuntimeError(
+                            f"Databricks SQL warehouse {warehouse_id} did not start "
+                            f"after {START_MAX_ATTEMPTS} attempts: {exc}"
+                        ) from exc
+                    delay = _retry_delay_seconds(attempt)
+                    logger.warning(
+                        "Databricks SQL warehouse start failed with a transient error "
+                        "(attempt %d/%d): %s Retrying in %ds.",
+                        attempt,
+                        START_MAX_ATTEMPTS,
+                        exc,
+                        delay,
+                    )
+                    _sleep_before_retry(delay, overall_deadline, warehouse_id)
+                    retry_next_attempt = True
+                    break
+                else:
+                    raise
+            else:
+                break
+        if retry_next_attempt:
+            continue
 
-        if state == "RUNNING" and health_status in (None, "HEALTHY"):
-            print(f"Databricks SQL warehouse {warehouse_id} is running and healthy.")
+        try:
+            _poll_for_healthy(cli_env, warehouse_id, overall_deadline, observed_starting)
+        except LaunchFailedError:
+            pass
+        else:
             return
-        if state == "RUNNING" and health_status in ("DEGRADED", "FAILED"):
-            detail = health.get("summary") or health.get("details") or health_status
-            raise RuntimeError(f"Databricks SQL warehouse is {health_status}: {detail}")
 
-    health = status.get("health") or {}
-    summary = health.get("summary") or health.get("details") or ""
-    raise TimeoutError(
-        f"Databricks SQL warehouse did not become healthy within {START_TIMEOUT_SECONDS}s "
-        f"(state: {state or 'unknown'}). {summary}"
-    )
+        if attempt == START_MAX_ATTEMPTS:
+            raise RuntimeError(
+                f"Databricks SQL warehouse {warehouse_id} did not start "
+                f"after {START_MAX_ATTEMPTS} attempts."
+            )
+        delay = _retry_delay_seconds(attempt)
+        logger.info(
+            "Retrying Databricks SQL warehouse start in %ds (attempt %d/%d).",
+            delay,
+            attempt + 1,
+            START_MAX_ATTEMPTS,
+        )
+        _sleep_before_retry(delay, overall_deadline, warehouse_id)
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
     start_databricks_warehouse()
