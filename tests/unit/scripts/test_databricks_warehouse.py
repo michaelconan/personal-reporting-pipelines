@@ -141,14 +141,27 @@ def _record_sleeps(monkeypatch):
 
 
 def test_retry_delay_seconds() -> None:
-    assert [databricks_warehouse._retry_delay_seconds(a) for a in range(1, 7)] == [
+    # Only attempts 1-5 ever produce a delay: attempt 6 raises instead of
+    # sleeping, so no value for attempt 6 can occur.
+    assert [databricks_warehouse._retry_delay_seconds(a) for a in range(1, 6)] == [
         60,
         120,
         240,
         300,
         300,
-        300,
     ]
+
+
+def test_start_error_classification() -> None:
+    assert databricks_warehouse.is_transient_start_error(
+        RuntimeError("Databricks CLI command timed out after 120s")
+    )
+    assert databricks_warehouse.is_benign_start_error(
+        RuntimeError("Error: cannot start warehouse: already starting")
+    )
+    assert not databricks_warehouse.is_benign_start_error(
+        RuntimeError("Databricks CLI command failed: Error: PERMISSION_DENIED.")
+    )
 
 
 def test_start_warehouse_retries_transient_capacity_error(monkeypatch) -> None:
@@ -291,6 +304,104 @@ def test_start_warehouse_tolerates_stopped_samples_after_accepted_start(monkeypa
     assert len(commands) == 1
     assert 60 not in sleeps
     assert all(sleep == databricks_warehouse.POLL_INTERVAL_SECONDS for sleep in sleeps)
+
+
+def test_start_warehouse_retries_after_grace_window_expires(monkeypatch) -> None:
+    # Boundary test: STOPPED_POLLS_WITHOUT_START consecutive STOPPED
+    # polls with no STARTING observed must issue a second start.
+    grace = databricks_warehouse.STOPPED_POLLS_WITHOUT_START
+    statuses = (
+        [{"state": "STOPPED"}]
+        + [{"state": "STOPPED"}] * grace
+        + [
+            {"state": "STOPPED"},
+            {"state": "STARTING"},
+            {"state": "RUNNING", "health": {"status": "HEALTHY"}},
+        ]
+    )
+    commands = []
+    _patch_start(
+        monkeypatch,
+        statuses,
+        lambda command, **_: commands.append(command),
+    )
+
+    databricks_warehouse.start_databricks_warehouse()
+
+    assert len(commands) == 2
+    assert commands[1] == ["databricks", "warehouses", "start", "warehouse-id", "--no-wait"]
+
+
+def test_start_warehouse_treats_already_starting_as_benign(monkeypatch) -> None:
+    # A duplicate start rejected as "already starting" must not fail the
+    # run: a start is in flight, so poll for it instead.
+    statuses = [
+        {"state": "STOPPED"},
+        {"state": "STARTING"},
+        {"state": "RUNNING", "health": {"status": "HEALTHY"}},
+    ]
+    commands = []
+
+    def benign_run(command, **_):
+        commands.append(command)
+        raise RuntimeError("Databricks CLI command failed: Error: already starting.")
+
+    _patch_start(monkeypatch, statuses, benign_run)
+
+    databricks_warehouse.start_databricks_warehouse()
+
+    assert len(commands) == 1
+
+
+def test_settle_stopping_tolerates_transient_status_read_failure(monkeypatch) -> None:
+    import subprocess
+
+    statuses = [
+        {"state": "STOPPING"},
+        {"state": "STOPPED"},
+        {"state": "STARTING"},
+        {"state": "RUNNING", "health": {"status": "HEALTHY"}},
+    ]
+    provider = _status_provider(statuses)
+    calls = {"count": 0}
+
+    def status_with_one_failure(*_):
+        calls["count"] += 1
+        if calls["count"] == 2:
+            raise subprocess.CalledProcessError(1, ["databricks"])
+        return provider(*_)
+
+    monkeypatch.setattr(
+        databricks_warehouse, "databricks_cli_environment", lambda: ({}, "warehouse-id")
+    )
+    monkeypatch.setattr(databricks_warehouse, "warehouse_status", status_with_one_failure)
+    monkeypatch.setattr(databricks_warehouse.time, "sleep", lambda _: None)
+    commands = []
+    monkeypatch.setattr(databricks_warehouse, "run", lambda command, **_: commands.append(command))
+
+    databricks_warehouse.start_databricks_warehouse()
+
+    assert len(commands) == 1
+
+
+def test_settle_stopping_times_out(monkeypatch) -> None:
+    monkeypatch.setattr(
+        databricks_warehouse,
+        "warehouse_status",
+        lambda *_: {"state": "STOPPING"},
+    )
+    monkeypatch.setattr(databricks_warehouse.time, "sleep", lambda _: None)
+    clock = [0.0]
+
+    def fake_monotonic():
+        value = clock[0]
+        clock[0] += 10000.0
+        return value
+
+    monkeypatch.setattr(databricks_warehouse.time, "monotonic", fake_monotonic)
+
+    with pytest.raises(TimeoutError, match="did not stop"):
+        databricks_warehouse._settle_stopping({}, "warehouse-id", 900.0)
 
 
 def test_start_warehouse_fails_fast_when_initial_status_read_fails(monkeypatch) -> None:
