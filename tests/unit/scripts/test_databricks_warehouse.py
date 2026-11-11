@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import subprocess
+
 import pytest
 
 from scripts import databricks_warehouse
@@ -67,18 +69,16 @@ def test_databricks_cli_environment_rejects_partial_service_principal_credential
 
 
 def test_start_warehouse_starts_then_waits_for_healthy(monkeypatch) -> None:
-    statuses = iter(
-        [
-            {"state": "STOPPED"},
-            {"state": "STARTING"},
-            {"state": "RUNNING", "health": {"status": "HEALTHY"}},
-        ]
-    )
+    statuses = [
+        {"state": "STOPPED"},
+        {"state": "STARTING"},
+        {"state": "RUNNING", "health": {"status": "HEALTHY"}},
+    ]
     commands = []
     monkeypatch.setattr(
         databricks_warehouse, "databricks_cli_environment", lambda: ({}, "warehouse-id")
     )
-    monkeypatch.setattr(databricks_warehouse, "warehouse_status", lambda *_: next(statuses))
+    monkeypatch.setattr(databricks_warehouse, "warehouse_status", _status_provider(statuses))
     monkeypatch.setattr(databricks_warehouse, "run", lambda command, **_: commands.append(command))
     monkeypatch.setattr(databricks_warehouse.time, "sleep", lambda _: None)
 
@@ -131,6 +131,13 @@ def _patch_start(monkeypatch, statuses, run) -> None:
     monkeypatch.setattr(databricks_warehouse, "warehouse_status", _status_provider(statuses))
     monkeypatch.setattr(databricks_warehouse, "run", run)
     monkeypatch.setattr(databricks_warehouse.time, "sleep", lambda _: None)
+
+
+def _record_sleeps(monkeypatch):
+    """Replace time.sleep with a recorder; return the recorded durations."""
+    sleeps = []
+    monkeypatch.setattr(databricks_warehouse.time, "sleep", sleeps.append)
+    return sleeps
 
 
 def test_retry_delay_seconds() -> None:
@@ -235,7 +242,8 @@ def test_start_warehouse_retries_when_it_stops_while_starting(monkeypatch) -> No
 
 def test_start_warehouse_waits_out_stopping(monkeypatch) -> None:
     # A STOPPING warehouse must not trigger an immediate start (the API
-    # rejects it as non-transient); poll until it settles, then start it.
+    # rejects it as non-transient); poll until it settles, then start it
+    # in the same attempt — no backoff, no attempt burned.
     statuses = [
         {"state": "STOPPING"},
         {"state": "STOPPED"},
@@ -249,15 +257,61 @@ def test_start_warehouse_waits_out_stopping(monkeypatch) -> None:
         statuses,
         lambda command, **_: commands.append(command),
     )
+    sleeps = _record_sleeps(monkeypatch)
 
     databricks_warehouse.start_databricks_warehouse()
 
     assert len(commands) == 1
+    assert 60 not in sleeps
+    assert all(sleep == databricks_warehouse.POLL_INTERVAL_SECONDS for sleep in sleeps)
+
+
+def test_start_warehouse_tolerates_stopped_samples_after_accepted_start(monkeypatch) -> None:
+    # Grace window: STOPPED polls right after an accepted start are
+    # eventual consistency, not a failed launch — a single start, no
+    # retry delay, once STARTING is observed.
+    statuses = [
+        {"state": "STOPPED"},
+        {"state": "STOPPED"},
+        {"state": "STOPPED"},
+        {"state": "STOPPED"},
+        {"state": "STARTING"},
+        {"state": "RUNNING", "health": {"status": "HEALTHY"}},
+    ]
+    commands = []
+    _patch_start(
+        monkeypatch,
+        statuses,
+        lambda command, **_: commands.append(command),
+    )
+    sleeps = _record_sleeps(monkeypatch)
+
+    databricks_warehouse.start_databricks_warehouse()
+
+    assert len(commands) == 1
+    assert 60 not in sleeps
+    assert all(sleep == databricks_warehouse.POLL_INTERVAL_SECONDS for sleep in sleeps)
+
+
+def test_start_warehouse_fails_fast_when_initial_status_read_fails(monkeypatch) -> None:
+    monkeypatch.setattr(
+        databricks_warehouse, "databricks_cli_environment", lambda: ({}, "warehouse-id")
+    )
+
+    def failing_status(*_):
+        raise subprocess.CalledProcessError(1, ["databricks"], stderr="PERMISSION_DENIED")
+
+    monkeypatch.setattr(databricks_warehouse, "warehouse_status", failing_status)
+    commands = []
+    monkeypatch.setattr(databricks_warehouse, "run", lambda command, **_: commands.append(command))
+
+    with pytest.raises(RuntimeError, match="Could not read"):
+        databricks_warehouse.start_databricks_warehouse()
+
+    assert commands == []
 
 
 def test_start_warehouse_tolerates_transient_status_poll_failure(monkeypatch) -> None:
-    import subprocess
-
     statuses = [
         {"state": "STOPPED"},
         {"state": "STARTING"},
@@ -299,8 +353,10 @@ def test_start_warehouse_overall_deadline_bounds_stuck_starting(monkeypatch) -> 
     monkeypatch.setattr(databricks_warehouse, "run", lambda command, **_: None)
     monkeypatch.setattr(databricks_warehouse.time, "sleep", lambda _: None)
     clock = [0.0]
+    monotonic_calls = {"count": 0}
 
     def fake_monotonic():
+        monotonic_calls["count"] += 1
         value = clock[0]
         clock[0] += 10000.0
         return value
@@ -309,3 +365,7 @@ def test_start_warehouse_overall_deadline_bounds_stuck_starting(monkeypatch) -> 
 
     with pytest.raises(TimeoutError, match="900"):
         databricks_warehouse.start_databricks_warehouse()
+
+    # The deadline must be reached after a handful of clock reads, not
+    # after looping through per-attempt timeouts.
+    assert monotonic_calls["count"] <= 5
