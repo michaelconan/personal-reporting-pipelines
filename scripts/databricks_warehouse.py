@@ -13,6 +13,16 @@ WAREHOUSE_PATH_PREFIX = "/sql/1.0/warehouses/"
 POLL_INTERVAL_SECONDS = 10
 START_TIMEOUT_SECONDS = 900
 
+# Starting a serverless SQL warehouse can fail transiently when the backing
+# serverless compute pool runs out of capacity. Databricks reports this as
+# RESOURCE_EXHAUSTED, surfaced by the CLI as "Cannot create the resource,
+# please try again later." (Seen in scheduled runs on 2026-11-09, where the
+# single start attempt failed in under 3s and killed the whole pipeline.)
+# Retry only those errors, with backoff, instead of failing immediately.
+START_MAX_ATTEMPTS = 6
+START_RETRY_DELAYS_SECONDS = (60, 120, 240, 300, 300)
+TRANSIENT_START_ERROR_MARKERS = ("cannot create the resource", "resource_exhausted")
+
 
 def run(
     command: Sequence[str], *, env: dict[str, str] | None = None
@@ -97,50 +107,122 @@ def warehouse_status(cli_env: dict[str, str], warehouse_id: str) -> dict[str, An
         raise RuntimeError("Databricks CLI returned invalid JSON for warehouse status.") from exc
 
 
+def is_transient_start_error(error: Exception) -> bool:
+    """Return True when a start failure is worth retrying.
+
+    Only serverless capacity exhaustion is retried. Anything else (auth,
+    permissions, an unknown warehouse, bad configuration) fails immediately
+    so a real problem is not hidden behind a long retry loop.
+    """
+    message = str(error).lower()
+    return any(marker in message for marker in TRANSIENT_START_ERROR_MARKERS)
+
+
+def _retry_delay_seconds(attempt: int) -> int:
+    """Backoff before the next start attempt (1-based attempt just made)."""
+    index = min(attempt - 1, len(START_RETRY_DELAYS_SECONDS) - 1)
+    return START_RETRY_DELAYS_SECONDS[index]
+
+
+def _warehouse_state(status: dict[str, Any]) -> str | None:
+    """Return the warehouse state, raising if it is running but unhealthy."""
+    state = status.get("state")
+    health = status.get("health") or {}
+    health_status = health.get("status")
+    if state == "RUNNING" and health_status in ("DEGRADED", "FAILED"):
+        detail = health.get("summary") or health.get("details") or health_status
+        raise RuntimeError(f"Databricks SQL warehouse is {health_status}: {detail}")
+    return state
+
+
+def _is_running_and_healthy(status: dict[str, Any]) -> bool:
+    """Return True when the warehouse is running with no health problem."""
+    state = status.get("state")
+    health = status.get("health") or {}
+    return state == "RUNNING" and health.get("status") in (None, "HEALTHY")
+
+
 def start_databricks_warehouse() -> None:
-    """Start a stopped SQL warehouse and wait until it is running and healthy."""
+    """Start a stopped SQL warehouse and wait until it is running and healthy.
+
+    A start rejected with a transient capacity error is retried with
+    backoff (up to START_MAX_ATTEMPTS starts, ~17 minutes of backoff in
+    total). A start that is accepted but then falls back to STOPPED while
+    polling is treated the same way: the launch itself failed, so start
+    again rather than polling a stopped warehouse until the timeout.
+    """
     cli_env, warehouse_id = databricks_cli_environment()
 
-    try:
-        status = warehouse_status(cli_env, warehouse_id)
-        state = status.get("state")
+    for attempt in range(1, START_MAX_ATTEMPTS + 1):
+        try:
+            status = warehouse_status(cli_env, warehouse_id)
+            state = _warehouse_state(status)
+            if _is_running_and_healthy(status):
+                print(f"Databricks SQL warehouse {warehouse_id} is already running and healthy.")
+                return
+        except subprocess.CalledProcessError:
+            status = {}
+            state = None
+
+        if state != "STARTING":
+            print(
+                f"Starting Databricks SQL warehouse {warehouse_id} "
+                f"(state: {state or 'unknown'}, attempt {attempt}/{START_MAX_ATTEMPTS})."
+            )
+            try:
+                run(["databricks", "warehouses", "start", warehouse_id, "--no-wait"], env=cli_env)
+            except RuntimeError as exc:
+                if not is_transient_start_error(exc) or attempt == START_MAX_ATTEMPTS:
+                    raise
+                delay = _retry_delay_seconds(attempt)
+                print(
+                    f"Databricks SQL warehouse start failed with a transient error "
+                    f"(attempt {attempt}/{START_MAX_ATTEMPTS}): {exc} "
+                    f"Retrying in {delay}s."
+                )
+                time.sleep(delay)
+                continue
+
+        deadline = time.monotonic() + START_TIMEOUT_SECONDS
+        start_failed = False
+        while time.monotonic() < deadline:
+            time.sleep(POLL_INTERVAL_SECONDS)
+            status = warehouse_status(cli_env, warehouse_id)
+            state = _warehouse_state(status)
+
+            if _is_running_and_healthy(status):
+                print(f"Databricks SQL warehouse {warehouse_id} is running and healthy.")
+                return
+            if state == "STOPPED":
+                # The start was accepted but the launch failed and the
+                # warehouse stopped again; retry the start itself.
+                print(
+                    f"Databricks SQL warehouse {warehouse_id} stopped while starting "
+                    f"(attempt {attempt}/{START_MAX_ATTEMPTS})."
+                )
+                start_failed = True
+                break
+
+        if start_failed:
+            if attempt == START_MAX_ATTEMPTS:
+                raise RuntimeError(
+                    f"Databricks SQL warehouse {warehouse_id} did not start "
+                    f"after {START_MAX_ATTEMPTS} attempts."
+                )
+            delay = _retry_delay_seconds(attempt)
+            print(
+                f"Retrying Databricks SQL warehouse start in {delay}s "
+                f"(attempt {attempt + 1}/{START_MAX_ATTEMPTS})."
+            )
+            time.sleep(delay)
+            continue
+
         health = status.get("health") or {}
-        health_status = health.get("status")
-
-        if state == "RUNNING" and health_status in (None, "HEALTHY"):
-            print(f"Databricks SQL warehouse {warehouse_id} is already running and healthy.")
-            return
-        if state == "RUNNING" and health_status in ("DEGRADED", "FAILED"):
-            detail = health.get("summary") or health.get("details") or health_status
-            raise RuntimeError(f"Databricks SQL warehouse is {health_status}: {detail}")
-    except subprocess.CalledProcessError:
-        state = None
-
-    if state != "STARTING":
-        print(f"Starting Databricks SQL warehouse {warehouse_id} (state: {state or 'unknown'}).")
-        run(["databricks", "warehouses", "start", warehouse_id, "--no-wait"], env=cli_env)
-
-    deadline = time.monotonic() + START_TIMEOUT_SECONDS
-    while time.monotonic() < deadline:
-        time.sleep(POLL_INTERVAL_SECONDS)
-        status = warehouse_status(cli_env, warehouse_id)
-        state = status.get("state")
-        health = status.get("health") or {}
-        health_status = health.get("status")
-
-        if state == "RUNNING" and health_status in (None, "HEALTHY"):
-            print(f"Databricks SQL warehouse {warehouse_id} is running and healthy.")
-            return
-        if state == "RUNNING" and health_status in ("DEGRADED", "FAILED"):
-            detail = health.get("summary") or health.get("details") or health_status
-            raise RuntimeError(f"Databricks SQL warehouse is {health_status}: {detail}")
-
-    health = status.get("health") or {}
-    summary = health.get("summary") or health.get("details") or ""
-    raise TimeoutError(
-        f"Databricks SQL warehouse did not become healthy within {START_TIMEOUT_SECONDS}s "
-        f"(state: {state or 'unknown'}). {summary}"
-    )
+        summary = health.get("summary") or health.get("details") or ""
+        raise TimeoutError(
+            f"Databricks SQL warehouse did not become healthy within {START_TIMEOUT_SECONDS}s "
+            f"(state: {state or 'unknown'}). {summary}"
+        )
 
 
 if __name__ == "__main__":

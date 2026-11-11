@@ -102,3 +102,99 @@ def test_start_warehouse_is_idempotent_when_running_and_healthy(monkeypatch) -> 
     databricks_warehouse.start_databricks_warehouse()
 
     assert commands == []
+
+
+def _patch_start(monkeypatch, statuses, run) -> None:
+    monkeypatch.setattr(
+        databricks_warehouse, "databricks_cli_environment", lambda: ({}, "warehouse-id")
+    )
+    monkeypatch.setattr(databricks_warehouse, "warehouse_status", lambda *_: next(statuses))
+    monkeypatch.setattr(databricks_warehouse, "run", run)
+    monkeypatch.setattr(databricks_warehouse.time, "sleep", lambda _: None)
+
+
+def test_start_warehouse_retries_transient_capacity_error(monkeypatch) -> None:
+    # The 2026-11-09 failure: start rejected with "Cannot create the
+    # resource, please try again later." (RESOURCE_EXHAUSTED) while STOPPED.
+    statuses = iter(
+        [
+            {"state": "STOPPED"},
+            {"state": "STOPPED"},
+            {"state": "STARTING"},
+            {"state": "RUNNING", "health": {"status": "HEALTHY"}},
+        ]
+    )
+    commands = []
+
+    def flaky_run(command, **_):
+        commands.append(command)
+        if len(commands) == 1:
+            raise RuntimeError(
+                "Databricks CLI command failed: "
+                "Error: Cannot create the resource, please try again later."
+            )
+
+    _patch_start(monkeypatch, statuses, flaky_run)
+
+    databricks_warehouse.start_databricks_warehouse()
+
+    assert len(commands) == 2
+    assert commands[0] == ["databricks", "warehouses", "start", "warehouse-id", "--no-wait"]
+
+
+def test_start_warehouse_does_not_retry_non_transient_error(monkeypatch) -> None:
+    statuses = iter([{"state": "STOPPED"}])
+    commands = []
+
+    def failing_run(command, **_):
+        commands.append(command)
+        raise RuntimeError("Databricks CLI command failed: Error: PERMISSION_DENIED.")
+
+    _patch_start(monkeypatch, statuses, failing_run)
+
+    with pytest.raises(RuntimeError, match="PERMISSION_DENIED"):
+        databricks_warehouse.start_databricks_warehouse()
+
+    assert len(commands) == 1
+
+
+def test_start_warehouse_gives_up_after_max_transient_attempts(monkeypatch) -> None:
+    statuses = iter([{"state": "STOPPED"}] * databricks_warehouse.START_MAX_ATTEMPTS)
+    commands = []
+
+    def failing_run(command, **_):
+        commands.append(command)
+        raise RuntimeError(
+            "Databricks CLI command failed: "
+            "RESOURCE_EXHAUSTED: Cannot create the resource, please try again later."
+        )
+
+    _patch_start(monkeypatch, statuses, failing_run)
+
+    with pytest.raises(RuntimeError, match="Cannot create the resource"):
+        databricks_warehouse.start_databricks_warehouse()
+
+    assert len(commands) == databricks_warehouse.START_MAX_ATTEMPTS
+
+
+def test_start_warehouse_retries_when_it_stops_while_starting(monkeypatch) -> None:
+    # Start accepted, but the launch failed and the warehouse fell back to
+    # STOPPED while polling; the start itself should be retried.
+    statuses = iter(
+        [
+            {"state": "STOPPED"},
+            {"state": "STOPPED"},
+            {"state": "STARTING"},
+            {"state": "RUNNING", "health": {"status": "HEALTHY"}},
+        ]
+    )
+    commands = []
+    _patch_start(
+        monkeypatch,
+        statuses,
+        lambda command, **_: commands.append(command),
+    )
+
+    databricks_warehouse.start_databricks_warehouse()
+
+    assert len(commands) == 1
