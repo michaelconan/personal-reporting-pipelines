@@ -156,12 +156,85 @@ def test_start_error_classification() -> None:
     assert databricks_warehouse.is_transient_start_error(
         RuntimeError("Databricks CLI command timed out after 120s")
     )
+    # A generic timeout is not a capacity error: only run()'s unique
+    # "command timed out after" message is transient.
+    assert not databricks_warehouse.is_transient_start_error(RuntimeError("connection timed out"))
     assert databricks_warehouse.is_benign_start_error(
         RuntimeError("Error: cannot start warehouse: already starting")
     )
     assert not databricks_warehouse.is_benign_start_error(
         RuntimeError("Databricks CLI command failed: Error: PERMISSION_DENIED.")
     )
+
+
+def test_state_and_health_raises_for_unhealthy_running() -> None:
+    with pytest.raises(RuntimeError, match="UNHEALTHY"):
+        databricks_warehouse._state_and_health(
+            {"state": "RUNNING", "health": {"status": "UNHEALTHY", "summary": "disk full"}}
+        )
+
+
+def test_state_and_health_tolerates_malformed_health_payload() -> None:
+    # A non-dict health payload must not crash with AttributeError.
+    assert databricks_warehouse._state_and_health({"state": "RUNNING", "health": "weird"}) == (
+        "RUNNING",
+        None,
+    )
+
+
+def test_warehouse_status_rejects_non_object_json(monkeypatch) -> None:
+    class FakeResult:
+        stdout = "[1, 2]"
+
+    monkeypatch.setattr(databricks_warehouse, "_run_cli", lambda *_, **__: FakeResult())
+
+    with pytest.raises(TypeError, match="unexpected warehouse status"):
+        databricks_warehouse.warehouse_status({}, "warehouse-id")
+
+
+def test_start_warehouse_fails_fast_on_deleted_warehouse(monkeypatch) -> None:
+    _patch_start(
+        monkeypatch,
+        [{"state": "DELETED"}],
+        lambda command, **_: pytest.fail("start must not be issued for a deleted warehouse"),
+    )
+
+    with pytest.raises(RuntimeError, match="cannot be started"):
+        databricks_warehouse.start_databricks_warehouse()
+
+
+def test_poll_for_healthy_fails_fast_on_deleting(monkeypatch) -> None:
+    monkeypatch.setattr(
+        databricks_warehouse,
+        "warehouse_status",
+        lambda *_: {"state": "DELETING"},
+    )
+    monkeypatch.setattr(databricks_warehouse.time, "sleep", lambda _: None)
+
+    with pytest.raises(RuntimeError, match="cannot be started"):
+        databricks_warehouse._poll_for_healthy(
+            {}, "warehouse-id", databricks_warehouse.time.monotonic() + 900.0, False
+        )
+
+
+def test_settle_stopping_returns_healthy_when_warehouse_starts_on_its_own(
+    monkeypatch,
+) -> None:
+    statuses = [
+        {"state": "STOPPING"},
+        {"state": "RUNNING", "health": {"status": "HEALTHY"}},
+    ]
+    commands = []
+    _patch_start(
+        monkeypatch,
+        statuses,
+        lambda command, **_: commands.append(command),
+    )
+
+    databricks_warehouse.start_databricks_warehouse()
+
+    # The warehouse became healthy while settling, so no start was issued.
+    assert commands == []
 
 
 def test_start_warehouse_retries_transient_capacity_error(monkeypatch) -> None:
@@ -221,7 +294,7 @@ def test_start_warehouse_gives_up_after_max_transient_attempts(monkeypatch) -> N
 
     _patch_start(monkeypatch, statuses, failing_run)
 
-    with pytest.raises(RuntimeError, match="Cannot create the resource"):
+    with pytest.raises(RuntimeError, match="did not start after 6 attempts"):
         databricks_warehouse.start_databricks_warehouse()
 
     assert len(commands) == databricks_warehouse.START_MAX_ATTEMPTS
@@ -479,8 +552,10 @@ def test_start_warehouse_overall_deadline_bounds_stuck_starting(monkeypatch) -> 
         databricks_warehouse.start_databricks_warehouse()
 
     # The poll loop must have actually run: status was read many times
-    # before the deadline, not zero times.
-    assert status_reads["count"] > 1
+    # before the deadline, not zero times — and the deadline must bound
+    # it: with a 10s step, ~90 reads is the ceiling (900s / 10s), plus a
+    # small slack for the initial read and loop guards.
+    assert 1 < status_reads["count"] <= 95
 
 
 def test_sleep_before_retry_fails_when_deadline_passed(monkeypatch) -> None:
