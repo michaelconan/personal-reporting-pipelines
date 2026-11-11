@@ -11,11 +11,15 @@ from typing import Any
 
 WAREHOUSE_PATH_PREFIX = "/sql/1.0/warehouses/"
 POLL_INTERVAL_SECONDS = 10
-# Overall wall-clock bound for the whole start-and-wait, across all attempts
-# and backoff. The test-pipelines CI job has a 20-minute timeout, so the
-# start helper must never burn 6 x 15 min of per-attempt polling (~90 min)
-# on a warehouse stuck in STARTING. Note the backoff delays sum to 1020s,
-# so the last delay is truncated by this deadline: the real bound is 15 min.
+# Soft overall wall-clock bound for the whole start-and-wait, across all
+# attempts and backoff. The test-pipelines CI job has a 20-minute timeout,
+# so the start helper must never burn 6 x 15 min of per-attempt polling
+# (~90 min) on a warehouse stuck in STARTING. Note the backoff delays sum
+# to 1020s, so the last delay is truncated by this deadline: the real
+# bound is 15 min. It is soft, not hard: the deadline is checked at loop
+# boundaries, so a status/start call can add up to CLI_TIMEOUT_SECONDS
+# (120s) and a poll interval can add a few more seconds — the run can
+# overshoot by a couple of minutes, still inside the 20-minute job.
 OVERALL_TIMEOUT_SECONDS = 900
 # Every Databricks CLI call gets its own timeout so a hung `start`/`get`
 # cannot defeat OVERALL_TIMEOUT_SECONDS: a normal call takes seconds.
@@ -37,6 +41,9 @@ TERMINAL_STATES = ("DELETED", "DELETING")
 # single start attempt failed in under 3s and killed the whole pipeline.)
 # Retry only those errors, with backoff, instead of failing immediately.
 START_MAX_ATTEMPTS = 6
+# One delay per retryable attempt: attempts 1-5 sleep before retrying;
+# attempt 6 raises instead of sleeping, so the tuple has
+# START_MAX_ATTEMPTS - 1 entries.
 START_RETRY_DELAYS_SECONDS = (60, 120, 240, 300, 300)
 TRANSIENT_START_ERROR_MARKERS = ("cannot create the resource", "resource_exhausted", "timed out")
 # A start rejected because a start is already in flight is not a failure:
@@ -180,16 +187,8 @@ def _state_and_health(status: dict[str, Any]) -> tuple[str | None, str | None]:
     return state, health_status
 
 
-def _warehouse_state(status: dict[str, Any]) -> str | None:
-    """Return the warehouse state, raising if it is running but unhealthy."""
-    state, _ = _state_and_health(status)
-    return state
-
-
-def _is_running_and_healthy(status: dict[str, Any]) -> bool:
-    """Return True when the warehouse is running with no health problem."""
-    state, health_status = _state_and_health(status)
-    return state == "RUNNING" and health_status in (None, "HEALTHY")
+class LaunchFailedError(RuntimeError):
+    """A start was accepted (or the warehouse was already starting) but the launch failed."""
 
 
 def _sleep_before_retry(delay: int, overall_deadline: float, warehouse_id: str) -> None:
@@ -227,8 +226,8 @@ def _settle_stopping(
         if state != "STOPPING":
             return state, False
     raise TimeoutError(
-        f"Databricks SQL warehouse {warehouse_id} did not stop "
-        "before the 15-minute overall deadline."
+        f"Databricks SQL warehouse {warehouse_id} did not stop before the "
+        f"{OVERALL_TIMEOUT_SECONDS}s overall deadline."
     )
 
 
@@ -237,8 +236,8 @@ def _poll_for_healthy(
     warehouse_id: str,
     overall_deadline: float,
     observed_starting: bool,
-) -> bool:
-    """Poll until the warehouse is healthy; return True if the launch failed.
+) -> None:
+    """Poll until the warehouse is healthy; raise LaunchFailedError if the launch failed.
 
     ``observed_starting`` means STARTING was observed — either the warehouse
     was already STARTING when this attempt began, or a poll since the start
@@ -246,8 +245,12 @@ def _poll_for_healthy(
     was observed, or after STOPPED_POLLS_WITHOUT_START consecutive STOPPED
     polls with no STARTING at all (a genuine instant failure, not the
     eventual consistency of a first poll right after an accepted start).
+    When the grace window expires, one confirmation poll is taken first:
+    an accepted start can legitimately be slow to report STARTING, and
+    failing on the threshold poll alone risks a duplicate start.
     """
     stopped_without_start = 0
+    grace_confirmed = False
     while time.monotonic() < overall_deadline:
         time.sleep(POLL_INTERVAL_SECONDS)
         try:
@@ -264,26 +267,40 @@ def _poll_for_healthy(
 
         if state == "RUNNING" and health_status in (None, "HEALTHY"):
             print(f"Databricks SQL warehouse {warehouse_id} is running and healthy.")
-            return False
+            return
         if state == "STARTING":
             observed_starting = True
             stopped_without_start = 0
+            grace_confirmed = False
             continue
         if state == "STOPPING":
             stopped_without_start = 0
+            grace_confirmed = False
             continue
         if state == "STOPPED":
             if observed_starting:
                 # The start was accepted and the launch actually began,
                 # then the warehouse stopped again; retry the start.
                 print(f"Databricks SQL warehouse {warehouse_id} stopped while starting.")
-                return True
+                raise LaunchFailedError(
+                    f"Databricks SQL warehouse {warehouse_id} stopped while starting."
+                )
             stopped_without_start += 1
             if stopped_without_start >= STOPPED_POLLS_WITHOUT_START:
-                # ~120s of STOPPED with no STARTING observed: the launch
-                # failed outright, not eventual consistency.
+                if not grace_confirmed:
+                    # ~120s of STOPPED with no STARTING observed, but the
+                    # accepted start may just be slow to report; take one
+                    # confirmation poll before declaring the launch failed.
+                    grace_confirmed = True
+                    print(
+                        f"Databricks SQL warehouse {warehouse_id} still STOPPED "
+                        "after the grace window; taking one confirmation poll."
+                    )
+                    continue
                 print(f"Databricks SQL warehouse {warehouse_id} never left STOPPED.")
-                return True
+                raise LaunchFailedError(
+                    f"Databricks SQL warehouse {warehouse_id} never left STOPPED."
+                )
             continue
         if state in TERMINAL_STATES:
             raise RuntimeError(
@@ -305,9 +322,11 @@ def start_databricks_warehouse() -> None:
     backoff (up to START_MAX_ATTEMPTS starts). A start that is accepted but
     then falls back to STOPPED while polling is treated the same way: the
     launch itself failed, so start again rather than polling a stopped
-    warehouse until the timeout. The whole operation is bounded by
-    OVERALL_TIMEOUT_SECONDS (15 minutes), so a warehouse stuck in STARTING
-    cannot burn a fresh 15-minute poll on every attempt.
+    warehouse until the timeout. The whole operation is soft-bounded by
+    OVERALL_TIMEOUT_SECONDS (15 minutes, checked at loop boundaries, so it
+    can overshoot by up to a CLI timeout plus a poll interval), so a
+    warehouse stuck in STARTING cannot burn a fresh 15-minute poll on
+    every attempt.
     """
     cli_env, warehouse_id = databricks_cli_environment()
     overall_deadline = time.monotonic() + OVERALL_TIMEOUT_SECONDS
@@ -383,7 +402,11 @@ def start_databricks_warehouse() -> None:
                     _sleep_before_retry(delay, overall_deadline, warehouse_id)
                     continue
 
-        if not _poll_for_healthy(cli_env, warehouse_id, overall_deadline, observed_starting):
+        try:
+            _poll_for_healthy(cli_env, warehouse_id, overall_deadline, observed_starting)
+        except LaunchFailedError:
+            pass
+        else:
             return
 
         if attempt == START_MAX_ATTEMPTS:

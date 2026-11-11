@@ -315,6 +315,7 @@ def test_start_warehouse_retries_after_grace_window_expires(monkeypatch) -> None
         + [{"state": "STOPPED"}] * grace
         + [
             {"state": "STOPPED"},
+            {"state": "STOPPED"},
             {"state": "STARTING"},
             {"state": "RUNNING", "health": {"status": "HEALTHY"}},
         ]
@@ -354,8 +355,6 @@ def test_start_warehouse_treats_already_starting_as_benign(monkeypatch) -> None:
 
 
 def test_settle_stopping_tolerates_transient_status_read_failure(monkeypatch) -> None:
-    import subprocess
-
     statuses = [
         {"state": "STOPPING"},
         {"state": "STOPPED"},
@@ -452,24 +451,26 @@ def test_start_warehouse_tolerates_transient_status_poll_failure(monkeypatch) ->
 
 def test_start_warehouse_overall_deadline_bounds_stuck_starting(monkeypatch) -> None:
     # A warehouse stuck in STARTING must fail within the overall deadline,
-    # not after a fresh 15-minute poll on every attempt.
+    # not after a fresh 15-minute poll on every attempt. The fake clock
+    # advances slowly (10s per read), so the poll loop actually runs and
+    # reads status many times before the deadline hits.
+    status_reads = {"count": 0}
+
+    def stuck_starting(*_):
+        status_reads["count"] += 1
+        return {"state": "STARTING"}
+
     monkeypatch.setattr(
         databricks_warehouse, "databricks_cli_environment", lambda: ({}, "warehouse-id")
     )
-    monkeypatch.setattr(
-        databricks_warehouse,
-        "warehouse_status",
-        lambda *_: {"state": "STARTING"},
-    )
+    monkeypatch.setattr(databricks_warehouse, "warehouse_status", stuck_starting)
     monkeypatch.setattr(databricks_warehouse, "run", lambda command, **_: None)
     monkeypatch.setattr(databricks_warehouse.time, "sleep", lambda _: None)
     clock = [0.0]
-    monotonic_calls = {"count": 0}
 
     def fake_monotonic():
-        monotonic_calls["count"] += 1
         value = clock[0]
-        clock[0] += 10000.0
+        clock[0] += 10.0
         return value
 
     monkeypatch.setattr(databricks_warehouse.time, "monotonic", fake_monotonic)
@@ -477,6 +478,15 @@ def test_start_warehouse_overall_deadline_bounds_stuck_starting(monkeypatch) -> 
     with pytest.raises(TimeoutError, match="900"):
         databricks_warehouse.start_databricks_warehouse()
 
-    # The deadline must be reached after a handful of clock reads, not
-    # after looping through per-attempt timeouts.
-    assert monotonic_calls["count"] <= 5
+    # The poll loop must have actually run: status was read many times
+    # before the deadline, not zero times.
+    assert status_reads["count"] > 1
+
+
+def test_sleep_before_retry_fails_when_deadline_passed(monkeypatch) -> None:
+    # Drives _sleep_before_retry's remaining <= 0 branch directly: the
+    # clock is already past the deadline when a retry sleep is requested.
+    monkeypatch.setattr(databricks_warehouse.time, "monotonic", lambda: 1000.0)
+
+    with pytest.raises(TimeoutError, match="did not start"):
+        databricks_warehouse._sleep_before_retry(60, 900.0, "warehouse-id")
