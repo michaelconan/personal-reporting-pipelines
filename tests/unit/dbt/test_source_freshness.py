@@ -32,7 +32,9 @@ SOURCES: list[tuple[str, str]] = [
 
 # (warn_after_hours, error_after_hours) per ingestion cadence
 EXPECTED_SLA: dict[str, tuple[int, int]] = {
-    "hubspot": (48, 72),  # daily schedule
+    # Weekly ingestion (Mondays 02:00 UTC); freshness runs ~4h later, so
+    # 48/72h alerts on a missed Monday load by Thursday.
+    "hubspot": (48, 72),
     "notion": (336, 384),  # weekly (14 / 16 days)
     "google_health": (336, 384),  # weekly
 }
@@ -40,7 +42,9 @@ EXPECTED_SLA: dict[str, tuple[int, int]] = {
 # Tables freshness-checked (they inherit the source-level SLA) vs tables
 # on a longer per-table SLA because they are not expected to be fresh on
 # the ingestion schedule. Rare tables warn/error at 90/120 days; the
-# static habit reference at 180/210 days.
+# static habit reference at 365/400 days (effectively never — it is
+# correct at any age, and the SLA exists only because dbt-bouncer
+# requires a populated freshness per table).
 FRESHNESS_CHECKED: dict[str, list[str]] = {
     "hubspot": ["companies", "contacts", "meetings", "meetings_to_contacts"],
     "notion": [
@@ -57,7 +61,7 @@ FRESHNESS_LONG_SLA: dict[str, dict[str, tuple[int, int]]] = {
         "communications": (2160, 2880),
         "communications_to_contacts": (2160, 2880),
     },
-    "notion": {"data_source_habit_reference": (4320, 5040)},
+    "notion": {"data_source_habit_reference": (8760, 9600)},
     "google_health": {"steps": (2160, 2880), "exercise": (2160, 2880)},
 }
 
@@ -91,7 +95,11 @@ def test_sla_thresholds_match_ingestion_cadence(name: str, rel: str) -> None:
 @pytest.mark.parametrize(("name", "rel"), SOURCES)
 def test_freshness_scope_matches_expected_tables(name: str, rel: str) -> None:
     tables = {table["name"]: table for table in _source(name, rel)["tables"]}
-    assert set(tables) == set(FRESHNESS_CHECKED[name]) | set(FRESHNESS_LONG_SLA[name])
+    expected = set(FRESHNESS_CHECKED[name]) | set(FRESHNESS_LONG_SLA[name])
+    unclassified = set(tables) - expected
+    assert not unclassified, f"{name}: unclassified tables {sorted(unclassified)}"
+    missing = expected - set(tables)
+    assert not missing, f"{name}: expected tables missing from source {sorted(missing)}"
     for table_name in FRESHNESS_CHECKED[name]:
         # Checked tables inherit the source-level SLA: no per-table override.
         assert "freshness" not in tables[table_name].get("config", {})

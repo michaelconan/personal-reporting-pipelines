@@ -34,13 +34,18 @@ The `mock` target uses DuckDB and CSV fixtures. `dbt-build` and
 `RAW_SCHEMA`, and perform a warehouse preflight. For development docs, run
 `mise run docs`.
 
-Source freshness (`dbt source freshness`) checks every table against its SLA.
-Tables that are not expected to be fresh on the ingestion schedule carry a
-longer per-table SLA instead of inheriting the source-level one: HubSpot calls,
-calls_to_contacts, communications and communications_to_contacts and Google
-Health steps and exercise warn/error at 90/120 days; the Notion habit
-reference (static data) at 180/210 days. Google Health sleep is the only
-Google Health table on the standard 14/16-day SLA. The scope is enforced by
+Source freshness (`dbt source freshness`) checks each table against its
+configured SLA. Tables that are not expected to be fresh on the ingestion
+schedule carry a longer per-table SLA instead of inheriting the source-level
+one: HubSpot calls, calls_to_contacts, communications, and
+communications_to_contacts, plus Google Health steps and exercise, warn/error
+at 90/120 days. Steps have a known upstream gap — step counts come from Garmin
+via Google Health, which has no supported write/backfill path, so gaps occur
+when Garmin history is missing or has not synced (see issue #160). The Notion
+habit reference (static data, correct at any age) warns/errors at 365/400 days;
+the SLA exists only because dbt-bouncer requires a populated freshness per
+table. Google Health sleep is the only Google Health table on the standard
+14/16-day SLA. The scope is enforced by
 `test_freshness_scope_matches_expected_tables` in
 `tests/unit/dbt/test_source_freshness.py`.
 

@@ -9,8 +9,10 @@ sources:
       # Freshness is measured from the dlt load timestamp: join each row's
       # _dlt_load_id to dlt's _dlt_loads metadata table and take the latest
       # completed load. See https://github.com/michaelconan/personal-reporting-pipelines/issues/141
+      # Weekly ingestion (Mondays 02:00 UTC); freshness runs ~4h later,
+      # so the 48/72h SLA alerts on a missed Monday load by Thursday.
       freshness:
-        warn_after: { count: 48, period: hour } # Daily schedule
+        warn_after: { count: 48, period: hour }
         error_after: { count: 72, period: hour }
       # Tables not expected to be fresh on the schedule above carry a
       # longer per-table SLA in their own `config:` instead of inheriting

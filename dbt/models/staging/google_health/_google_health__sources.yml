@@ -14,10 +14,12 @@ sources:
         error_after: {count: 384, period: hour}  # 16 days
       # Tables not expected to be fresh on the schedule above carry a
       # longer per-table SLA in their own `config:` instead of inheriting
-      # this one: rarely-updated tables warn/error at 90/120 days. The
-      # longer SLA keeps a populated freshness (required by dbt-bouncer)
-      # while avoiding false positives, and a fully dead ingestion still
-      # alerts eventually. Only sleep inherits the source-level SLA.
+      # this one. Exercise sessions are sporadic, and steps have a known
+      # upstream gap: step counts come from Garmin via Google Health,
+      # which has no supported write/backfill path, so gaps occur when
+      # Garmin history is missing or has not synced (see issue #160).
+      # 90/120 days gives headroom for that gap while still alerting if
+      # it drags on. Only sleep inherits the source-level SLA.
       loaded_at_query: |
         select max(loads.inserted_at)
         from {{ this }} as rows
@@ -71,9 +73,10 @@ sources:
         description: Step count interval data imported from the Google Health / Healthy
           DataSource API.
         config:
-          # Steps have not updated recently, so this table is not expected
-          # to be fresh on the weekly schedule. Longer per-table SLA (see
-          # source config).
+          # Steps come from Garmin via Google Health (see issue #160):
+          # no supported write/backfill path, so gaps occur when Garmin
+          # history is missing or has not synced. Longer per-table SLA
+          # (see source config).
           freshness:
             warn_after: {count: 2160, period: hour}  # 90 days
             error_after: {count: 2880, period: hour}  # 120 days
