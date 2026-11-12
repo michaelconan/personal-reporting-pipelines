@@ -12,6 +12,14 @@ sources:
       freshness:
         warn_after: {count: 336, period: hour}  # 14 days (weekly schedule)
         error_after: {count: 384, period: hour}  # 16 days
+      # Tables not expected to be fresh on the schedule above carry a
+      # longer per-table SLA in their own `config:` instead of inheriting
+      # this one. Exercise sessions are sporadic, and steps have a known
+      # upstream gap: step counts come from Garmin via Google Health,
+      # which has no supported write/backfill path, so gaps occur when
+      # Garmin history is missing or has not synced (see issue #160).
+      # 90/120 days gives headroom for that gap while still alerting if
+      # it drags on. Only sleep inherits the source-level SLA.
       loaded_at_query: |
         select max(loads.inserted_at)
         from {{ this }} as rows
@@ -64,6 +72,14 @@ sources:
         identifier: google_health__steps
         description: Step count interval data imported from the Google Health / Healthy
           DataSource API.
+        config:
+          # Steps come from Garmin via Google Health (see issue #160):
+          # no supported write/backfill path, so gaps occur when Garmin
+          # history is missing or has not synced. Longer per-table SLA
+          # (see source config).
+          freshness:
+            warn_after: {count: 2160, period: hour}  # 90 days
+            error_after: {count: 2880, period: hour}  # 120 days
         columns:
           - name: steps__count
             description: Number of steps recorded within the step interval.
@@ -104,6 +120,12 @@ sources:
         identifier: google_health__exercise
         description: Exercise session data imported from the Google Health / Healthy
           DataSource API.
+        config:
+          # Exercise sessions are recorded rarely. Longer per-table SLA
+          # (see source config).
+          freshness:
+            warn_after: {count: 2160, period: hour}  # 90 days
+            error_after: {count: 2880, period: hour}  # 120 days
         columns:
           - name: name
             description: Fully qualified name of the exercise data point.

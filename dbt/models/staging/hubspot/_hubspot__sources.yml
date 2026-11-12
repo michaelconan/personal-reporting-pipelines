@@ -9,9 +9,19 @@ sources:
       # Freshness is measured from the dlt load timestamp: join each row's
       # _dlt_load_id to dlt's _dlt_loads metadata table and take the latest
       # completed load. See https://github.com/michaelconan/personal-reporting-pipelines/issues/141
+      # Weekly ingestion (Mondays 02:00 UTC); freshness runs ~4h later.
+      # The 7/8-day SLA matches the weekly cadence: any run within the
+      # week passes, while a missed Monday load warns on the Monday
+      # freshness run (last load 7 days old) and errors on any later run.
       freshness:
-        warn_after: { count: 48, period: hour } # Daily schedule
-        error_after: { count: 72, period: hour }
+        warn_after: { count: 168, period: hour }
+        error_after: { count: 192, period: hour }
+      # Tables not expected to be fresh on the schedule above carry a
+      # longer per-table SLA in their own `config:` instead of inheriting
+      # this one: rarely-updated tables warn/error at 90/120 days. The
+      # longer SLA keeps a populated freshness (required by dbt-bouncer)
+      # while avoiding false positives, and a fully dead ingestion still
+      # alerts eventually.
       loaded_at_query: |
         select max(loads.inserted_at)
         from {{ this }} as rows
@@ -103,6 +113,11 @@ sources:
       - name: calls
         identifier: hubspot__calls
         description: Raw call engagement data from HubSpot CRM.
+        config:
+          # Calls are logged rarely. Longer per-table SLA (see source config).
+          freshness:
+            warn_after: {count: 2160, period: hour}  # 90 days
+            error_after: {count: 2880, period: hour}  # 120 days
         columns:
           - name: id
             description: Primary key for the HubSpot call.
@@ -125,6 +140,12 @@ sources:
       - name: calls_to_contacts
         identifier: hubspot__calls_to_contacts
         description: Association table between calls and contacts.
+        config:
+          # Follows its parent object: no new associations are expected
+          # when there are no new calls. Longer per-table SLA (see source config).
+          freshness:
+            warn_after: {count: 2160, period: hour}  # 90 days
+            error_after: {count: 2880, period: hour}  # 120 days
         columns:
           - name: to_object_id
             description: The contact ID.
@@ -135,6 +156,11 @@ sources:
       - name: communications
         identifier: hubspot__communications
         description: Raw communication engagement data from HubSpot CRM.
+        config:
+          # Communications are logged rarely. Longer per-table SLA (see source config).
+          freshness:
+            warn_after: {count: 2160, period: hour}  # 90 days
+            error_after: {count: 2880, period: hour}  # 120 days
         columns:
           - name: id
             description: Primary key for the HubSpot communication.
@@ -157,6 +183,12 @@ sources:
       - name: communications_to_contacts
         identifier: hubspot__communications_to_contacts
         description: Association table between communications and contacts.
+        config:
+          # Follows its parent object: no new associations are expected
+          # when there are no new communications. Longer per-table SLA (see source config).
+          freshness:
+            warn_after: {count: 2160, period: hour}  # 90 days
+            error_after: {count: 2880, period: hour}  # 120 days
         columns:
           - name: to_object_id
             description: The contact ID.

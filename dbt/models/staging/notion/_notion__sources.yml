@@ -12,6 +12,14 @@ sources:
       freshness:
         warn_after: {count: 336, period: hour}  # 14 days (weekly schedule)
         error_after: {count: 384, period: hour}  # 16 days
+      # Tables not expected to be fresh on the schedule above carry a
+      # longer per-table SLA in their own `config:` instead of inheriting
+      # this one. The habit reference is static data that is correct at
+      # any age, so its SLA is effectively never (365/400 days): the SLA
+      # exists only because dbt-bouncer requires a populated freshness
+      # per table, and its `exclude` matches the whole source file, so a
+      # single table cannot be excluded without dropping the SLA
+      # requirement for the habit tables too.
       loaded_at_query: |
         select max(loads.inserted_at)
         from {{ this }} as rows
@@ -133,6 +141,13 @@ sources:
         identifier: notion__data_source_habit_reference
         description: Reference table of all tracked disciplines from the Notion habit
           reference database.
+        config:
+          # Static reference data: it changes only when the habit list is
+          # edited, and it is correct at any age. The SLA is effectively
+          # never (see source config).
+          freshness:
+            warn_after: {count: 8760, period: hour}  # 365 days
+            error_after: {count: 9600, period: hour}  # 400 days
         columns:
           - name: parent__data_source_id
             data_type: varchar
