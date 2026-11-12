@@ -32,9 +32,10 @@ SOURCES: list[tuple[str, str]] = [
 
 # (warn_after_hours, error_after_hours) per ingestion cadence
 EXPECTED_SLA: dict[str, tuple[int, int]] = {
-    # Weekly ingestion (Mondays 02:00 UTC); freshness runs ~4h later, so
-    # 48/72h alerts on a missed Monday load by Thursday.
-    "hubspot": (48, 72),
+    # Weekly ingestion (Mondays 02:00 UTC); freshness runs ~4h later.
+    # The 7/8-day SLA matches the weekly cadence: any run within the
+    # week passes, while a missed Monday load warns on the Monday run.
+    "hubspot": (168, 192),
     "notion": (336, 384),  # weekly (14 / 16 days)
     "google_health": (336, 384),  # weekly
 }
@@ -94,7 +95,12 @@ def test_sla_thresholds_match_ingestion_cadence(name: str, rel: str) -> None:
 
 @pytest.mark.parametrize(("name", "rel"), SOURCES)
 def test_freshness_scope_matches_expected_tables(name: str, rel: str) -> None:
-    tables = {table["name"]: table for table in _source(name, rel)["tables"]}
+    source_tables = _source(name, rel)["tables"]
+    tables = {table["name"]: table for table in source_tables}
+    # A duplicated table name would be silently collapsed by the dict
+    # comprehension, so assert the count matches (dbt-bouncer's
+    # check_duplicate_sources also covers this).
+    assert len(tables) == len(source_tables), f"{name}: duplicated table name"
     expected = set(FRESHNESS_CHECKED[name]) | set(FRESHNESS_LONG_SLA[name])
     unclassified = set(tables) - expected
     assert not unclassified, f"{name}: unclassified tables {sorted(unclassified)}"
