@@ -103,6 +103,12 @@ sources:
       - name: calls
         identifier: hubspot__calls
         description: Raw call engagement data from HubSpot CRM.
+        config:
+          # Calls are logged rarely, so this table is not expected to be
+          # fresh on the daily schedule. null disables freshness checks
+          # for this table only; contacts, companies, meetings and
+          # meetings_to_contacts inherit the source-level SLA.
+          freshness: null
         columns:
           - name: id
             description: Primary key for the HubSpot call.
@@ -125,6 +131,11 @@ sources:
       - name: calls_to_contacts
         identifier: hubspot__calls_to_contacts
         description: Association table between calls and contacts.
+        config:
+          # Follows its parent object: no new associations are expected
+          # when there are no new calls. null disables freshness checks
+          # for this table only.
+          freshness: null
         columns:
           - name: to_object_id
             description: The contact ID.
@@ -135,6 +146,11 @@ sources:
       - name: communications
         identifier: hubspot__communications
         description: Raw communication engagement data from HubSpot CRM.
+        config:
+          # Communications are logged rarely, so this table is not expected
+          # to be fresh on the daily schedule. null disables freshness
+          # checks for this table only.
+          freshness: null
         columns:
           - name: id
             description: Primary key for the HubSpot communication.
@@ -157,6 +173,11 @@ sources:
       - name: communications_to_contacts
         identifier: hubspot__communications_to_contacts
         description: Association table between communications and contacts.
+        config:
+          # Follows its parent object: no new associations are expected
+          # when there are no new communications. null disables freshness
+          # checks for this table only.
+          freshness: null
         columns:
           - name: to_object_id
             description: The contact ID.

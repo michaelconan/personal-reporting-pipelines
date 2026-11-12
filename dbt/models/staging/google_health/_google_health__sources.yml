@@ -27,6 +27,11 @@ sources:
         identifier: google_health__sleep
         description: Sleep session data imported from Google Health (e.g. from Fitbit
           / Google Fit).
+        config:
+          # Only steps are freshness-checked for Google Health; sleep is
+          # not expected to be fresh on the weekly schedule. null disables
+          # freshness checks for this table only.
+          freshness: null
         columns:
           - name: name
             description: Fully qualified resource name of the sleep data point.
@@ -104,6 +109,11 @@ sources:
         identifier: google_health__exercise
         description: Exercise session data imported from the Google Health / Healthy
           DataSource API.
+        config:
+          # Only steps are freshness-checked for Google Health; exercise is
+          # not expected to be fresh on the weekly schedule. null disables
+          # freshness checks for this table only.
+          freshness: null
         columns:
           - name: name
             description: Fully qualified name of the exercise data point.

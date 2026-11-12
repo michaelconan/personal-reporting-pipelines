@@ -37,6 +37,24 @@ EXPECTED_SLA: dict[str, tuple[int, int]] = {
     "google_health": (336, 384),  # weekly
 }
 
+# Tables freshness-checked (they inherit the source-level SLA) vs tables
+# explicitly excluded with `freshness: null` because they are not expected
+# to be fresh on the ingestion schedule.
+FRESHNESS_CHECKED: dict[str, list[str]] = {
+    "hubspot": ["companies", "contacts", "meetings", "meetings_to_contacts"],
+    "notion": [
+        "data_source_daily_habits",
+        "data_source_weekly_habits",
+        "data_source_monthly_habits",
+    ],
+    "google_health": ["steps"],
+}
+FRESHNESS_EXCLUDED: dict[str, list[str]] = {
+    "hubspot": ["calls", "calls_to_contacts", "communications", "communications_to_contacts"],
+    "notion": ["data_source_habit_reference"],
+    "google_health": ["sleep", "exercise"],
+}
+
 
 def _source(name: str, rel: str) -> dict[str, Any]:
     data = yaml.safe_load((DBT_MODELS / rel).read_text())
@@ -59,6 +77,20 @@ def test_sla_thresholds_match_ingestion_cadence(name: str, rel: str) -> None:
     freshness = _source(name, rel)["config"]["freshness"]
     warn, error = _hours(freshness["warn_after"]), _hours(freshness["error_after"])
     assert (warn, error) == EXPECTED_SLA[name]
+
+
+@pytest.mark.parametrize(("name", "rel"), SOURCES)
+def test_freshness_scope_matches_expected_tables(name: str, rel: str) -> None:
+    tables = {table["name"]: table for table in _source(name, rel)["tables"]}
+    assert set(tables) == set(FRESHNESS_CHECKED[name]) | set(FRESHNESS_EXCLUDED[name])
+    for table_name in FRESHNESS_CHECKED[name]:
+        # Checked tables inherit the source-level SLA: no per-table override.
+        assert "freshness" not in tables[table_name].get("config", {})
+    for table_name in FRESHNESS_EXCLUDED[name]:
+        # Excluded tables disable freshness explicitly (null), so
+        # `dbt source freshness` skips them while the source-level SLA
+        # stays in place for the bouncer check.
+        assert tables[table_name]["config"]["freshness"] is None
 
 
 @pytest.mark.parametrize(("name", "rel"), SOURCES)

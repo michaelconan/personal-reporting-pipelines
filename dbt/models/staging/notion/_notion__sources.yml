@@ -133,6 +133,12 @@ sources:
         identifier: notion__data_source_habit_reference
         description: Reference table of all tracked disciplines from the Notion habit
           reference database.
+        config:
+          # Static reference data: it changes only when the habit list is
+          # edited, so it is not expected to be fresh on the weekly
+          # schedule. null disables freshness checks for this table only;
+          # the other Notion tables inherit the source-level SLA.
+          freshness: null
         columns:
           - name: parent__data_source_id
             data_type: varchar
