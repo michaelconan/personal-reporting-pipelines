@@ -34,6 +34,16 @@ The `mock` target uses DuckDB and CSV fixtures. `dbt-build` and
 `RAW_SCHEMA`, and perform a warehouse preflight. For development docs, run
 `mise run docs`.
 
+Source freshness (`dbt source freshness`) checks every table against its SLA.
+Tables that are not expected to be fresh on the ingestion schedule carry a
+longer per-table SLA instead of inheriting the source-level one: HubSpot calls,
+calls_to_contacts, communications and communications_to_contacts and Google
+Health steps and exercise warn/error at 90/120 days; the Notion habit
+reference (static data) at 180/210 days. Google Health sleep is the only
+Google Health table on the standard 14/16-day SLA. The scope is enforced by
+`test_freshness_scope_matches_expected_tables` in
+`tests/unit/dbt/test_source_freshness.py`.
+
 ## Linting and governance
 
 ```bash

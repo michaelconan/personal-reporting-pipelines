@@ -12,6 +12,12 @@ sources:
       freshness:
         warn_after: { count: 48, period: hour } # Daily schedule
         error_after: { count: 72, period: hour }
+      # Tables not expected to be fresh on the schedule above carry a
+      # longer per-table SLA in their own `config:` instead of inheriting
+      # this one: rarely-updated tables warn/error at 90/120 days. The
+      # longer SLA keeps a populated freshness (required by dbt-bouncer)
+      # while avoiding false positives, and a fully dead ingestion still
+      # alerts eventually.
       loaded_at_query: |
         select max(loads.inserted_at)
         from {{ this }} as rows
@@ -104,11 +110,10 @@ sources:
         identifier: hubspot__calls
         description: Raw call engagement data from HubSpot CRM.
         config:
-          # Calls are logged rarely, so this table is not expected to be
-          # fresh on the daily schedule. null disables freshness checks
-          # for this table only; contacts, companies, meetings and
-          # meetings_to_contacts inherit the source-level SLA.
-          freshness: null
+          # Calls are logged rarely. Longer per-table SLA (see source config).
+          freshness:
+            warn_after: {count: 2160, period: hour}  # 90 days
+            error_after: {count: 2880, period: hour}  # 120 days
         columns:
           - name: id
             description: Primary key for the HubSpot call.
@@ -133,9 +138,10 @@ sources:
         description: Association table between calls and contacts.
         config:
           # Follows its parent object: no new associations are expected
-          # when there are no new calls. null disables freshness checks
-          # for this table only.
-          freshness: null
+          # when there are no new calls. Longer per-table SLA (see source config).
+          freshness:
+            warn_after: {count: 2160, period: hour}  # 90 days
+            error_after: {count: 2880, period: hour}  # 120 days
         columns:
           - name: to_object_id
             description: The contact ID.
@@ -147,10 +153,10 @@ sources:
         identifier: hubspot__communications
         description: Raw communication engagement data from HubSpot CRM.
         config:
-          # Communications are logged rarely, so this table is not expected
-          # to be fresh on the daily schedule. null disables freshness
-          # checks for this table only.
-          freshness: null
+          # Communications are logged rarely. Longer per-table SLA (see source config).
+          freshness:
+            warn_after: {count: 2160, period: hour}  # 90 days
+            error_after: {count: 2880, period: hour}  # 120 days
         columns:
           - name: id
             description: Primary key for the HubSpot communication.
@@ -175,9 +181,10 @@ sources:
         description: Association table between communications and contacts.
         config:
           # Follows its parent object: no new associations are expected
-          # when there are no new communications. null disables freshness
-          # checks for this table only.
-          freshness: null
+          # when there are no new communications. Longer per-table SLA (see source config).
+          freshness:
+            warn_after: {count: 2160, period: hour}  # 90 days
+            error_after: {count: 2880, period: hour}  # 120 days
         columns:
           - name: to_object_id
             description: The contact ID.

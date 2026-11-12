@@ -12,6 +12,12 @@ sources:
       freshness:
         warn_after: {count: 336, period: hour}  # 14 days (weekly schedule)
         error_after: {count: 384, period: hour}  # 16 days
+      # Tables not expected to be fresh on the schedule above carry a
+      # longer per-table SLA in their own `config:` instead of inheriting
+      # this one: rarely-updated tables warn/error at 90/120 days. The
+      # longer SLA keeps a populated freshness (required by dbt-bouncer)
+      # while avoiding false positives, and a fully dead ingestion still
+      # alerts eventually. Only sleep inherits the source-level SLA.
       loaded_at_query: |
         select max(loads.inserted_at)
         from {{ this }} as rows
@@ -27,11 +33,6 @@ sources:
         identifier: google_health__sleep
         description: Sleep session data imported from Google Health (e.g. from Fitbit
           / Google Fit).
-        config:
-          # Only steps are freshness-checked for Google Health; sleep is
-          # not expected to be fresh on the weekly schedule. null disables
-          # freshness checks for this table only.
-          freshness: null
         columns:
           - name: name
             description: Fully qualified resource name of the sleep data point.
@@ -69,6 +70,13 @@ sources:
         identifier: google_health__steps
         description: Step count interval data imported from the Google Health / Healthy
           DataSource API.
+        config:
+          # Steps have not updated recently, so this table is not expected
+          # to be fresh on the weekly schedule. Longer per-table SLA (see
+          # source config).
+          freshness:
+            warn_after: {count: 2160, period: hour}  # 90 days
+            error_after: {count: 2880, period: hour}  # 120 days
         columns:
           - name: steps__count
             description: Number of steps recorded within the step interval.
@@ -110,10 +118,11 @@ sources:
         description: Exercise session data imported from the Google Health / Healthy
           DataSource API.
         config:
-          # Only steps are freshness-checked for Google Health; exercise is
-          # not expected to be fresh on the weekly schedule. null disables
-          # freshness checks for this table only.
-          freshness: null
+          # Exercise sessions are recorded rarely. Longer per-table SLA
+          # (see source config).
+          freshness:
+            warn_after: {count: 2160, period: hour}  # 90 days
+            error_after: {count: 2880, period: hour}  # 120 days
         columns:
           - name: name
             description: Fully qualified name of the exercise data point.

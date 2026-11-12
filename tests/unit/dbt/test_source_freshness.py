@@ -38,8 +38,9 @@ EXPECTED_SLA: dict[str, tuple[int, int]] = {
 }
 
 # Tables freshness-checked (they inherit the source-level SLA) vs tables
-# explicitly excluded with `freshness: null` because they are not expected
-# to be fresh on the ingestion schedule.
+# on a longer per-table SLA because they are not expected to be fresh on
+# the ingestion schedule. Rare tables warn/error at 90/120 days; the
+# static habit reference at 180/210 days.
 FRESHNESS_CHECKED: dict[str, list[str]] = {
     "hubspot": ["companies", "contacts", "meetings", "meetings_to_contacts"],
     "notion": [
@@ -47,21 +48,29 @@ FRESHNESS_CHECKED: dict[str, list[str]] = {
         "data_source_weekly_habits",
         "data_source_monthly_habits",
     ],
-    "google_health": ["steps"],
+    "google_health": ["sleep"],
 }
-FRESHNESS_EXCLUDED: dict[str, list[str]] = {
-    "hubspot": ["calls", "calls_to_contacts", "communications", "communications_to_contacts"],
-    "notion": ["data_source_habit_reference"],
-    "google_health": ["sleep", "exercise"],
+FRESHNESS_LONG_SLA: dict[str, dict[str, tuple[int, int]]] = {
+    "hubspot": {
+        "calls": (2160, 2880),
+        "calls_to_contacts": (2160, 2880),
+        "communications": (2160, 2880),
+        "communications_to_contacts": (2160, 2880),
+    },
+    "notion": {"data_source_habit_reference": (4320, 5040)},
+    "google_health": {"steps": (2160, 2880), "exercise": (2160, 2880)},
 }
 
 
 def _source(name: str, rel: str) -> dict[str, Any]:
     data = yaml.safe_load((DBT_MODELS / rel).read_text())
-    return data["sources"][0]
+    source = data["sources"][0]
+    assert source["name"] == name
+    return source
 
 
 def _hours(block: dict[str, Any]) -> int:
+    assert block["period"] == "hour"
     return int(block["count"])
 
 
@@ -82,15 +91,21 @@ def test_sla_thresholds_match_ingestion_cadence(name: str, rel: str) -> None:
 @pytest.mark.parametrize(("name", "rel"), SOURCES)
 def test_freshness_scope_matches_expected_tables(name: str, rel: str) -> None:
     tables = {table["name"]: table for table in _source(name, rel)["tables"]}
-    assert set(tables) == set(FRESHNESS_CHECKED[name]) | set(FRESHNESS_EXCLUDED[name])
+    assert set(tables) == set(FRESHNESS_CHECKED[name]) | set(FRESHNESS_LONG_SLA[name])
     for table_name in FRESHNESS_CHECKED[name]:
         # Checked tables inherit the source-level SLA: no per-table override.
         assert "freshness" not in tables[table_name].get("config", {})
-    for table_name in FRESHNESS_EXCLUDED[name]:
-        # Excluded tables disable freshness explicitly (null), so
-        # `dbt source freshness` skips them while the source-level SLA
-        # stays in place for the bouncer check.
-        assert tables[table_name]["config"]["freshness"] is None
+    for table_name, (warn, error) in FRESHNESS_LONG_SLA[name].items():
+        # Rare/static tables carry a longer per-table SLA instead of
+        # inheriting the source-level one, so the weekly freshness run
+        # does not flag them while a fully dead ingestion still alerts
+        # eventually. The SLA must stay populated: dbt-bouncer's
+        # check_source_freshness_populated fails a table with no freshness.
+        freshness = tables[table_name]["config"]["freshness"]
+        assert (_hours(freshness["warn_after"]), _hours(freshness["error_after"])) == (
+            warn,
+            error,
+        )
 
 
 @pytest.mark.parametrize(("name", "rel"), SOURCES)
